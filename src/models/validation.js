@@ -1,5 +1,15 @@
+/**
+ * @file Joi validation schemas for different objects. (Consider splitting)
+ * @module JoiSchemas
+ * @requires joi
+ */
+
 const joi = require('joi');
 
+/**
+ * Address schema to validate IP address and port.
+ * @type {import('joi').ObjectSchema}
+ */
 const addressSchema = joi.object({
   ip: joi.string()
     .ip({ version: ['ipv4'] })
@@ -9,6 +19,10 @@ const addressSchema = joi.object({
     .required(),
 });
 
+/**
+ * Document schema to validate document objects.
+ * @type {import('joi').ObjectSchema}
+ */
 const documentSchema = joi.object({
   type: joi.string()
     .valid('document')
@@ -39,6 +53,10 @@ const documentSchema = joi.object({
     .items(joi.string()),
 });
 
+/**
+ * User schema to validate user objects.
+ * @type {import('joi').ObjectSchema}
+ */
 const userSchema = joi.object({
   type: joi.string()
     .valid('user')
@@ -54,11 +72,15 @@ const userSchema = joi.object({
 
   lastAddress: addressSchema
     .required(),
-  
+
   lastSeen: joi.date()
-      .required(),
+    .required(),
 });
 
+/**
+ * Feed schema to validate user objects.
+ * @type {import('joi').ObjectSchema}
+ */
 const feedSchema = joi.object({
   type: joi.string()
     .valid('feed')
@@ -67,11 +89,11 @@ const feedSchema = joi.object({
   id: joi.string()
     .length(16)
     .required(),
-  
+
   owner: joi.string()
     .length(16)
     .required(),
-  
+
   timestamp: joi.date()
     .required(),
 
@@ -80,4 +102,8 @@ const feedSchema = joi.object({
     .required(),
 });
 
+/**
+ * Exporting the validation schemas for documents, users, and feeds.
+ * @type {object}
+ */
 module.exports = { documentSchema, userSchema, feedSchema };
