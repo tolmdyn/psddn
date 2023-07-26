@@ -5,25 +5,31 @@
 
 const SqliteDatabase = require('better-sqlite3');
 const debug = require('debug')('database');
-const path = require('path');
-
 /**
 * @description: Represents the type of an item in the database.
 */
-const itemTypes = {
+const Types = {
   Feed: 'feed',
   User: 'user',
   Document: 'document',
 };
 
-class Database {
-  #dbPath = path.join(__dirname, './../../data/database.db');
+// const { Feed, User, Document } = Types;
 
+function isValidItemType(type) {
+  return Object.values(Types).includes(type);
+}
+
+// const databasepath = path.join(__dirname, './../../data/database.db');
+
+class Database {
   #db;
 
-  constructor() {
+  // If no path is provided, then the database is created in memory
+  constructor(dbPath) {
     // Open database
-    this.#db = this.openDatabaseConnection();
+    // this.#db = this.openDatabaseConnection(dbPath);
+    this.#openDatabaseConnection(dbPath);
 
     // Check if this.db doesnt have the right tables... create them
     if (!this.#databaseHasTables()) {
@@ -36,14 +42,13 @@ class Database {
   * @return {Database} Database connection
   * @throws {Error} Error opening database
   */
-  openDatabaseConnection() {
+  #openDatabaseConnection(dbPath) {
+    debug('PATH:', dbPath);
     try {
-      const db = new SqliteDatabase(this.#dbPath, { verbose: debug });
+      this.#db = new SqliteDatabase(dbPath, { verbose: debug });
       debug('Database opened successfully.');
-      return db;
     } catch (error) {
       console.error(error);
-      throw error;
     }
   }
 
@@ -99,6 +104,10 @@ class Database {
       `).run();
 
     debug('Tables created successfully.');
+
+    if (!this.#databaseHasTables()) {
+      throw new Error('Unable to create tables.');
+    }
   }
 
   /**
@@ -109,29 +118,45 @@ class Database {
  * @throws {Error} Error getting item from database
  */
   get(key, type) {
-  // Sometimes the key is a hash and sometimes an id...
-    const query = this.#db.prepare('SELECT * FROM ? WHERE key = ?');
+    if (!isValidItemType(type)) {
+      throw new Error('Invalid item type.');
+    }
+    const query = this.#db.prepare(`SELECT * FROM ${type} WHERE key = ? LIMIT 1;`);
     try {
-      const item = query.get(type, key);
-      return item;
+      const item = query.get(key);
+      return JSON.parse(item.json_data);
     } catch (error) {
+      // This should be properly handled higher up
       console.error(error);
       return null;
     }
   }
 
   put(key, type, data) {
-    const query = this.#db.prepare('INSERT INTO ? (key, json_data) VALUES (?, ?)');
+    if (!isValidItemType(type)) {
+      throw new Error('Invalid item type.');
+    }
+
+    const query = this.#db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`);
+
     try {
-      const item = query.run(type, key, data);
-      return item;
+      const result = query.run(key, JSON.stringify(data));
+      return result;
     } catch (error) {
+      // This should be properly handled higher up
       console.error(error);
       return null;
     }
   }
 }
 
-// const testdb = new Database();
+// const testdb = new Database(); // in memory
+
+// testdb.put('0000000000000001', User, { name: 'test' });
+// console.log(testdb.put('0000000000000002', User, { name: 'test2' }));
+
+// console.log(testdb.get('0000000000000001', User));
+
 // testdb.closeDatabaseConnection();
-module.exports = { Database };
+
+module.exports = { Database, Types };
