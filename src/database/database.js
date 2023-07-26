@@ -1,10 +1,17 @@
 /**
-* @description: This file provides the database wrapper class and functions.
-*
+* @fileOverview This file provides the database wrapper class and functions for interaction
+* @module database
+* @requires better-sqlite3 - Raw sqlite database functionality
+* @requires debug - Debug module for logging
+* @example
+* const { Database, Types } = require('./database');
+* const testDB = new Database();
+* const document = testDB.put('1234567890123456', Types.Document, <JSON document>);
 */
 
-const SqliteDatabase = require('better-sqlite3');
+const Sqlite = require('better-sqlite3');
 const debug = require('debug')('database');
+
 /**
 * @description: Represents the type of an item in the database.
 */
@@ -28,7 +35,6 @@ class Database {
   // If no path is provided, then the database is created in memory
   constructor(dbPath) {
     // Open database
-    // this.#db = this.openDatabaseConnection(dbPath);
     this.#openDatabaseConnection(dbPath);
 
     // Check if this.db doesnt have the right tables... create them
@@ -45,7 +51,7 @@ class Database {
   #openDatabaseConnection(dbPath) {
     debug('PATH:', dbPath);
     try {
-      this.#db = new SqliteDatabase(dbPath, { verbose: debug });
+      this.#db = new Sqlite(dbPath, { verbose: debug });
       debug('Database opened successfully.');
     } catch (error) {
       console.error(error);
@@ -115,7 +121,7 @@ class Database {
  * @param {string} key - Key (hash/id) of item to get
  * @param {string} type - Type of item to get ()
  * @return {object} Item from database or null if not found
- * @throws {Error} Error getting item from database
+ * @throws {Error} Error getting item from database (not yet)
  */
   get(key, type) {
     if (!isValidItemType(type)) {
@@ -126,12 +132,23 @@ class Database {
       const item = query.get(key);
       return JSON.parse(item.json_data);
     } catch (error) {
-      // This should be properly handled higher up
+      // This should be properly handled higher up, not swallowed
       console.error(error);
       return null;
     }
   }
 
+  /**
+   * @description: Put item into database
+   * @param {string} key - Key (hash/id) of item to put
+   * @param {string} type - Type of item to put
+   * @param {object} data - Item to put into database
+   * @return {object} Result of database query
+   * @throws {Error} Error putting item into database (not yet)
+   *
+   * TODO: Call getHash() on data rather than accept a parameter
+   * TODO: Improve error handling
+   */
   put(key, type, data) {
     if (!isValidItemType(type)) {
       throw new Error('Invalid item type.');
@@ -149,14 +166,5 @@ class Database {
     }
   }
 }
-
-// const testdb = new Database(); // in memory
-
-// testdb.put('0000000000000001', User, { name: 'test' });
-// console.log(testdb.put('0000000000000002', User, { name: 'test2' }));
-
-// console.log(testdb.get('0000000000000001', User));
-
-// testdb.closeDatabaseConnection();
 
 module.exports = { Database, Types };
