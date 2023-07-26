@@ -1,5 +1,7 @@
 /**
  * Tests the database by inserting a few documents and then retrieving them.
+ *
+ * TODO: This code will be migrated into database.test.js
  */
 
 // import the document schema
