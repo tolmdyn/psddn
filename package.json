@@ -4,13 +4,19 @@
   "description": "A Node P2P Content Sharing Network",
   "main": "bin/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha tests/**/*.test.js",
+    "test:database": "mocha tests/database.test.js",
+    "test:validation": "mocha tests/validation.test.js",
+    "test:server": "mocha tests/server.test.js",
+    "test:client": "mocha tests/client.test.js"
   },
   "author": "tolmdyn",
   "license": "ISC",
   "devDependencies": {
+    "chai": "^4.3.7",
     "eslint": "^8.45.0",
-    "eslint-config-airbnb": "^19.0.4"
+    "eslint-config-airbnb": "^19.0.4",
+    "mocha": "^10.2.0"
   },
   "dependencies": {
     "@faker-js/faker": "^8.0.2",

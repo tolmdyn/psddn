@@ -3,7 +3,7 @@
  * @module Utils
  */
 
-const { objectHash } = require('object-hash');
+const objecthash = require('object-hash');
 
 /**
  * Get a consistent hash of an object, to be used as a key in a map.
@@ -13,7 +13,7 @@ const { objectHash } = require('object-hash');
  * @returns A consistent hash of the input
  */
 function getHash(input) {
-  const key = objectHash(input, { algorithm: 'sha1', encoding: 'hex' });
+  const key = objecthash(input, { algorithm: 'sha1', encoding: 'hex' });
   return key.substring(0, 16);
 }
 
@@ -37,6 +37,16 @@ function generateRandomDocument() {
   return document;
 }
 
-// console.log(JSON.stringify(generateRandomDocument()));
+function generateRandomUser() {
+  // TODO: Implement
+}
+
+function generateRandomFeed() {
+  // TODO: Implement
+}
+
+// const doc = generateRandomDocument();
+// const key = getHash(doc);
+// console.log(`\n Key: ${key} \n Doc: ${JSON.stringify(doc)}.`);
 
 module.exports = { getHash, generateRandomDocument };
