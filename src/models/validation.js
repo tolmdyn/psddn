@@ -102,8 +102,4 @@ const feedSchema = joi.object({
     .required(),
 });
 
-/**
- * Exporting the validation schemas for documents, users, and feeds.
- * @type {object}
- */
 module.exports = { documentSchema, userSchema, feedSchema };

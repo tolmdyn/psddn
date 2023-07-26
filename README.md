@@ -1,6 +1,6 @@
-# NPNET
-
-A Peer-to-Peer Social Network
+# PSDDN
+psddn
+A Peer-to-Peer Structured Data Distribution Network
 
 - **bin**/: executable files
     - **app.js**: main executable (view)
@@ -26,9 +26,9 @@ A Peer-to-Peer Social Network
 - REQ - retrieve a specific remote resource
 - FEED - update 'subscribed' feed(s)
 
---database actions?--<br>
-(view all posts from user?)<br>
-(view all posts from user in a specific group?)<br>
-(view all feeds from a specific group?)<br>
-(view all posts with a specific tag?)<br>
+### --database actions?--
+- (view all posts from user?)
+- (view all posts from user in a specific group?)
+- (view all feeds from a specific group?)
+- (view all posts with a specific tag?)
 
