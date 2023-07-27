@@ -1,4 +1,9 @@
-const { assert, expect } = require('chai');
+/**
+ * @description Tests for the database class
+ */
+
+const { expect } = require('chai');
+const fs = require('fs');
 
 // import the document schema
 const { documentSchema } = require('../src/models/validation');
@@ -21,34 +26,52 @@ describe('Database Tests', () => {
   });
 
   beforeEach(() => {
-    // Code to run before each test
+    // Create an empty test database in memory before each test
     testDB = new Database();
   });
 
   afterEach(() => {
-    // Code to run after each test
-    if (this.testDB) {
-      testDB.close();
+    // Close the database connection after each test
+    if (testDB) {
+      testDB.closeDatabaseConnection();
+    }
+
+    // Delete the test database file, if it exists
+    if (fs.existsSync('./tests/data/test_database.db')) {
+      fs.unlinkSync('./tests/data/test_database.db');
     }
   });
 
   it('should create a new database in memory if no path', () => {
-    testDB = new Database();
+    // testDB = new Database();
     expect(testDB).to.be.an.instanceof(Database);
   });
 
-  it('should open existing database if path given', () => {
-    // Test assertions
+  it('should create database if path given and doesnt already exist', () => {
+    testDB = new Database('./tests/data/test_database.db');
+    expect(testDB).to.be.an.instanceof(Database);
+    expect(testDB.databaseHasTables()).to.be.equal(true);
   });
 
-  it('should create new database if path given', () => {
-    // Test assertions
+  it('should open database if path given and exists', () => {
+    testDB = new Database('./tests/data/test_database.db');
+    expect(testDB).to.be.an.instanceof(Database);
+    expect(testDB.databaseHasTables()).to.be.equal(true);
+
+    const testDocument = generateRandomDocument();
+    const key = getHash(testDocument);
+
+    testDB.put(key, Types.Document, testDocument);
+    testDB.closeDatabaseConnection();
+
+    testDB = new Database('./tests/data/test_database.db');
+    const retrievedDocument = testDB.get(key, Types.Document);
+    expect(retrievedDocument).to.exist;
+    expect(retrievedDocument).to.deep.equal(testDocument);
   });
 
   it('should create tables if none exist', () => {
-    testDB = new Database();
     expect(testDB).to.be.an.instanceof(Database);
-
     expect(testDB.databaseHasTables()).to.be.equal(true);
   });
 
@@ -72,8 +95,8 @@ describe('Database Tests', () => {
     testDocuments.forEach((document) => {
       const key = getHash(document);
       const result = testDB.put(key, Types.Document, document);
-      expect(result).to.exist; // Ensure that result is not null
-      expect(result.changes).to.equal(1); // Ensure that one row was inserted
+      expect(result).to.exist;
+      expect(result.changes).to.equal(1);
     });
   });
 
