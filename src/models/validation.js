@@ -1,7 +1,8 @@
 /**
- * @file Joi validation schemas for different objects. (Consider splitting)
+ * @file Joi validation schemas for different objects. Used to validate items.
  * @module JoiSchemas
  * @requires joi
+ * @todo Split into separate files, Add regex validations for strings
  */
 
 const joi = require('joi');
