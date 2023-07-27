@@ -3,14 +3,16 @@
 * @module database
 * @requires better-sqlite3 - Raw sqlite database functionality
 * @requires debug - Debug module for logging
-* @example
-* const { Database, Types } = require('./database');
-* const testDB = new Database();
-* const document = testDB.put('1234567890123456', Types.Document, <JSON document>);
+* @example - Usage:
+*   const { Database, Types } = require('./database');
+*   const testDB = new Database();
+*   const document = testDB.put('1234567890123456', Types.Document, <JSON document>);
 */
 
 const Sqlite = require('better-sqlite3');
 const debug = require('debug')('database');
+
+const { isValidKey } = require('../utils/utils'); // TODO: Should this be handled as a verification step, not in database?
 
 /**
 * @description: Represents the type of an item in the database.
@@ -23,12 +25,22 @@ const Types = {
 
 // const { Feed, User, Document } = Types;
 
+/**
+ * @description: Checks if the given type is a valid item type
+ * @param {*} type - Type to check
+ * @returns {boolean} True if the type is valid, false otherwise
+ */
 function isValidItemType(type) {
   return Object.values(Types).includes(type);
 }
 
 // const databasepath = path.join(__dirname, './../../data/database.db');
 
+/**
+ * @description: Database wrapper class
+ * @class Database
+ * @param {string} dbPath - Path to database file
+ */
 class Database {
   #db;
 
@@ -38,7 +50,7 @@ class Database {
     this.#openDatabaseConnection(dbPath);
 
     // Check if this.db doesnt have the right tables... create them
-    if (!this.#databaseHasTables()) {
+    if (!this.databaseHasTables()) {
       this.#createTables();
     }
   }
@@ -58,6 +70,9 @@ class Database {
     }
   }
 
+  /**
+   * @description: Close database connection
+   */
   closeDatabaseConnection() {
     this.#db.close();
   }
@@ -66,8 +81,7 @@ class Database {
    * @description: Checks if the database has the right tables
    * @return {boolean} True if the database has the right tables, false otherwise
    */
-  #databaseHasTables() {
-    // Check if this.db doesnt have the right tables... create them
+  databaseHasTables() {
     const result = this.#db.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name IN ('feed', 'document', 'user');").all();
 
     // result must have the three table names in it
@@ -111,7 +125,7 @@ class Database {
 
     debug('Tables created successfully.');
 
-    if (!this.#databaseHasTables()) {
+    if (!this.databaseHasTables()) {
       throw new Error('Unable to create tables.');
     }
   }
@@ -128,14 +142,12 @@ class Database {
       throw new Error('Invalid item type.');
     }
     const query = this.#db.prepare(`SELECT * FROM ${type} WHERE key = ? LIMIT 1;`);
-    try {
-      const item = query.get(key);
+
+    const item = query.get(key);
+    if (item) {
       return JSON.parse(item.json_data);
-    } catch (error) {
-      // This should be properly handled higher up, not swallowed
-      console.error(error);
-      return null;
     }
+    return null;
   }
 
   /**
@@ -154,15 +166,21 @@ class Database {
       throw new Error('Invalid item type.');
     }
 
+    if (!isValidKey(key, data)) {
+      throw new Error('Key is not a valid hash for the item.');
+    }
+
     const query = this.#db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`);
 
     try {
       const result = query.run(key, JSON.stringify(data));
       return result;
     } catch (error) {
-      // This should be properly handled higher up
-      console.error(error);
-      return null;
+      if (error.message.includes('UNIQUE constraint failed')) {
+        throw new Error('Key already exists in database.');
+      } else {
+        throw new Error(error);
+      }
     }
   }
 }

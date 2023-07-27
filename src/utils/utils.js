@@ -17,6 +17,16 @@ function getHash(input) {
   return key.substring(0, 16);
 }
 
+/**
+ * @description: Check if the key is a valid hash for the item.
+ * @param {*} key The key to check
+ * @param {*} item The item to hash
+ * @returns True if the key is a valid hash for the item, false otherwise
+ */
+function isValidKey(key, item) {
+  return key === getHash(item);
+}
+
 const { faker } = require('@faker-js/faker');
 
 /**
@@ -37,16 +47,16 @@ function generateRandomDocument() {
   return document;
 }
 
-function generateRandomUser() {
-  // TODO: Implement
-}
+// function generateRandomUser() {
+//   // TODO: Implement
+// }
 
-function generateRandomFeed() {
-  // TODO: Implement
-}
+// function generateRandomFeed() {
+//   // TODO: Implement
+// }
 
 // const doc = generateRandomDocument();
 // const key = getHash(doc);
 // console.log(`\n Key: ${key} \n Doc: ${JSON.stringify(doc)}.`);
 
-module.exports = { getHash, generateRandomDocument };
+module.exports = { getHash, isValidKey, generateRandomDocument };
