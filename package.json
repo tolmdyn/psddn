@@ -6,9 +6,10 @@
   "scripts": {
     "test": "mocha tests/**/*.test.js",
     "test:database": "mocha tests/database.test.js",
-    "test:validation": "mocha tests/validation.test.js",
+    "test:validation": "mocha tests/validation.*.test.js",
     "test:server": "mocha tests/server.test.js",
-    "test:client": "mocha tests/client.test.js"
+    "test:client": "mocha tests/client.test.js",
+    "test:utils": "mocha tests/utils.test.js"
   },
   "author": "tolmdyn",
   "license": "ISC",
