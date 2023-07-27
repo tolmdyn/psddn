@@ -7,6 +7,14 @@ module.exports = {
   },
   extends: ['eslint:recommended', 'airbnb'],
   overrides: [
+    {
+      files: ['**/*.test.js'],
+      rules: {
+        'no-unused-expressions': 'off',
+        'no-unused-vars': 'off',
+        'import/no-extraneous-dependencies': 'off',
+      },
+    },
   ],
   parserOptions: {
     ecmaVersion: 'latest',
@@ -14,6 +22,5 @@ module.exports = {
   rules: {
     'no-console': 'off',
     'no-unused-vars': 'warn',
-    'import/no-extraneous-dependencies': ['error', { devDependencies: ['**/*.test.js'] }],
   },
 };
