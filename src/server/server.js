@@ -17,8 +17,7 @@ const dbPath = path.join(__dirname, './../../data/database.db');
 const database = new Database(dbPath);
 
 function handleRequest(message) {
-  // const requestString = message.toString();
-  const request = JSON.parse(message); // concat these two lines
+  const request = JSON.parse(message);
 
   debug('Request:', request);
 
