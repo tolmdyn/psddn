@@ -10,28 +10,11 @@ const { Database } = require('../database/database');
 const { documentSchema } = require('../models/validation');
 const { Types, isValidItemType } = require('../models/types');
 const { getHash } = require('../utils/utils');
+const { RequestTypes, Request } = require('../models/request');
+const { ResponseTypes, Response } = require('../models/response');
 
 const dbPath = path.join(__dirname, './../../data/database.db');
 const database = new Database(dbPath);
-
-const RequestTypes = {
-  Get: 'get',
-  Put: 'put',
-  Ping: 'ping',
-  Message: 'message',
-};
-
-const ResponseTypes = {
-  Success: 'success',
-  Error: 'error',
-};
-
-class Response {
-  constructor(type, message) {
-    this.type = type;
-    this.message = message;
-  }
-}
 
 function handleRequest(message) {
   // const requestString = message.toString();
@@ -75,11 +58,10 @@ function handleGet(request) {
     debug(`Getting item from database\nKey: ${key}\nType: ${type}`);
     const item = database.get(key, type);
 
-    // Do some things here?
     if (item) {
       return new Response(ResponseTypes.Success, item);
     }
-    return new Response(ResponseTypes.Success, 'Item not found in database.');
+    return new Response(ResponseTypes.Error, 'Item not found in database.');
   } catch (error) {
     // Possibly massage the error message to make it more readable for users
     return new Response(ResponseTypes.Error, error.message);
@@ -102,11 +84,11 @@ function handlePut(request) {
   try {
     debug(`Putting item into database\nKey: ${key}\nType: ${type}\nData: ${data}`);
     const result = database.put(key, type, data);
-    // Do some things here?
-    // check if result is valid?
+
     if (!result) {
       return new Response(ResponseTypes.Error, 'Error putting item into database.');
     }
+
     return new Response(ResponseTypes.Success, `Item ${result.key} inserted into database.`);
   } catch (error) {
     // Possibly massage the error message to make it more readable for users
