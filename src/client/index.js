@@ -1,3 +1,0 @@
-/**
- * @fileoverview Client entry point 
- */

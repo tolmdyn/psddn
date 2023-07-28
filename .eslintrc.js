@@ -22,5 +22,6 @@ module.exports = {
   rules: {
     'no-console': 'off',
     'no-unused-vars': 'warn',
+    'no-use-before-define': ['error', { functions: false, classes: false }],
   },
 };
