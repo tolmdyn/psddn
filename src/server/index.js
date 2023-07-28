@@ -1,3 +1,0 @@
-/**
- * @fileoverview Server entry point
- */
