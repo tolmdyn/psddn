@@ -13,26 +13,7 @@ const Sqlite = require('better-sqlite3');
 const debug = require('debug')('database');
 
 const { isValidKey } = require('../utils/utils'); // TODO: Should this be handled as a verification step, not in database?
-
-/**
-* @description: Represents the type of an item in the database.
-*/
-const Types = {
-  Feed: 'feed',
-  User: 'user',
-  Document: 'document',
-};
-
-// const { Feed, User, Document } = Types;
-
-/**
- * @description: Checks if the given type is a valid item type
- * @param {*} type - Type to check
- * @returns {boolean} True if the type is valid, false otherwise
- */
-function isValidItemType(type) {
-  return Object.values(Types).includes(type);
-}
+const { Types, isValidItemType } = require('../models/types');
 
 // const databasepath = path.join(__dirname, './../../data/database.db');
 
@@ -174,7 +155,10 @@ class Database {
 
     try {
       const result = query.run(key, JSON.stringify(data));
-      return result;
+      if (result.changes !== 1) {
+        throw new Error('Error putting item into database.');
+      }
+      return { key, type, data };
     } catch (error) {
       if (error.message.includes('UNIQUE constraint failed')) {
         throw new Error('Key already exists in database.');
