@@ -9,7 +9,7 @@ const path = require('path');
 const { Database } = require('../database/database');
 const { documentSchema } = require('../models/validation');
 const { Types, isValidItemType } = require('../models/types');
-const { getHash } = require('../utils/utils');
+const { getHash, isKey, isValidKey } = require('../utils/utils');
 const { RequestTypes, Request } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
 
@@ -50,7 +50,11 @@ function handleGet(request) {
   }
 
   if (!isValidItemType(type)) {
-    return 'Invalid item type';
+    return new Response(ResponseTypes.Error, 'Invalid item type.');
+  }
+
+  if (!isKey(key)) {
+    return new Response(ResponseTypes.Error, 'Invalid key format.');
   }
 
   try {
@@ -68,9 +72,9 @@ function handleGet(request) {
 }
 
 function handlePut(request) {
-  const { type, data } = request;
+  const { key, type, data } = request;
 
-  if (!type || !data) {
+  if (!key || !type || !data) {
     return new Response(ResponseTypes.Error, 'Invalid request, missing parameters.');
   }
 
@@ -78,7 +82,9 @@ function handlePut(request) {
     return new Response(ResponseTypes.Error, 'Invalid item type.');
   }
 
-  const key = getHash(data);
+  if (!isValidKey(key, data)) {
+    return new Response(ResponseTypes.Error, 'Provided key is not valid for the item.');
+  }
 
   try {
     debug(`Putting item into database\nKey: ${key}\nType: ${type}\nData: ${data}`);
