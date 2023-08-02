@@ -1,5 +1,8 @@
 /**
  * @fileoverview Server entry point
+ * @description The server module is solely responsible for handling remote requests from
+ * incoming websocket connections. The server does not handle any requests from the local
+ * user/interface as that is the job of the client modules.
  */
 
 const WebSocket = require('ws');
