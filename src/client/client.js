@@ -69,7 +69,8 @@ async function getItem(key, type) {
   // check local db // should this be a seperate function?
   try {
     debug(`Getting item from local database\nKey: ${key}\nType: ${type}`);
-    const item = database.get(key, type);
+    // const item = database.get(key, type);
+    let item;
 
     if (item) {
       return new Response(ResponseTypes.Success, item);
@@ -82,7 +83,7 @@ async function getItem(key, type) {
 
   // try providers
   try {
-    const result = getItemFromProviders(key, type);
+    const result = await getItemFromProviders(key, type);
     debug('Result from providers:', result);
     return result;
   } catch (err) {
@@ -113,13 +114,20 @@ async function getItemFromProviders(key, type) {
           responseRecieved = true;
 
           const response = JSON.parse(message);
+          debug('Response:', response);
+          
           if (response.type === ResponseTypes.Success) {
             ws.close();
-            resolve(response.item);
+            resolve(response);
           } else if (response.type === ResponseTypes.Error) {
             ws.close();
             resolve(null);
           }
+        });
+
+        ws.on('error', (err) => {
+          debug('Websocket error:', err);
+          reject(err);
         });
       });
 
@@ -144,50 +152,33 @@ async function getItemFromProviders(key, type) {
     }
   }
 
-  // for (const provider of providers) {
+  // a for loop is synchronous, so we should use something else with await
   for (let i = 0; i < providers.length; i += 1) {
-    console.log('Trying provider:', providers[i]);
-    const item = await tryConnectToProvider(providers[i]);
-    if (item !== null) {
-      return new Response(ResponseTypes.Success, item);
+    debug('Trying provider:', providers[i]);
+    const response = await tryConnectToProvider(providers[i]);
+    if (response !== null) {
+      return new Response(ResponseTypes.Success, response.message);
     }
   }
+
+  // map the array of providers to an array of promises
+  // const promises = providers.map((provider) => tryConnectToProvider(provider));
+
+  // // wait for all promises to resolve
+  // const results = await Promise.all(promises);
+  // console.log('Results:', JSON.stringify(results));
+  // // find successful responses, is this redundant?
+  // const validResults = results.filter((result) => result !== null);
+  // console.log('Valid results:', JSON.stringify(validResults));
+
+  // const successfulResult = validResults.find((result) => result.type === ResponseTypes.Success);
+  // if (successfulResult) {
+  //   return successfulResult;
+  // }
 
   // if no item recieved, return error
   return new Response(ResponseTypes.Error, 'No provider has the item.');
 }
-
-// async function tryConnectToProvider(provider) {
-//   try {
-//     const ws = new WebSocket(`ws://${provider.ip}:${provider.port}`);
-//     await new Promise((resolve) => ws.on('open', resolve)); // wait for connection to open before continuing
-//     ws.send(JSON.stringify(request));
-
-//     return new Promise((resolve, reject) => {
-//       ws.on('message', (message) => {
-//         const response = JSON.parse(message);
-//         // console.log('Response from provider:', response);
-//         if (response.type === ResponseTypes.Success) {
-//           ws.close();
-//           resolve(response.item);
-//         } else if (response.type === ResponseTypes.Error) {
-//           // console.log('Error getting item from provider:', response.message);
-//           ws.close();
-//           resolve(null);
-//           // reject(response.message);
-//         }
-//       });
-
-//       ws.on('error', (err) => {
-//         debug('Websocket error:', err);
-//         reject(err);
-//       });
-//     });
-//   } catch (err) {
-//     debug('Error connecting to provider:', err);
-//     return null;
-//   }
-// }
 
 function putItem(key, value, type) {
   // add to local db only
