@@ -1,19 +1,12 @@
 /**
 * @fileOverview This file provides the database wrapper class and functions for interaction
 * @module database
-* @requires better-sqlite3 - Raw sqlite database functionality
-* @requires debug - Debug module for logging
-* @example - Usage:
-*   const { Database, Types } = require('./database');
-*   const testDB = new Database();
-*   const document = testDB.put('1234567890123456', Types.Document, <JSON document>);
 *
-*  Should the database be a singleton defined in this file and then accessed from other modules?
+*  The database is now a singleton defined in this file and then accessed from other modules
 */
-
+const path = require('path');
 const Sqlite = require('better-sqlite3');
 const debug = require('debug')('database');
-const path = require('path');
 
 const { isValidKey } = require('../utils/utils'); // TODO: Should this be handled as a verification step, not in database?
 const { isValidItemType } = require('../models/types');
