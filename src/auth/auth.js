@@ -16,47 +16,60 @@ nacl.util = require('tweetnacl-util');
 //   }
 // }
 
+/**
+ * @description: Create a new keypair object, encoded as base64 strings.
+ * @returns A new keypair object
+ */
 function createNewKeypair() {
   const { publicKey, secretKey } = nacl.sign.keyPair();
-
-  // console.log('publicKey:', publicKey, 'secretKey:', secretKey);
 
   const publicKeyString = nacl.util.encodeBase64(publicKey);
   const secretKeyString = nacl.util.encodeBase64(secretKey);
 
-  // console.log('publicKey:', publicKeyString, 'secretKey:', secretKeyString);
-
   return { publicKey: publicKeyString, secretKey: secretKeyString };
 }
 
+/**
+ * @description: Create a new user object with a new keypair.
+ * @param {*} _nickname An optional nickname to use for the user
+ * @returns An object containting the new user object and the secret key
+ */
 function createNewUser(_nickname) {
   const { publicKey, secretKey } = createNewKeypair();
   const nickname = _nickname || 'Anonymous';
 
   const user = {
     type: 'user',
-    pubKey: publicKey,
+    publicKey,
     nickname,
     lastAddress: null,
     lastSeen: null,
+    secretKey: null,
   };
 
   return { user, secretKey };
 }
 
-function getUserPubKey(user) {
-  // fetch the user from the db
-  // return the public key
+// If the user UID is also a public key then this function is not needed,
+// as the public key can be used to verify the user.
+// /**
+//  * Fetch the public key for a user from the database,
+//  * or from the network if not found in the database.
+//  * @param {*} user The user to fetch the public key for
+//  * @returns The public key for the user
+//  */
+// function getUserPubKey(user) {
+//   // fetch the user from the db
+//   // return the public key
 
-  return user.pubKey;
-}
+//   return user.pubKey;
+// }
 
 function authenticateUser(publicKey, secretKey) {
   let authenticated = false;
 
   try {
-    const secretKeyBuffer = nacl.util.decodeBase64(secretKey);// Buffer.from(secretKey, 'base64');
-
+    const secretKeyBuffer = nacl.util.decodeBase64(secretKey);
     const generatedBuffer = nacl.sign.keyPair.fromSecretKey(secretKeyBuffer);
     const generatedKey = nacl.util.encodeBase64(generatedBuffer.publicKey);
 
@@ -73,19 +86,60 @@ function authenticateUser(publicKey, secretKey) {
   return authenticated;
 }
 
-const { secretKey, user } = createNewUser('Steve');
+function signMessage(message, secretKey) {
+  const secretKeyBuffer = nacl.util.decodeBase64(secretKey);
+  const messageBuffer = nacl.util.decodeUTF8(message);
+  const signatureBuffer = nacl.sign.detached(messageBuffer, secretKeyBuffer);
+  const signature = nacl.util.encodeBase64(signatureBuffer);
 
-const steve = user;
-const stevesSecret = secretKey;
+  return signature;
+}
 
-console.log(`steve: "${steve.pubKey}"\nstevesSecret: "${stevesSecret}"`);
+function verifyMessage(message, signature, publicKey) {
+  let verified = false;
 
-authenticateUser(steve.pubKey, stevesSecret);
-authenticateUser(steve.pubKey, 'not the secret');
+  try {
+    const signatureBuffer = nacl.util.decodeBase64(signature);
+    const publicKeyBuffer = nacl.util.decodeBase64(publicKey);
+    const messageBuffer = nacl.util.decodeUTF8(message);
+
+    verified = nacl.sign.detached.verify(messageBuffer, signatureBuffer, publicKeyBuffer);
+  } catch (err) {
+    if (err instanceof TypeError) {
+      debug(`Invalid format: "${signature}" or "${publicKey}"`);
+    } else {
+      debug('Error verifying:', err);
+    }
+  }
+
+  return verified;
+}
+
+/* Temporary tests */
+
+// const { secretKey, user } = createNewUser('Steve');
+
+// const steve = user;
+// const stevesSecret = secretKey;
+
+// console.log(`steve: "${steve.pubKey}"\nstevesSecret: "${stevesSecret}"`);
+
+// authenticateUser(steve.pubKey, stevesSecret);
+// authenticateUser(steve.pubKey, 'not the secret');
+
+// const message = 'Hello world!';
+// const signature = signMessage(message, stevesSecret);
+// console.log(`signature: "${signature}"`);
+// const verified = verifyMessage(message, signature, steve.pubKey);
+// console.log(`verified: "${verified}"`);
+// const verified2 = verifyMessage(message,
+//  '/BdqU0O0Tmj/jcK5qPF+hbvMuQLixdbFiMjYru4lUqA5h4uNHedCIb0ucEmh23F/sVnMHdvba1FOMNHyeKP8BQ==',
+//  steve.pubKey);
+// console.log(`verified2: "${verified2}"`);
 
 module.exports = {
   createNewUser,
-  createNewKeypair,
-  getUserPubKey,
   authenticateUser,
+  signMessage,
+  verifyMessage,
 };
