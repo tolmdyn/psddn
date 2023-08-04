@@ -7,15 +7,18 @@
 *   const { Database, Types } = require('./database');
 *   const testDB = new Database();
 *   const document = testDB.put('1234567890123456', Types.Document, <JSON document>);
+*
+*  Should the database be a singleton defined in this file and then accessed from other modules?
 */
 
 const Sqlite = require('better-sqlite3');
 const debug = require('debug')('database');
+const path = require('path');
 
 const { isValidKey } = require('../utils/utils'); // TODO: Should this be handled as a verification step, not in database?
-const { Types, isValidItemType } = require('../models/types');
+const { isValidItemType } = require('../models/types');
 
-// const databasepath = path.join(__dirname, './../../data/database.db');
+const databasePath = path.join(__dirname, './../../data/database.db');
 
 /**
  * @description: Database wrapper class
@@ -169,4 +172,5 @@ class Database {
   }
 }
 
-module.exports = { Database, Types };
+module.exports = new Database(databasePath);
+// module.exports = { Database, Types };

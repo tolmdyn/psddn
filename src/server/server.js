@@ -7,17 +7,19 @@
 
 const WebSocket = require('ws');
 const debug = require('debug')('server');
-const path = require('path');
+// const path = require('path');
 
-const { Database } = require('../database/database');
-const { documentSchema } = require('../models/validation');
-const { Types, isValidItemType } = require('../models/types');
-const { getHash, isKey, isValidKey } = require('../utils/utils');
-const { RequestTypes, Request } = require('../models/request');
+// const { Database } = require('../database/database');
+const database = require('../database/database');
+
+// const { documentSchema } = require('../models/validation');
+const { isValidItemType } = require('../models/types');
+const { isKey, isValidKey } = require('../utils/utils');
+const { RequestTypes } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
 
-const dbPath = path.join(__dirname, './../../data/database.db');
-const database = new Database(dbPath);
+// const dbPath = path.join(__dirname, './../../data/database.db');
+// const database = new Database(dbPath);
 
 function handleRequest(message) {
   const request = JSON.parse(message);
