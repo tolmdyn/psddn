@@ -1,6 +1,9 @@
 /**
  * @fileoverview This file contains the user authentication logic.
  * @module auth
+ * TODO: Add a function to fetch the user object from the database?
+ * TODO: Add a function to fetch the user object from the network?
+ * TODO: WRITE TESTS
  */
 
 const debug = require('debug')('auth');
