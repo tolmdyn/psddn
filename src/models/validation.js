@@ -8,6 +8,7 @@
 const joi = require('joi');
 
 /**
+ * ADDRESS SCHEMA
  * Address schema to validate IP address and port.
  * @type {import('joi').ObjectSchema}
  */
@@ -21,6 +22,7 @@ const addressSchema = joi.object({
 });
 
 /**
+ * DOCUMENT SCHEMA
  * Document schema to validate document objects.
  * @type {import('joi').ObjectSchema}
  */
@@ -55,6 +57,7 @@ const documentSchema = joi.object({
 });
 
 /**
+ * USER SCHEMA
  * User schema to validate user objects.
  * @type {import('joi').ObjectSchema}
  */
@@ -63,22 +66,21 @@ const userSchema = joi.object({
     .valid('user')
     .required(),
 
-  pubkey: joi.string()
+  publicKey: joi.string()
     .required()
-    .length(64),
+    .length(32),
 
   nickname: joi.string()
     .min(5)
     .max(50),
 
-  lastAddress: addressSchema
-    .required(),
+  lastAddress: addressSchema,
 
-  lastSeen: joi.date()
-    .required(),
+  lastSeen: joi.date(),
 });
 
 /**
+ * FEED SCHEMA
  * Feed schema to validate user objects.
  * @type {import('joi').ObjectSchema}
  */
@@ -103,4 +105,29 @@ const feedSchema = joi.object({
     .required(),
 });
 
-module.exports = { documentSchema, userSchema, feedSchema };
+function validateItem(item) {
+  if (!item) {
+    return false;
+  }
+
+  if (item.type === 'document') {
+    return documentSchema.validate(item);
+  }
+
+  if (item.type === 'user') {
+    return userSchema.validate(item);
+  }
+
+  if (item.type === 'feed') {
+    return feedSchema.validate(item);
+  }
+
+  return false;
+}
+
+module.exports = {
+  documentSchema,
+  userSchema,
+  feedSchema,
+  validateItem,
+};
