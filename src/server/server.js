@@ -14,7 +14,7 @@ const database = require('../database/database');
 
 // const { documentSchema } = require('../models/validation');
 const { isValidItemType } = require('../models/types');
-const { isKey, isValidKey } = require('../utils/utils');
+const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils');
 const { RequestTypes } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
 
@@ -58,7 +58,7 @@ function handleGet(request) {
     return new Response(ResponseTypes.Error, 'Invalid item type.');
   }
 
-  if (!isKey(key)) {
+  if (!isValidKeyFormat(key)) {
     return new Response(ResponseTypes.Error, 'Invalid key format.');
   }
 
@@ -69,6 +69,7 @@ function handleGet(request) {
     if (item) {
       return new Response(ResponseTypes.Success, item);
     }
+    debug('Item not found in database.');
     return new Response(ResponseTypes.Error, 'Item not found in database.');
   } catch (error) {
     // Possibly massage the error message to make it more readable for users
@@ -87,7 +88,7 @@ function handlePut(request) {
     return new Response(ResponseTypes.Error, 'Invalid item type.');
   }
 
-  if (!isValidKey(key, data)) {
+  if (!isValidKeyForItem(key, data)) {
     return new Response(ResponseTypes.Error, 'Provided key is not valid for the item.');
   }
 

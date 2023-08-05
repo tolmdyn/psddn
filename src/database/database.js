@@ -8,7 +8,7 @@ const path = require('path');
 const Sqlite = require('better-sqlite3');
 const debug = require('debug')('database');
 
-const { isValidKey } = require('../utils/utils'); // TODO: Should this be handled as a verification step, not in database?
+const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils'); // TODO: Should this be handled as a verification step, not in database?
 const { isValidItemType } = require('../models/types');
 
 const databasePath = path.join(__dirname, './../../data/database.db');
@@ -118,6 +118,11 @@ class Database {
     if (!isValidItemType(type)) {
       throw new Error('Invalid item type.');
     }
+
+    if (!isValidKeyFormat(key)) {
+      throw new Error('Invalid key format.');
+    }
+
     const query = this.#db.prepare(`SELECT * FROM ${type} WHERE key = ? LIMIT 1;`);
 
     const item = query.get(key);
@@ -143,7 +148,7 @@ class Database {
       throw new Error('Invalid item type.');
     }
 
-    if (!isValidKey(key, data)) {
+    if (!isValidKeyForItem(key, data)) {
       throw new Error('Key is not a valid hash for the item.');
     }
 
