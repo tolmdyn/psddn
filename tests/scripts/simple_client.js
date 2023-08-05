@@ -1,13 +1,19 @@
 #!/usr/bin/env node
 
 /**
- * @fileoverview Simple client for testing the websocket server interface
+ * @fileoverview Simple interactive CLI application for testing the websocket server interface
+ * @description Supported commands:
+    # get <key> <type>: Sends a request to the server to get data with the specified key and type.
+    # put <key> <type> <data>: Sends a request to the server to put data with the specified key,
+      type, and data.
+    # ping: Sends a request to the server to check if it is active (ping-pong test).
+    # message <message>: Sends a message to the server with the specified content.
+    # exit: Closes the WebSocket connection and exits the program.
  */
 
 const readline = require('readline');
 const WebSocket = require('ws');
 const { program } = require('commander');
-const { parse } = require('path');
 
 const { RequestTypes, Request } = require('../../src/models/request');
 const { ResponseTypes, Response } = require('../../src/models/response');

@@ -55,6 +55,12 @@ describe('Utils Tests', () => {
     expect(isValidKey(key, 'invalid')).to.be.false;
   });
 
+  it('should not accept wrong key', () => {
+    const doc = generateRandomDocument();
+    const key = '123456789ABCDEF';
+    expect(isValidKey(key, doc)).to.be.false;
+  });
+
   it('should generate a consistent hash for same data', () => {
     const doc = generateRandomDocument();
     const key1 = getHash(doc);
@@ -111,4 +117,13 @@ describe('Utils Tests', () => {
 
     expect(key1).to.equal(key2);
   });
+  /*
+  const key1 = "1a2b3c4d5e6f7g8h"; // Invalid: contains non-hex characters
+  const key2 = "1a2b3c4d5e6f7h8"; // Valid: 16 hex characters
+  const key3 = "1a2b3c4d5e6f7h8i9"; // Invalid: more than 16 characters
+
+  console.log(isValidKey(key1)); // Output: false
+  console.log(isValidKey(key2)); // Output: true
+  console.log(isValidKey(key3)); // Output: false
+  */
 });

@@ -6,7 +6,7 @@
 
 const path = require('path');
 const { Database, Types } = require('../../src/database/database');
-const { getHash, generateRandomDocument } = require('../../src/utils/utils');
+const { getHash, generateRandomDocument, generateRandomUser } = require('../../src/utils/utils');
 
 // Create test database
 const testDB = new Database(path.join(__dirname, '../../data/main.db'));
@@ -22,6 +22,22 @@ documents.forEach((document) => {
   const key = getHash(document);
   try {
     testDB.put(key, Types.Document, document); // insert into test database
+  } catch (error) {
+    console.log(error);
+  }
+});
+
+// Generate some users
+const users = [];
+for (let i = 0; i < 10; i += 1) {
+  users.push(generateRandomUser());
+}
+
+// Generate a hash for each user in users and insert into database
+users.forEach((user) => {
+  const key = getHash(user);
+  try {
+    testDB.put(key, Types.User, user); // insert into test database
   } catch (error) {
     console.log(error);
   }
