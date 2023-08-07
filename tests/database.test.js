@@ -2,8 +2,8 @@
  * @description Tests for the database class
  */
 
-const { expect } = require('chai');
 const fs = require('fs');
+const { expect } = require('chai');
 
 // import the document schema
 const { documentSchema } = require('../src/models/validation');
@@ -15,14 +15,10 @@ describe('Database Tests', () => {
 
   before(() => {
     // Code to run before all tests in this test suite
-    // testDB = new Database();
   });
 
   after(() => {
     // Code to run after all tests in this test suite
-    // if (this.testDB) {
-    //   testDB.close();
-    // }
   });
 
   beforeEach(() => {

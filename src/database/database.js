@@ -171,4 +171,3 @@ class Database {
 }
 
 module.exports = new Database(databasePath);
-// module.exports = { Database, Types };
