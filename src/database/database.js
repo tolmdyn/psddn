@@ -4,6 +4,7 @@
 *
 *  The database is now a singleton defined in this file and then accessed from other modules
 */
+const fs = require('fs');
 const path = require('path');
 const Sqlite = require('better-sqlite3');
 const debug = require('debug')('database');
@@ -11,6 +12,7 @@ const debug = require('debug')('database');
 const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils'); // TODO: Should this be handled as a verification step, not in database?
 const { isValidItemType } = require('../models/types');
 
+const databaseFolderPath = path.join(__dirname, './../../data');
 const databasePath = path.join(__dirname, './../../data/database.db');
 
 /**
@@ -21,14 +23,26 @@ const databasePath = path.join(__dirname, './../../data/database.db');
 class Database {
   #db;
 
-  // If no path is provided, then the database is created in memory
+  // If no path is provided, then a temporary database is created
   constructor(dbPath) {
+    // Create folder if it doesn't exist
+    this.createDatabaseFolder();
+
     // Open database
     this.#openDatabaseConnection(dbPath);
 
     // Check if this.db doesnt have the right tables... create them
     if (!this.databaseHasTables()) {
       this.#createTables();
+    }
+  }
+
+  /**
+   * @description: Create database folder if it doesn't exist
+   */
+  static createDatabaseFolder() {
+    if (!fs.existsSync(databaseFolderPath)) {
+      fs.mkdirSync(databaseFolderPath);
     }
   }
 
