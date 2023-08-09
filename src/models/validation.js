@@ -24,7 +24,7 @@ const addressSchema = joi.object({
 /**
  * DOCUMENT SCHEMA
  * Document schema to validate document objects.
- * @type {import('joi').ObjectSchema}
+ * @usage const { error } = documentSchema.validate(document);
  */
 const documentSchema = joi.object({
   type: joi.string()
@@ -53,13 +53,20 @@ const documentSchema = joi.object({
     .required(),
 
   tags: joi.array()
-    .items(joi.string()),
+    .items(joi.string())
+    .required(),
+
+  signature: joi.string()
+    .length(88)
+    .required()
+    .allow(null),
+
 });
 
 /**
  * USER SCHEMA
  * User schema to validate user objects.
- * @type {import('joi').ObjectSchema}
+ * @usage const { error } = userSchema.validate(user);
  */
 const userSchema = joi.object({
   type: joi.string()
@@ -68,21 +75,32 @@ const userSchema = joi.object({
 
   publicKey: joi.string()
     .required()
-    .length(32),
+    .length(44),
 
   nickname: joi.string()
     .min(5)
-    .max(50),
+    .max(50)
+    .required()
+    .allow(null),
 
-  lastAddress: addressSchema,
+  lastAddress: addressSchema
+    .required()
+    .allow(null),
 
-  lastSeen: joi.date(),
+  lastSeen: joi.date()
+    .required()
+    .allow(null),
+
+  lastFeed: joi.string()
+    .length(16)
+    .required()
+    .allow(null),
 });
 
 /**
  * FEED SCHEMA
- * Feed schema to validate user objects.
- * @type {import('joi').ObjectSchema}
+ * Feed schema to validate feed objects.
+ * @usage const { error } = feedSchema.validate(feed);
  */
 const feedSchema = joi.object({
   type: joi.string()
@@ -94,17 +112,30 @@ const feedSchema = joi.object({
     .required(),
 
   owner: joi.string()
-    .length(16)
+    .length(44)
     .required(),
 
   timestamp: joi.date()
     .required(),
 
   documents: joi.array()
-    .items(documentSchema)
+    .items(
+      joi.string()
+        .length(16),
+    )
     .required(),
+
+  signature: joi.string()
+    .length(88)
+    .required()
+    .allow(null),
 });
 
+/**
+ * Generic function to validate any item.
+ * @param {*} item The item to validate (User, Feed, Document)
+ * @returns True if the item is valid, false otherwise
+ */
 function validateItem(item) {
   if (!item) {
     return false;
