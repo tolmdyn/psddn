@@ -6,6 +6,7 @@
 
 const debug = require('debug')('routing');
 
+const cache = require('./cache');
 // const Address = require('../models/address');
 
 function getProviders(key, type) {
@@ -17,8 +18,13 @@ function getProviders(key, type) {
   // - if found return providers
   // - else return null?
 
+  // CACHE PROVIDERS
+  const providers = cache.getProviders(key, type);
+
+  // DHT PROVIDERS
+
   // return dummy providers
-  return [{ ip: '127.0.0.1', port: 8080 }, { ip: '127.0.0.1', port: 8081 }, { ip: '127.0.0.1', port: 8082 }];
+  return providers.add([{ ip: '127.0.0.1', port: 8080 }, { ip: '127.0.0.1', port: 8081 }, { ip: '127.0.0.1', port: 8082 }]);
 }
 
 module.exports = {
