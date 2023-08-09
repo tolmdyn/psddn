@@ -26,7 +26,7 @@ class Database {
   // If no path is provided, then a temporary database is created
   constructor(dbPath) {
     // Create folder if it doesn't exist
-    this.createDatabaseFolder();
+    Database.createDatabaseFolder();
 
     // Open database
     this.#openDatabaseConnection(dbPath);
@@ -34,15 +34,6 @@ class Database {
     // Check if this.db doesnt have the right tables... create them
     if (!this.databaseHasTables()) {
       this.#createTables();
-    }
-  }
-
-  /**
-   * @description: Create database folder if it doesn't exist
-   */
-  static createDatabaseFolder() {
-    if (!fs.existsSync(databaseFolderPath)) {
-      fs.mkdirSync(databaseFolderPath);
     }
   }
 
@@ -122,6 +113,15 @@ class Database {
   }
 
   /**
+   * @description: Create database folder if it doesn't exist
+   */
+  static createDatabaseFolder() {
+    if (!fs.existsSync(databaseFolderPath)) {
+      fs.mkdirSync(databaseFolderPath);
+    }
+  }
+
+  /**
  * @description: Get item from database
  * @param {string} key - Key (hash/id) of item to get
  * @param {string} type - Type of item to get ()
@@ -144,6 +144,17 @@ class Database {
       return JSON.parse(item.json_data);
     }
     return null;
+  }
+
+  getUser(key) {
+    // const key = generateKey(publicKey);
+    return this.get(key, 'user');
+  }
+
+  getUsers() {
+    const query = this.#db.prepare('SELECT * FROM user;');
+    const users = query.all();
+    return users.map((user) => JSON.parse(user.json_data));
   }
 
   /**
