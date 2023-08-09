@@ -1,5 +1,4 @@
 # PSDDN
-psddn
 A Peer-to-Peer Structured Data Distribution Network
 
 - **bin**/: executable files
