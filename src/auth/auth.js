@@ -47,7 +47,6 @@ function createNewUser(_nickname) {
     nickname,
     lastAddress: null,
     lastSeen: null,
-    secretKey: null,
   };
 
   return { user, secretKey };
@@ -79,7 +78,7 @@ function authenticateUser(publicKey, secretKey) {
     authenticated = publicKey === generatedKey;
   } catch (err) {
     if (err instanceof TypeError) {
-      debug(`Invalid key format: "${secretKey}"`);
+      debug('Invalid key format');
     } else {
       debug('Error authenticating:', err);
     }
@@ -125,19 +124,27 @@ function verifyMessage(message, signature, publicKey) {
 // const steve = user;
 // const stevesSecret = secretKey;
 
-// console.log(`steve: "${steve.pubKey}"\nstevesSecret: "${stevesSecret}"`);
+// console.log(`steve: "${steve.publicKey}"\nstevesSecret: "${stevesSecret}"`);
 
-// authenticateUser(steve.pubKey, stevesSecret);
-// authenticateUser(steve.pubKey, 'not the secret');
+// authenticateUser(steve.publicKey, stevesSecret);
+// authenticateUser(steve.publicKey, 'not the secret');
+
+// console.log('public key length:', steve.publicKey.length);
 
 // const message = 'Hello world!';
 // const signature = signMessage(message, stevesSecret);
+
 // console.log(`signature: "${signature}"`);
-// const verified = verifyMessage(message, signature, steve.pubKey);
+// console.log(`signature length: "${signature.length}"`);
+
+// const verified = verifyMessage(message, signature, steve.publicKey);
 // console.log(`verified: "${verified}"`);
-// const verified2 = verifyMessage(message,
-//  '/BdqU0O0Tmj/jcK5qPF+hbvMuQLixdbFiMjYru4lUqA5h4uNHedCIb0ucEmh23F/sVnMHdvba1FOMNHyeKP8BQ==',
-//  steve.pubKey);
+
+// const verified2 = verifyMessage(
+//   message,
+//   '/BdqU0O0Tmj/jcK5qPF+hbvMuQLixdbFiMjYru4lUqA5h4uNHedCIb0ucEmh23F/sVnMHdvba1FOMNHyeKP8BQ==',
+//   steve.pubKey,
+// );
 // console.log(`verified2: "${verified2}"`);
 
 module.exports = {
