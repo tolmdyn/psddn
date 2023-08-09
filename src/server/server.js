@@ -9,8 +9,8 @@ const WebSocket = require('ws');
 const debug = require('debug')('server');
 // const path = require('path');
 
-// const { Database } = require('../database/database');
-const database = require('../database/database');
+const { database } = require('../database/database');
+// const database = require('../database/database');
 
 // const { documentSchema } = require('../models/validation');
 const { isValidItemType } = require('../models/types');
@@ -119,7 +119,8 @@ function handleMessage(request) {
   return new Response(ResponseTypes.Success, 'Message received.');
 }
 
-const server = new WebSocket.Server({ port: 8080 });
+const port = process.env.S_PORT || 8080;
+const server = new WebSocket.Server({ port });
 
 server.on('connection', (socket, request) => {
   debug(`Connection: ${request.socket.remoteAddress}:${request.socket.remotePort}`);
@@ -129,6 +130,8 @@ server.on('connection', (socket, request) => {
   });
 });
 
-debug(`Server running at ${server.address().address}:${server.address().port}`);
+server.on('listening', () => {
+  debug(`Server running at ${server.address().address}:${server.address().port}`);
+});
 
 module.exports = { server };

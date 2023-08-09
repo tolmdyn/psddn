@@ -20,8 +20,8 @@ const ResponseTypes = {
  */
 class Response {
   constructor(type, message) {
-    this.type = type;
-    this.message = message;
+    this.responseType = type;
+    this.responseMessage = message;
   }
 }
 
