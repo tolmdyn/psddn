@@ -46,14 +46,17 @@
 const debug = require('debug')('cache');
 const WebSocket = require('ws');
 
-const { database } = require('../database/database');
-const { ref } = require('joi');
+const { database, get } = require('../database/database');
+const { generateRandomUser } = require('../utils/utils');
+const { Request, RequestTypes } = require('../models/request');
+const { Response, ResponseTypes } = require('../models/response');
 
 // The cache itself is private to this module
 const cache = new Map();
 
 function getProviders(key, type) {
   debug(`Getting providers for key: ${key} and type: ${type}`);
+  return getAllPeers();
 }
 
 function addPeer(peer) {
@@ -136,12 +139,19 @@ function updatePeerLastAddress(publicKey, address) {
 
 async function refreshCache() {
   debug('Refreshing cache');
-
   // Go through each peer in the cache and check if it is still active
   // If not active then remove it from the cache
+  // This performs each refresh (check/remove) in parallel
+  // But it could also send out the checks, wait for them all to resolve
+  // and then remove the inactive peers
+
+  const refreshPromises = [];
+
   cache.forEach((peer) => {
-    refreshPeer(peer);
+    refreshPromises.push(refreshPeer(peer));
   });
+
+  await Promise.all(refreshPromises);
 }
 
 async function refreshPeer(peer) {
@@ -156,6 +166,7 @@ async function refreshPeer(peer) {
   if (peerOnline) {
     debug(`Peer is active: ${peer.publicKey}`);
     // Peer is active so update the last seen timestamp
+    updatePeerLastSeen(peer.publicKey);
   } else {
     debug(`Peer is inactive: ${peer.publicKey}`);
     // Peer is inactive so remove it from the cache
@@ -164,21 +175,25 @@ async function refreshPeer(peer) {
 }
 
 async function checkPeerOnline(peer) {
+  debug(`Checking if peer is online: ${peer.publicKey} - ${peer.lastAddress.ip}:${peer.lastAddress.port}`);
   // Check if the peer is still active
   // This is done by opening a websocket and sending a ping
   // If the peer responds then it is still active
   // Returns boolean
   try {
-    const ws = new WebSocket(`ws://${peer.ip}:${peer.port}`);
+    const ws = new WebSocket(`ws://${peer.lastAddress.ip}:${peer.lastAddress.port}`);
 
     const peerOnline = await new Promise((resolve) => {
       ws.on('open', () => {
-        debug(`Ping peer: ${peer.publicKey}`);
-        ws.send('ping');
+        // debug(`Ping peer: ${peer.publicKey}`);
+        const request = new Request(RequestTypes.Ping, null);
+        ws.send(JSON.stringify(request));
       });
 
       ws.on('message', (message) => {
-        if (message === 'pong') {
+        // debug(`Pong peer: ${peer.publicKey}`);
+        const response = JSON.parse(message);
+        if (response.responseType === ResponseTypes.Success) {
           resolve(true);
         } else {
           resolve(false);
@@ -248,3 +263,59 @@ function saveCache() {
     }
   });
 }
+
+// --------------------- Heartbeat functions --------------------------
+
+class RefeshScheduler {
+  constructor(refreshFunction, intervalSeconds) {
+    this.refreshFunction = refreshFunction;
+    this.refreshInterval = intervalSeconds * 1000; // in seconds
+    this.refreshTimer = null;
+  }
+
+  start() {
+    this.refreshTimer = setInterval(this.refreshFunction, this.refreshInterval);
+    this.refreshFunction();
+  }
+
+  stop() {
+    if (this.refreshTimer) {
+      clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+  }
+}
+
+// const refreshScheduler = new RefeshScheduler(refreshCache, 60);
+// refreshScheduler.start();
+
+// --------------------- Testing functions ----------------------------
+
+function buildDummyCache() {
+  // Build a dummy cache for testing
+  // This is done by adding dummy peers to the cache
+  // The peers are not added to the database
+  // The peers are not checked for activity
+  debug('Building dummy cache');
+
+  for (let i = 0; i < 5; i += 1) {
+    const peer = generateRandomUser();
+    peer.lastAddress.ip = '127.0.0.1';
+    peer.lastAddress.port = 8080 + i;
+    peer.lastSeen = Date.now();
+    addPeer(peer);
+  }
+}
+
+async function refreshTest() {
+  buildDummyCache();
+  debug('Cache:', cache);
+
+  await refreshCache();
+
+  debug('Cache:', cache);
+}
+
+refreshTest();
+// const refreshScheduler = new RefeshScheduler(refreshCache, 10);
+// refreshScheduler.start();
