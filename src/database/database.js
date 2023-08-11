@@ -10,7 +10,7 @@ const Sqlite = require('better-sqlite3');
 const debug = require('debug')('database');
 
 const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils'); // TODO: Should this be handled as a verification step, not in database?
-const { isValidItemType } = require('../models/types');
+const { isValidItemType, Types } = require('../models/types');
 
 const databaseFolderPath = path.join(__dirname, './../../data');
 const databasePath = path.join(__dirname, './../../data/database.db');
@@ -147,12 +147,20 @@ class Database {
     return null;
   }
 
-  getUser(key) {
-    // const key = generateKey(publicKey);
-    return this.get(key, 'user');
+  /**
+   * @description Get user from database helper method for more abstraction.
+   * @param {*} key User publicKey
+   * @returns The requested user object
+   */
+  getUser(publicKey) {
+    return this.get(publicKey, Types.User);
   }
 
-  getUsers() {
+  /**
+   * @description: Get all users from the database
+   * @return {object} All users from database
+   */
+  getAllUsers() {
     const query = this.#db.prepare('SELECT * FROM user;');
     const users = query.all();
     return users.map((user) => JSON.parse(user.json_data));
@@ -170,7 +178,7 @@ class Database {
    * TODO: Improve error handling
    */
   put(key, type, data) {
-    if (!isValidItemType(type)) {
+    if (!isValidItemType(type) || type !== data.type) {
       throw new Error('Invalid item type.');
     }
 
@@ -195,9 +203,6 @@ class Database {
     }
   }
 }
-
-// const Database = new Database(databasePath);
-// const testDatabase = new Database(':memory:');
 
 // module.exports = new Database(databasePath);
 module.exports = { Database };

@@ -34,7 +34,8 @@ function isValidKeyForItem(key, item) {
     return key === item.publicKey;
   }
 
-  return key === generateKey(item);
+  const { id, ...itemContent } = item;
+  return key === generateKey(itemContent);
 }
 
 /**
@@ -56,7 +57,7 @@ function isValidKeyFormat(key) {
 function generateRandomDocument() {
   const document = {
     type: 'document',
-    id: faker.string.alphanumeric(16),
+    // id: faker.string.alphanumeric(16),
     owner: faker.string.alphanumeric(16),
     timestamp: faker.date.recent().toISOString(),
     title: faker.lorem.words(3),
@@ -64,6 +65,8 @@ function generateRandomDocument() {
     tags: [faker.lorem.word(), faker.lorem.word()],
     signature: null,
   };
+
+  document.id = generateKey(document);
 
   return document;
 }
@@ -83,19 +86,30 @@ function generateRandomUser(keepSecretKey = false) {
   return user;
 }
 
-// function generateRandomFeed() {
-//   // TODO: Implement
-// }
+function generateRandomFeed() {
+  // TODO: Implement
+  const feed = {
+    type: 'feed',
+    // id: faker.string.alphanumeric(16),
+    owner: faker.string.alphanumeric(16),
+    timestamp: faker.date.recent().toISOString(),
+    documents: [],
+  };
+
+  feed.id = generateKey(feed);
+  return feed;
+}
 
 // const doc = generateRandomDocument();
 // const key = generateKey(doc);
-// console.log(`\n Key: ${key} \n Doc: ${JSON.stringify(doc)}.`);
+// console.log(`\n Key: ${doc.id} \n Doc: ${JSON.stringify(doc)}.`);
 
 // const steve = generateRandomUser();
 // console.log(steve);
 // const key = generateKey('hello');
 
-// console.log(key, isValidKeyFormat(key));
+// console.log(doc.id, isValidKeyFormat(doc.id));
+// console.log(isValidKeyForItem(doc.id, doc));
 // console.log(isValidKeyFormat(generateKey('jhdfkjdfkjdfjhdf')));
 
 module.exports = {

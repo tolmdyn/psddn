@@ -7,6 +7,8 @@
 
 const joi = require('joi');
 
+const keyRegex = /^[A-Za-z0-9+/]{43,}(={0,2})$/;
+
 /**
  * ADDRESS SCHEMA
  * Address schema to validate IP address and port.
@@ -32,7 +34,7 @@ const documentSchema = joi.object({
     .required(),
 
   id: joi.string()
-    .length(16)
+    .pattern(keyRegex)
     .required(),
 
   owner: joi.string()
@@ -75,6 +77,7 @@ const userSchema = joi.object({
 
   publicKey: joi.string()
     .required()
+    .pattern(keyRegex)
     .length(44),
 
   nickname: joi.string()
@@ -108,11 +111,12 @@ const feedSchema = joi.object({
     .required(),
 
   id: joi.string()
-    .length(16)
+    .pattern(keyRegex)
     .required(),
 
   owner: joi.string()
     .length(44)
+    .pattern(keyRegex)
     .required(),
 
   timestamp: joi.date()

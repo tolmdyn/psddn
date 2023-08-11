@@ -12,7 +12,6 @@ describe('Model Validation Tests', () => {
   it('should validate a valid document', () => {
     const doc = generateRandomDocument();
     const { error } = documentSchema.validate(doc);
-    console.log(error);
     expect(error).to.be.undefined;
   });
 

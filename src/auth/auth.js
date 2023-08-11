@@ -39,7 +39,7 @@ function createNewKeypair() {
  */
 function createNewUser(_nickname) {
   const { publicKey, secretKey } = createNewKeypair();
-  const nickname = _nickname || 'Anonymous';
+  const nickname = _nickname || null;
 
   const user = {
     type: 'user',
