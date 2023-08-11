@@ -72,6 +72,8 @@ function generateRandomUser(keepSecretKey = false) {
   const { user, secretKey } = createNewUser(faker.internet.userName());
   user.lastAddress = { ip: faker.internet.ipv4(), port: faker.internet.port() };
   user.lastSeen = faker.date.recent().toISOString();
+  // Add feed key here after implementing feeds
+  // user.lastFeed = null;
 
   if (keepSecretKey) {
     // embed secretKey in user object for testing

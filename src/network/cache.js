@@ -17,7 +17,8 @@
 //
 // What we are looking for is basically an index of ACTIVE peer addresses/ports which can
 // be sent to the client when requested. At this point we dont need to worry about finding
-// the correct provider for an item as we would for DHT.
+// the correct provider for an item as we would for DHT. Later on interest groups / following
+// could be implemented for the saved peers.
 //
 // The differences are yet to be determined between cached peers and the user database table.
 // Peers are added to the cache:
@@ -46,7 +47,7 @@
 const debug = require('debug')('cache');
 const WebSocket = require('ws');
 
-const { database, get } = require('../database/database');
+const { Database } = require('../database/dbInstance');
 const { generateRandomUser } = require('../utils/utils');
 const { Request, RequestTypes } = require('../models/request');
 const { Response, ResponseTypes } = require('../models/response');
@@ -224,7 +225,7 @@ function loadCache() {
 
   // Load all users from the database
   // Add each peer to the cache if there is a last seen timestamp and address
-  const peers = database.getUsers();
+  const peers = Database.getUsers();
 
   peers.forEach((peer) => {
     if (peer.lastSeen && peer.address) {
@@ -247,16 +248,16 @@ function saveCache() {
     // If not in database, then add the peer to the database
     try {
       // const dbPeer = database.getUser(peer.publicKey);
-      const dbPeer = database.getUser(peer.publicKey);
+      const dbPeer = Database.getUser(peer.publicKey);
 
       if (dbPeer) {
         // Peer exists in database so update it
         dbPeer.lastSeen = peer.lastSeen;
         dbPeer.lastAddress = peer.lastAddress;
-        database.updateUser(dbPeer);
+        Database.updateUser(dbPeer);
       } else {
         // Peer does not exist in database so add it
-        database.addUser(peer);
+        Database.addUser(peer);
       }
     } catch (error) {
       debug(`Error saving peer: ${peer.publicKey} - ${error}`);

@@ -9,17 +9,13 @@ const WebSocket = require('ws');
 const debug = require('debug')('server');
 // const path = require('path');
 
-const { database } = require('../database/database');
-// const database = require('../database/database');
+const { Database } = require('../database/dbInstance');
 
 // const { documentSchema } = require('../models/validation');
 const { isValidItemType } = require('../models/types');
 const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils');
 const { RequestTypes } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
-
-// const dbPath = path.join(__dirname, './../../data/database.db');
-// const database = new Database(dbPath);
 
 function handleRequest(message) {
   const request = JSON.parse(message);
@@ -64,7 +60,7 @@ function handleGet(request) {
 
   try {
     debug(`Getting item from database\nKey: ${key}\nType: ${type}`);
-    const item = database.get(key, type);
+    const item = Database.get(key, type);
 
     if (item) {
       return new Response(ResponseTypes.Success, item);
@@ -94,7 +90,7 @@ function handlePut(request) {
 
   try {
     debug(`Putting item into database\nKey: ${key}\nType: ${type}\nData: ${data}`);
-    const result = database.put(key, type, data);
+    const result = Database.put(key, type, data);
 
     if (!result) {
       return new Response(ResponseTypes.Error, 'Error putting item into database.');

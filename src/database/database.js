@@ -23,14 +23,15 @@ const databasePath = path.join(__dirname, './../../data/database.db');
 class Database {
   #db;
 
-  // If no path is provided, then a temporary database is created
-  constructor(dbPath) {
+  // If no path is provided, use default path, otherwise use provided path
+  constructor(customPath) {
     // Create folder if it doesn't exist
-    Database.createDatabaseFolder();
-
-    // Open database
-    this.#openDatabaseConnection(dbPath);
-
+    if (!customPath) {
+      Database.createDatabaseFolder();
+      this.#openDatabaseConnection(databasePath);
+    } else {
+      this.#openDatabaseConnection(customPath);
+    }
     // Check if this.db doesnt have the right tables... create them
     if (!this.databaseHasTables()) {
       this.#createTables();
@@ -195,4 +196,8 @@ class Database {
   }
 }
 
-module.exports = new Database(databasePath);
+// const Database = new Database(databasePath);
+// const testDatabase = new Database(':memory:');
+
+// module.exports = new Database(databasePath);
+module.exports = { Database };

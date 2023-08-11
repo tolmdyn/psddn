@@ -47,6 +47,7 @@ function createNewUser(_nickname) {
     nickname,
     lastAddress: null,
     lastSeen: null,
+    lastFeed: null,
   };
 
   return { user, secretKey };

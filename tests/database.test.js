@@ -7,8 +7,9 @@ const { expect } = require('chai');
 
 // import the document schema
 const { documentSchema } = require('../src/models/validation');
-const { Database, Types } = require('../src/database/database');
-const { getHash, generateRandomDocument } = require('../src/utils/utils');
+const { Database } = require('../src/database/database');
+const { generateRandomDocument, generateKey } = require('../src/utils/utils');
+const { Types } = require('../src/models/types');
 
 describe('Database Tests', () => {
   let testDB; // test database
@@ -23,7 +24,7 @@ describe('Database Tests', () => {
 
   beforeEach(() => {
     // Create an empty test database in memory before each test
-    testDB = new Database();
+    testDB = new Database('./tests/data/test_database.db');
   });
 
   afterEach(() => {
@@ -38,24 +39,18 @@ describe('Database Tests', () => {
     }
   });
 
-  it('should create a new database in memory if no path', () => {
+  it('should create a new database', () => {
     // testDB = new Database();
     expect(testDB).to.be.an.instanceof(Database);
   });
 
-  it('should create database if path given and doesnt already exist', () => {
-    testDB = new Database('./tests/data/test_database.db');
-    expect(testDB).to.be.an.instanceof(Database);
-    expect(testDB.databaseHasTables()).to.be.equal(true);
-  });
-
   it('should open database if path given and exists', () => {
-    testDB = new Database('./tests/data/test_database.db');
+    // testDB = new Database('./tests/data/test_database.db');
     expect(testDB).to.be.an.instanceof(Database);
     expect(testDB.databaseHasTables()).to.be.equal(true);
 
     const testDocument = generateRandomDocument();
-    const key = getHash(testDocument);
+    const key = generateKey(testDocument);
 
     testDB.put(key, Types.Document, testDocument);
     testDB.closeDatabaseConnection();
@@ -74,12 +69,15 @@ describe('Database Tests', () => {
   /* -------- PUT -------- */
   it('should insert a document into the database without errors', () => {
     const testDocument = generateRandomDocument();
-    const key = getHash(testDocument);
+    const key = generateKey(testDocument);
 
     const result = testDB.put(key, Types.Document, testDocument);
 
+    // If the result is null, then the insert failed
     expect(result).to.exist; // Ensure that result is not null
-    expect(result.changes).to.equal(1); // Ensure that one row was inserted
+    // If the result is not an error, then the insert succeeded
+    expect(result).to.not.be.an('error'); // Ensure that result is not an error
+    expect(result.key).to.equal(key); // Ensure that our document was inserted
   });
 
   it('should insert multiple documents into the database without errors', () => {
@@ -89,16 +87,16 @@ describe('Database Tests', () => {
     }
 
     testDocuments.forEach((document) => {
-      const key = getHash(document);
+      const key = generateKey(document);
       const result = testDB.put(key, Types.Document, document);
       expect(result).to.exist;
-      expect(result.changes).to.equal(1);
+      expect(result.key).to.equal(key);
     });
   });
 
   it('should fail to insert a document into the database if invalid type given', () => {
     const testDocument = generateRandomDocument();
-    const key = getHash(testDocument);
+    const key = generateKey(testDocument);
 
     const invalidType = 'invalid_type';
     expect(() => testDB.put(key, invalidType, testDocument)).to.throw('Invalid item type.');
@@ -113,11 +111,11 @@ describe('Database Tests', () => {
 
   it('should fail to insert a document into the database if duplicate key given (item already exists)', () => {
     const testDocument = generateRandomDocument();
-    const key = getHash(testDocument);
+    const key = generateKey(testDocument);
 
     const result = testDB.put(key, Types.Document, testDocument);
     expect(result).to.exist;
-    expect(result.changes).to.equal(1);
+    expect(result.key).to.equal(key);
 
     expect(() => testDB.put(key, Types.Document, testDocument)).to.throw('Key already exists in database.');
   });
@@ -125,7 +123,7 @@ describe('Database Tests', () => {
   /* -------- GET -------- */
   it('should retrieve a document from the database', () => {
     const testDocument = generateRandomDocument();
-    const key = getHash(testDocument);
+    const key = generateKey(testDocument);
 
     testDB.put(key, Types.Document, testDocument);
 
@@ -133,9 +131,8 @@ describe('Database Tests', () => {
     expect(retrievedDocument).to.deep.equal(testDocument);
   });
 
-  it('should return null if item is not found in the database', () => {
+  it('should throw exception if bad key is given', () => {
     const nonExistentKey = 'non_existent_key';
-    const retrievedDocument = testDB.get(nonExistentKey, Types.Document);
-    expect(retrievedDocument).to.be.null;
+    expect(() => testDB.get(nonExistentKey, Types.Document)).to.throw('Invalid key format.');
   });
 });

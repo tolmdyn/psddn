@@ -55,7 +55,7 @@
 const WebSocket = require('ws');
 const debug = require('debug')('client');
 
-const database = require('../database/database');
+const Database = require('../database/dbInstance');
 const { authenticateUser, signMessage, createNewUser } = require('../auth/auth');
 const { RequestTypes, Request } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
@@ -124,7 +124,7 @@ async function getItem(key, type) {
   // check local db // should this be a seperate function?
   try {
     debug(`Getting item from local database\nKey: ${key}\nType: ${type}`);
-    const item = database.get(key, type);
+    const item = Database.get(key, type);
 
     if (item) {
       return new Response(ResponseTypes.Success, item);
@@ -199,7 +199,7 @@ function putItem(item) {
 
   try {
     debug(`Putting item into local database\nKey: ${key}\nType: ${type}\nData: ${JSON.stringify(item)}`);
-    const result = database.put(key, type, item);
+    const result = Database.put(key, type, item);
     if (!result) {
       return new Response(ResponseTypes.Error, 'Error putting item into database.');
     }
@@ -238,7 +238,7 @@ function pubItem(item) {
   // if not in local db then add to local db
   try {
     debug(`Putting item into local database\nKey: ${key}\nType: ${type}\nData: ${JSON.stringify(item)}`);
-    const result = database.put(key, type, item);
+    const result = Database.put(key, type, item);
     if (!result) {
       return new Response(ResponseTypes.Error, 'Unknown error putting item into database.');
     }
@@ -279,8 +279,8 @@ function updateUserFeed(document) {
   // if this is always called internally then we shouldn't need to verify document
 
   // get last user feed
-  const user = database.get(userSession.publicKey, 'user');
-  const lastFeed = database.get(user.lastFeed, 'feed');
+  const user = Database.get(userSession.publicKey, 'user');
+  const lastFeed = Database.get(user.lastFeed, 'feed');
 
   // append new items
   const newFeed = lastFeed;
@@ -291,11 +291,11 @@ function updateUserFeed(document) {
   newFeed.signature = signature;
 
   // update local db
-  database.put(newFeed.id, 'feed', newFeed);
+  Database.put(newFeed.id, 'feed', newFeed);
 
   // update user last feed
   user.lastFeed = newFeed.id;
-  database.put(user.publicKey, 'user', user);
+  Database.put(user.publicKey, 'user', user);
 
   // send feed to providers
   sendItemToProviders(newFeed.id, 'feed', newFeed);
