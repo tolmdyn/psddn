@@ -38,7 +38,7 @@ const documentSchema = joi.object({
     .required(),
 
   owner: joi.string()
-    .length(16)
+    .pattern(keyRegex)
     .required(),
 
   timestamp: joi.date()
@@ -165,4 +165,5 @@ module.exports = {
   userSchema,
   feedSchema,
   validateItem,
+  keyRegex,
 };

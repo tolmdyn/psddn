@@ -5,19 +5,26 @@
 const { expect } = require('chai');
 
 const {
-  generateKey, isValidKeyForItem, isValidKeyFormat, generateRandomDocument,
+  generateKey,
+  isValidKeyForItem,
+  isValidKeyFormat,
+  generateRandomDocument,
+  generateRandomUser,
+  generateRandomFeed,
 } = require('../src/utils/utils');
-const { documentSchema } = require('../src/models/validation');
+
+const {
+  documentSchema, userSchema, feedSchema, keyRegex,
+} = require('../src/models/validation');
 
 describe('Utils Tests', () => {
   it('should generate a valid document', () => {
     const doc = generateRandomDocument();
     expect(doc).to.be.an('object');
     expect(doc.type).to.equal('document');
-    // expect(doc.id).to.be.a('string');
-    // expect(doc.id).to.have.lengthOf(16);
+    expect(doc.id).to.be.a('string');
     expect(doc.owner).to.be.a('string');
-    expect(doc.owner).to.have.lengthOf(16);
+    expect(doc.owner).to.match(keyRegex);
     expect(doc.timestamp).to.be.a('string');
     expect(doc.title).to.be.a('string');
     expect(doc.title).to.have.lengthOf.at.least(5);
@@ -126,6 +133,41 @@ describe('Utils Tests', () => {
     const key2 = generateKey(doc2);
 
     expect(key1).to.equal(key2);
+  });
+
+  /* generate random user tests */
+  it('should generate a random user with valid parameters', () => {
+    const user = generateRandomUser();
+
+    expect(user).to.be.an('object');
+    expect(user).to.have.property('type');
+    expect(user).to.have.property('publicKey');
+    expect(user).to.have.property('nickname');
+    expect(user).to.have.property('lastAddress');
+    expect(user).to.have.property('lastSeen');
+    expect(user.type).to.equal('user');
+
+    expect(user.nickname).to.be.a('string');
+    expect(user.lastAddress).to.be.a('Object');
+    // etc
+
+    expect(isValidKeyFormat(user.publicKey)).to.be.true;
+    expect(isValidKeyForItem(user.publicKey, user)).to.be.true;
+  });
+
+  /* generate random feed tests */
+  it('should generate a random feed with valid parameters', () => {
+    const feed = generateRandomFeed();
+    expect(feed).to.be.an('object');
+
+    expect(feed).to.have.property('type');
+    expect(feed.type).to.equal('feed');
+
+    expect(feed).to.have.property('owner');
+    expect(feed.owner).to.be.a('string');
+    expect(feed.owner).to.match(keyRegex);
+
+    expect(feed).to.have.property('timestamp');
   });
   /*
   const key1 = "1a2b3c4d5e6f7g8h"; // Invalid: contains non-hex characters

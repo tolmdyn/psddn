@@ -58,7 +58,7 @@ function generateRandomDocument() {
   const document = {
     type: 'document',
     // id: faker.string.alphanumeric(16),
-    owner: faker.string.alphanumeric(16),
+    owner: generateKey(faker.string.alphanumeric(16)),
     timestamp: faker.date.recent().toISOString(),
     title: faker.lorem.words(3),
     content: faker.lorem.paragraph(),
@@ -91,7 +91,8 @@ function generateRandomFeed() {
   const feed = {
     type: 'feed',
     // id: faker.string.alphanumeric(16),
-    owner: faker.string.alphanumeric(16),
+    owner: generateKey(faker.string.alphanumeric(16)),
+
     timestamp: faker.date.recent().toISOString(),
     documents: [],
   };
@@ -118,4 +119,5 @@ module.exports = {
   isValidKeyFormat,
   generateRandomDocument,
   generateRandomUser,
+  generateRandomFeed,
 };
