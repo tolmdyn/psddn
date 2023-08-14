@@ -50,13 +50,12 @@ describe('Database Tests', () => {
     expect(testDB.databaseHasTables()).to.be.equal(true);
 
     const testDocument = generateRandomDocument();
-    const key = generateKey(testDocument);
 
-    testDB.put(key, Types.Document, testDocument);
+    testDB.put(testDocument);
     testDB.closeDatabaseConnection();
 
     testDB = new Database('./tests/data/test_database.db');
-    const retrievedDocument = testDB.get(key, Types.Document);
+    const retrievedDocument = testDB.get(testDocument.key, Types.Document);
     expect(retrievedDocument).to.exist;
     expect(retrievedDocument).to.deep.equal(testDocument);
   });
@@ -69,15 +68,13 @@ describe('Database Tests', () => {
   /* -------- PUT -------- */
   it('should insert a document into the database without errors', () => {
     const testDocument = generateRandomDocument();
-    const key = generateKey(testDocument);
 
-    const result = testDB.put(key, Types.Document, testDocument);
-
+    const result = testDB.put(testDocument);
     // If the result is null, then the insert failed
     expect(result).to.exist; // Ensure that result is not null
     // If the result is not an error, then the insert succeeded
     expect(result).to.not.be.an('error'); // Ensure that result is not an error
-    expect(result.key).to.equal(key); // Ensure that our document was inserted
+    expect(result.key).to.equal(testDocument.key); // Ensure that our document was inserted
   });
 
   it('should insert multiple documents into the database without errors', () => {
@@ -87,47 +84,43 @@ describe('Database Tests', () => {
     }
 
     testDocuments.forEach((document) => {
-      const key = generateKey(document);
-      const result = testDB.put(key, Types.Document, document);
+      const result = testDB.put(document);
       expect(result).to.exist;
-      expect(result.key).to.equal(key);
+      expect(result.key).to.equal(document.key);
     });
   });
 
   it('should fail to insert a document into the database if invalid type given', () => {
     const testDocument = generateRandomDocument();
-    const key = generateKey(testDocument);
+    testDocument.type = 'invalid_type';
 
-    const invalidType = 'invalid_type';
-    expect(() => testDB.put(key, invalidType, testDocument)).to.throw('Invalid item type.');
+    expect(() => testDB.put(testDocument)).to.throw('Invalid item type.');
   });
 
   it('should fail to insert a document into the database if invalid key given', () => {
     const testDocument = generateRandomDocument();
-    const key = '1234';
+    testDocument.key = '1234';
 
-    expect(() => testDB.put(key, Types.Document, testDocument)).to.throw('Key is not a valid hash for the item.');
+    expect(() => testDB.put(testDocument)).to.throw('Key is not a valid hash for the item.');
   });
 
   it('should fail to insert a document into the database if duplicate key given (item already exists)', () => {
     const testDocument = generateRandomDocument();
-    const key = generateKey(testDocument);
 
-    const result = testDB.put(key, Types.Document, testDocument);
+    const result = testDB.put(testDocument);
     expect(result).to.exist;
-    expect(result.key).to.equal(key);
+    expect(result.key).to.equal(testDocument.key);
 
-    expect(() => testDB.put(key, Types.Document, testDocument)).to.throw('Key already exists in database.');
+    expect(() => testDB.put(testDocument)).to.throw('Key already exists in database.');
   });
 
   /* -------- GET -------- */
   it('should retrieve a document from the database', () => {
     const testDocument = generateRandomDocument();
-    const key = generateKey(testDocument);
 
-    testDB.put(key, Types.Document, testDocument);
+    testDB.put(testDocument);
 
-    const retrievedDocument = testDB.get(key, Types.Document);
+    const retrievedDocument = testDB.get(testDocument.key, Types.Document);
     expect(retrievedDocument).to.deep.equal(testDocument);
   });
 
@@ -139,48 +132,46 @@ describe('Database Tests', () => {
   /* -------- USER -------- */
   it('should insert a valid user into the database', () => {
     const testUser = generateRandomUser();
-    const key = testUser.publicKey;
+    // const key = testUser.key;
 
-    const result = testDB.put(key, Types.User, testUser);
-
+    const result = testDB.put(testUser);
     // If the result is null, then the insert failed
     expect(result).to.exist; // Ensure that result is not null
     // If the result matches the item given then success
-    expect(result.key).to.equal(key); // Ensure that our document was inserted
-    expect(result.data).to.deep.equal(testUser);
+    expect(result.key).to.equal(testUser.key); // Ensure that our document was inserted
+    expect(result).to.deep.equal(testUser);
   });
 
   it('should get a valid user from the database', () => {
     const testUser = generateRandomUser();
-    const key = testUser.publicKey;
-    testDB.put(key, Types.User, testUser);
+    // const key = testUser.publicKey;
+    testDB.put(testUser);
 
     // Test get function with user type
-    const retrievedUser = testDB.get(key, Types.User);
+    const retrievedUser = testDB.get(testUser.key, Types.User);
     expect(retrievedUser).to.exist;
     expect(retrievedUser).to.deep.equal(testUser);
 
     // Test the getUser helper wrapper
-    const retrievedUser2 = testDB.getUser(key);
+    const retrievedUser2 = testDB.getUser(testUser.key);
     expect(retrievedUser2).to.exist;
     expect(retrievedUser2).to.deep.equal(testUser);
   });
 
   it('should not insert a user into the database with wrong type', () => {
     const testUser = generateRandomUser();
-    testUser.type = Types.Document;
-    const key = generateKey(testUser);
+    testUser.type = 'invalid';
 
     // Should throw an Invalid item type error
-    expect(() => testDB.put(key, Types.User, testUser)).to.throw('Invalid item type.');
+    expect(() => testDB.put(testUser)).to.throw('Invalid item type.');
   });
 
   it('should not insert a user into the database with invalid key', () => {
     const testUser = generateRandomUser();
-    const key = '1234';
+    testUser.key = '1234';
 
     // Should throw an Invalid key format error
-    expect(() => testDB.put(key, Types.User, testUser)).to.throw('Key is not a valid hash for the item.');
+    expect(() => testDB.put(testUser)).to.throw('Key is not a valid hash for the item.');
   });
 
   it('should insert multiple users into the database without errors', () => {
@@ -189,7 +180,7 @@ describe('Database Tests', () => {
     keys.forEach((key) => {
       const retrievedUser = testDB.getUser(key);
       expect(retrievedUser).to.exist;
-      expect(retrievedUser.publicKey).to.equal(key);
+      expect(retrievedUser.key).to.equal(key);
     });
   });
 
@@ -202,7 +193,7 @@ describe('Database Tests', () => {
     expect(users.length).to.equal(30);
 
     users.forEach((user) => {
-      expect(keys.includes(user.publicKey)).to.equal(true);
+      expect(keys.includes(user.key)).to.equal(true);
     });
   });
 });
@@ -211,8 +202,8 @@ function insertTestUsers(testDB) {
   const keys = [];
   for (let i = 0; i < 30; i += 1) {
     const user = generateRandomUser();
-    keys.push(user.publicKey);
-    testDB.put(user.publicKey, Types.User, user);
+    keys.push(user.key);
+    testDB.put(user);
   }
   return keys;
 }

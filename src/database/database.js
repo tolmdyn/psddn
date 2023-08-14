@@ -139,8 +139,8 @@ class Database {
     }
 
     const query = this.#db.prepare(`SELECT * FROM ${type} WHERE key = ? LIMIT 1;`);
-
     const item = query.get(key);
+
     if (item) {
       return JSON.parse(item.json_data);
     }
@@ -177,23 +177,26 @@ class Database {
    * TODO: Call getHash() on data rather than accept a parameter
    * TODO: Improve error handling
    */
-  put(key, type, data) {
-    if (!isValidItemType(type) || type !== data.type) {
+  put(item) {
+    const { key, type } = item;
+
+    if (!isValidItemType(type)) {
       throw new Error('Invalid item type.');
     }
 
-    if (!isValidKeyForItem(key, data)) {
+    if (!isValidKeyForItem(key, item)) {
       throw new Error('Key is not a valid hash for the item.');
     }
 
+    // Be sure to prevent sql injection in type
     const query = this.#db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`);
 
     try {
-      const result = query.run(key, JSON.stringify(data));
+      const result = query.run(key, JSON.stringify(item));
       if (result.changes !== 1) {
         throw new Error('Error putting item into database.');
       }
-      return { key, type, data };
+      return item;
     } catch (error) {
       if (error.message.includes('UNIQUE constraint failed')) {
         throw new Error('Key already exists in database.');
