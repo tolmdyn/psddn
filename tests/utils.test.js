@@ -16,13 +16,14 @@ const {
 const {
   documentSchema, userSchema, feedSchema, keyRegex,
 } = require('../src/models/validation');
+// const { valid } = require('joi');
 
-describe('Utils Tests', () => {
+describe('Document Generation Tests', () => {
   it('should generate a valid document', () => {
     const doc = generateRandomDocument();
     expect(doc).to.be.an('object');
     expect(doc.type).to.equal('document');
-    expect(doc.id).to.be.a('string');
+    expect(doc.key).to.be.a('string');
     expect(doc.owner).to.be.a('string');
     expect(doc.owner).to.match(keyRegex);
     expect(doc.timestamp).to.be.a('string');
@@ -45,36 +46,36 @@ describe('Utils Tests', () => {
     const doc2 = generateRandomDocument();
 
     expect(doc1).to.not.deep.equal(doc2);
-    expect(doc1.id).to.not.equal(doc2.id);
+    expect(doc1.key).to.not.equal(doc2.key);
     expect(doc1.owner).to.not.equal(doc2.owner);
     expect(doc1.timestamp).to.not.equal(doc2.timestamp);
     expect(doc1.title).to.not.equal(doc2.title);
     /* etc */
   });
 
-  it('should generate a valid hash', () => {
+  it('should generate a valid hash from document', () => {
     const doc = generateRandomDocument();
-    const key = doc.id;
-    expect(isValidKeyFormat(key)).to.be.true;
-    expect(isValidKeyForItem(key, doc)).to.be.true;
+    // const key = doc.key;
+    expect(isValidKeyFormat(doc.key)).to.be.true;
+    expect(isValidKeyForItem(doc.key, doc)).to.be.true;
   });
 
-  it('should not generate a valid hash', () => {
+  it('should not validate an invalid document hash', () => {
     const doc1 = generateRandomDocument();
     const doc2 = generateRandomDocument();
-    const key = doc1.id;
-    expect(isValidKeyForItem(key, doc1)).to.be.true;
-    expect(isValidKeyForItem(key, doc2)).to.be.false;
+    // const key = doc1.id;
+    expect(isValidKeyForItem(doc1.key, doc1)).to.be.true;
+    expect(isValidKeyForItem(doc1.key, doc2)).to.be.false;
   });
 
-  it('should not accept wrong key', () => {
+  it('should not accept the wrong key for document', () => {
     const doc = generateRandomDocument();
     const key = '123456789ABCDEF';
     expect(isValidKeyForItem(key, doc)).to.be.false;
     expect(isValidKeyFormat(key)).to.be.false;
   });
 
-  it('should generate a consistent hash for same data', () => {
+  it('should generate a consistent hash for same document', () => {
     const doc = generateRandomDocument();
     // We are hashing a generated doc so the key will not match the id
     // But key1 and key2 should be the same
@@ -84,7 +85,7 @@ describe('Utils Tests', () => {
     expect(key1).to.not.equal(key1.id);
   });
 
-  it('should generate a different hash for different data', () => {
+  it('should generate a different hash for different document', () => {
     const doc1 = generateRandomDocument();
     const doc2 = generateRandomDocument();
     const key1 = generateKey(doc1);
@@ -92,7 +93,7 @@ describe('Utils Tests', () => {
     expect(key1).to.not.equal(key2);
   });
 
-  it('should generate the same hash for different object with same data', () => {
+  it('should generate the same hash for different document with same data', () => {
     const doc1 = generateRandomDocument();
     const doc2 = { ...doc1 };
     const key1 = generateKey(doc1);
@@ -134,14 +135,16 @@ describe('Utils Tests', () => {
 
     expect(key1).to.equal(key2);
   });
+});
 
+describe('User Generation Tests', () => {
   /* generate random user tests */
   it('should generate a random user with valid parameters', () => {
     const user = generateRandomUser();
 
     expect(user).to.be.an('object');
     expect(user).to.have.property('type');
-    expect(user).to.have.property('publicKey');
+    expect(user).to.have.property('key');
     expect(user).to.have.property('nickname');
     expect(user).to.have.property('lastAddress');
     expect(user).to.have.property('lastSeen');
@@ -151,10 +154,12 @@ describe('Utils Tests', () => {
     expect(user.lastAddress).to.be.a('Object');
     // etc
 
-    expect(isValidKeyFormat(user.publicKey)).to.be.true;
-    expect(isValidKeyForItem(user.publicKey, user)).to.be.true;
+    expect(isValidKeyFormat(user.key)).to.be.true;
+    expect(isValidKeyForItem(user.key, user)).to.be.true;
   });
+});
 
+describe('Feed Generation Tests', () => {
   /* generate random feed tests */
   it('should generate a random feed with valid parameters', () => {
     const feed = generateRandomFeed();
@@ -169,6 +174,82 @@ describe('Utils Tests', () => {
 
     expect(feed).to.have.property('timestamp');
   });
+});
+
+describe('Key Generation / Validation Tests', () => {
+  it('should generate a valid key by hashing an object', () => {
+    const object = {
+      type: 'document',
+      id: '1234567890123456',
+      owner: '1234567890123456',
+    };
+    const key = generateKey(object);
+    expect(key).to.equal('HOZB/B/8I3/2cWUtyae4nPv1vX7KjCZnOCV7iwrhJlI=');
+    expect(key).to.be.a('string');
+    expect(key).to.have.lengthOf(44);
+    expect(key).to.match(keyRegex);
+
+    // const { error } = keyRegex.validate(key);
+    // expect(error).to.be.undefined;
+  });
+
+  it('should validate a valid key format', () => {
+    // Generate a collection of random valid keys
+    const validKeys = [];
+    for (let i = 0; i < 10; i += 1) {
+      validKeys[i] = generateKey(generateRandomDocument());
+    }
+
+    validKeys.forEach((key) => {
+      expect(key).to.be.a('string');
+      expect(key).to.have.lengthOf(44);
+      expect(key).to.match(keyRegex);
+      expect(isValidKeyFormat(key)).to.be.true;
+    });
+  });
+
+  it('should not validate an invalid key format', () => {
+    const invalidKeys = [
+      'invalid',
+      '12345',
+      12345,
+      { key: '1ud321KDwz6ZFuK9gi0lrr4tIt0TFXR4TR5VCJcukeE=' },
+      // '1ud321KDwz6ZFuK9gi0lrr4tIt0TFXR4TR5VCJcuke',
+      // '1ud321KDwz6ZFuK9gi0lrr4tIt0TFXR4TR5VCJcukeeee',
+    ];
+
+    invalidKeys.forEach((key) => {
+      expect(isValidKeyFormat(key)).to.be.false;
+    });
+  });
+
+  it('should validate a valid key for an item', () => {
+  });
+
+  it('should not validate an invalid key for an item', () => {
+  });
+
+  it('should generate a consistent key for the same data', () => {
+  });
+
+  it('should generate a different key for different data', () => {
+  });
+
+  it('should generate the same key for different object with same data', () => {
+  });
+
+  it('should generate the same key for same object with different parameter order', () => {
+  });
+
+  it('should generate a valid key for a document', () => {
+  });
+
+  it('should generate a valid key for a user', () => {
+  });
+
+  it('should generate a valid key for a feed', () => {
+  });
+
   /*
   const key1 = "1a2b3c4d5e6f7g8h"; // Invalid: contains non-hex characters
   const key2 = "1a2b3c4d5e6f7h8"; // Valid: 16 hex characters

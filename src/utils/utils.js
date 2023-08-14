@@ -16,9 +16,7 @@ const { createNewUser } = require('../auth/auth');
  * @returns A consistent hash of the input
  */
 function generateKey(input) {
-  const key = objecthash(input, { algorithm: 'sha256', encoding: 'base64' });
-  // return key.substring(0, 16);
-  return key;
+  return objecthash(input, { algorithm: 'sha256', encoding: 'base64' });
 }
 
 /**
@@ -27,15 +25,18 @@ function generateKey(input) {
  * @param {*} item The item to hash
  * @returns True if the key is a valid hash for the item, false otherwise
  */
-function isValidKeyForItem(key, item) {
+function isValidKeyForItem(_key, item) {
+  if (!isValidKeyFormat(_key)) {
+    return false;
+  }
   // because user objects may have different parameters
   // we use the public key as the key instead ?
   if (item.type === 'user') {
-    return key === item.publicKey;
+    return _key === item.key;
   }
 
-  const { id, ...itemContent } = item;
-  return key === generateKey(itemContent);
+  const { key, ...itemContent } = item;
+  return _key === generateKey(itemContent);
 }
 
 /**
@@ -66,7 +67,7 @@ function generateRandomDocument() {
     signature: null,
   };
 
-  document.id = generateKey(document);
+  document.key = generateKey(document);
 
   return document;
 }
@@ -91,13 +92,14 @@ function generateRandomFeed() {
   const feed = {
     type: 'feed',
     // id: faker.string.alphanumeric(16),
-    owner: generateKey(faker.string.alphanumeric(16)),
+    // owner: generateKey(faker.string.alphanumeric(16)),
 
     timestamp: faker.date.recent().toISOString(),
     documents: [],
   };
 
-  feed.id = generateKey(feed);
+  feed.owner = generateKey(faker.string.alphanumeric(16));
+  feed.key = generateKey(feed);
   return feed;
 }
 
