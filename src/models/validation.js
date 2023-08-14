@@ -7,7 +7,8 @@
 
 const joi = require('joi');
 
-const keyRegex = /^[A-Za-z0-9+/]{43,}(={0,2})$/;
+// const keyRegex = /^[A-Za-z0-9+/]{43,}(={0,2})$/;
+const keyRegex = /^[A-Za-z0-9+/]{43,46}(={0,2})$/;
 
 /**
  * ADDRESS SCHEMA
@@ -33,7 +34,7 @@ const documentSchema = joi.object({
     .valid('document')
     .required(),
 
-  id: joi.string()
+  key: joi.string()
     .pattern(keyRegex)
     .required(),
 
@@ -75,7 +76,7 @@ const userSchema = joi.object({
     .valid('user')
     .required(),
 
-  publicKey: joi.string()
+  key: joi.string()
     .required()
     .pattern(keyRegex)
     .length(44),
@@ -110,7 +111,7 @@ const feedSchema = joi.object({
     .valid('feed')
     .required(),
 
-  id: joi.string()
+  key: joi.string()
     .pattern(keyRegex)
     .required(),
 
