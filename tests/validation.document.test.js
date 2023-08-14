@@ -8,7 +8,7 @@ const { expect } = require('chai');
 const { documentSchema } = require('../src/models/validation');
 const { generateRandomDocument } = require('../src/utils/utils');
 
-describe('Model Validation Tests', () => {
+describe('Document Validation Tests', () => {
   it('should validate a valid document', () => {
     const doc = generateRandomDocument();
     const { error } = documentSchema.validate(doc);
