@@ -61,23 +61,23 @@ function getProviders(key, type) {
 }
 
 function addPeer(peer) {
-  debug(`Adding peer: ${peer.publicKey}`);
-  cache.set(peer.publicKey, peer);
+  debug(`Adding peer: ${peer.key}`);
+  cache.set(peer.key, peer);
 }
 
-function removePeer(publicKey) {
-  debug(`Removing peer: ${publicKey}`);
-  cache.delete(publicKey);
+function removePeer(key) {
+  debug(`Removing peer: ${key}`);
+  cache.delete(key);
 }
 
 function updatePeer(peer) {
-  debug(`Updating peer: ${peer.publicKey}`);
-  cache.set(peer.publicKey, peer);
+  debug(`Updating peer: ${peer.key}`);
+  cache.set(peer.key, peer);
 }
 
-function getPeer(publicKey) {
-  debug(`Getting peer: ${publicKey}`);
-  return cache.get(publicKey);
+function getPeer(key) {
+  debug(`Getting peer: ${key}`);
+  return cache.get(key);
 }
 
 function getAllPeers() {
@@ -105,36 +105,36 @@ function getFollowedPeers(user) {
   return peers;
 }
 
-function getPeerAddress(publicKey) {
-  debug(`Getting address for peer: ${publicKey}`);
-  const peer = getPeer(publicKey);
+function getPeerAddress(key) {
+  debug(`Getting address for peer: ${key}`);
+  const peer = getPeer(key);
   if (peer) {
     return { ip: peer.ip, port: peer.port };
   }
 
-  debug(`Peer not found: ${publicKey}`);
+  debug(`Peer not found: ${key}`);
   return null;
 }
 
-function updatePeerLastSeen(publicKey) {
-  debug(`Updating last seen for peer: ${publicKey}`);
-  const peer = getPeer(publicKey);
+function updatePeerLastSeen(key) {
+  debug(`Updating last seen for peer: ${key}`);
+  const peer = getPeer(key);
   if (peer) {
     peer.lastSeen = Date.now();
     updatePeer(peer);
   } else {
-    debug(`Peer not found: ${publicKey}`);
+    debug(`Peer not found: ${key}`);
   }
 }
 
-function updatePeerLastAddress(publicKey, address) {
-  debug(`Updating last address for peer: ${publicKey}`);
-  const peer = getPeer(publicKey);
+function updatePeerLastAddress(key, address) {
+  debug(`Updating last address for peer: ${key}`);
+  const peer = getPeer(key);
   if (peer) {
     peer.lastAddress = address;
     updatePeer(peer);
   } else {
-    debug(`Peer not found: ${publicKey}`);
+    debug(`Peer not found: ${key}`);
   }
 }
 
@@ -160,23 +160,23 @@ async function refreshPeer(peer) {
   // If the peer is still active
   // the last seen timestamp is updated
   // If not then remove it from the cache?
-  debug(`Refreshing peer: ${peer.publicKey}`);
+  debug(`Refreshing peer: ${peer.key}`);
 
   const peerOnline = await checkPeerOnline(peer);
 
   if (peerOnline) {
-    debug(`Peer is active: ${peer.publicKey}`);
+    debug(`Peer is active: ${peer.key}`);
     // Peer is active so update the last seen timestamp
-    updatePeerLastSeen(peer.publicKey);
+    updatePeerLastSeen(peer.key);
   } else {
-    debug(`Peer is inactive: ${peer.publicKey}`);
+    debug(`Peer is inactive: ${peer.key}`);
     // Peer is inactive so remove it from the cache
-    removePeer(peer.publicKey);
+    removePeer(peer.key);
   }
 }
 
 async function checkPeerOnline(peer) {
-  debug(`Checking if peer is online: ${peer.publicKey} - ${peer.lastAddress.ip}:${peer.lastAddress.port}`);
+  debug(`Checking if peer is online: ${peer.key} - ${peer.lastAddress.ip}:${peer.lastAddress.port}`);
   // Check if the peer is still active
   // This is done by opening a websocket and sending a ping
   // If the peer responds then it is still active
@@ -186,13 +186,13 @@ async function checkPeerOnline(peer) {
 
     const peerOnline = await new Promise((resolve) => {
       ws.on('open', () => {
-        // debug(`Ping peer: ${peer.publicKey}`);
+        // debug(`Ping peer: ${peer.key}`);
         const request = new Request(RequestTypes.Ping, null);
         ws.send(JSON.stringify(request));
       });
 
       ws.on('message', (message) => {
-        // debug(`Pong peer: ${peer.publicKey}`);
+        // debug(`Pong peer: ${peer.key}`);
         const response = JSON.parse(message);
         if (response.responseType === ResponseTypes.Success) {
           resolve(true);
@@ -203,19 +203,19 @@ async function checkPeerOnline(peer) {
       });
 
       ws.on('error', (error) => {
-        debug(`Error peer: ${peer.publicKey} - ${error}`);
+        debug(`Error peer: ${peer.key} - ${error}`);
         resolve(false);
       });
 
       ws.on('close', () => {
-        debug(`Socket closed for peer: ${peer.publicKey}`);
+        debug(`Socket closed for peer: ${peer.key}`);
         resolve(false);
       });
     });
 
     return peerOnline;
   } catch (error) {
-    debug(`Error refreshing peer: ${peer.publicKey} - ${error}`);
+    debug(`Error refreshing peer: ${peer.key} - ${error}`);
     return false;
   }
 }
@@ -247,8 +247,8 @@ function saveCache() {
     // If in database, then update the last seen timestamp and address
     // If not in database, then add the peer to the database
     try {
-      // const dbPeer = database.getUser(peer.publicKey);
-      const dbPeer = Database.getUser(peer.publicKey);
+      // const dbPeer = database.getUser(peer.key);
+      const dbPeer = Database.getUser(peer.key);
 
       if (dbPeer) {
         // Peer exists in database so update it
@@ -260,7 +260,7 @@ function saveCache() {
         Database.addUser(peer);
       }
     } catch (error) {
-      debug(`Error saving peer: ${peer.publicKey} - ${error}`);
+      debug(`Error saving peer: ${peer.key} - ${error}`);
     }
   });
 }
@@ -317,6 +317,6 @@ async function refreshTest() {
   debug('Cache:', cache);
 }
 
-refreshTest();
+// refreshTest();
 // const refreshScheduler = new RefeshScheduler(refreshCache, 10);
 // refreshScheduler.start();

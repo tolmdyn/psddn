@@ -9,7 +9,7 @@ const WebSocket = require('ws');
 const debug = require('debug')('server');
 // const path = require('path');
 
-const { Database } = require('../database/dbInstance');
+const Database = require('../database/dbInstance');
 
 // const { documentSchema } = require('../models/validation');
 const { isValidItemType } = require('../models/types');
@@ -61,7 +61,6 @@ function handleGet(request) {
   try {
     debug(`Getting item from database\nKey: ${key}\nType: ${type}`);
     const item = Database.get(key, type);
-
     if (item) {
       return new Response(ResponseTypes.Success, item);
     }
@@ -73,10 +72,14 @@ function handleGet(request) {
   }
 }
 
-function handlePut(request) {
-  const { key, type, data } = request;
+// This is modified so that it just accepts an item, which has embedded a key and type.
+function handlePut(item) {
+  // const { key, type, data } = request;
 
-  if (!key || !type || !data) {
+  const { key, type } = item;
+
+  // console.log(key, type, item);
+  if (!key || !type) {
     return new Response(ResponseTypes.Error, 'Invalid request, missing parameters.');
   }
 
@@ -84,13 +87,13 @@ function handlePut(request) {
     return new Response(ResponseTypes.Error, 'Invalid item type.');
   }
 
-  if (!isValidKeyForItem(key, data)) {
+  if (!isValidKeyForItem(key, item)) {
     return new Response(ResponseTypes.Error, 'Provided key is not valid for the item.');
   }
 
   try {
-    debug(`Putting item into database\nKey: ${key}\nType: ${type}\nData: ${data}`);
-    const result = Database.put(key, type, data);
+    debug(`Putting item into database\n${item}`);
+    const result = Database.put(item);
 
     if (!result) {
       return new Response(ResponseTypes.Error, 'Error putting item into database.');
