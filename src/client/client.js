@@ -60,7 +60,7 @@ const { authenticateUser, signMessage, createNewUser } = require('../auth/auth')
 const { RequestTypes, Request } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
 const { isValidItemType } = require('../models/types');
-const { isValidKeyFormat, generateKey } = require('../utils/utils');
+const { isValidKeyFormat } = require('../utils/utils');
 const { getProviders } = require('../network/providers');
 const { validateItem } = require('../models/validation');
 
@@ -96,7 +96,7 @@ function authenticateUserSession(publicKey, secretKey) {
  */
 function createNewUserSession(nickname) {
   const { user, secretKey } = createNewUser(nickname);
-  userSession = { publicKey: user.publicKey, secretKey };
+  userSession = { publicKey: user.key, secretKey };
 
   // add user to local db OR add user to 'userprofiles'
   // TODO: figure out what to do with the secretKey
@@ -194,12 +194,13 @@ function putItem(item) {
   // sign / verify item here before adding to db
 
   // add to local db only
-  const key = generateKey(item);
-  const { type } = item;
+  // const key = generateKey(item);
+  // const { type } = item;
+  // OR const { key, type } = item;
 
   try {
-    debug(`Putting item into local database\nKey: ${key}\nType: ${type}\nData: ${JSON.stringify(item)}`);
-    const result = Database.put(key, type, item);
+    debug(`Putting item into local database:\n${JSON.stringify(item)}`);
+    const result = Database.put(item);
     if (!result) {
       return new Response(ResponseTypes.Error, 'Error putting item into database.');
     }
@@ -232,13 +233,13 @@ function pubItem(item) {
   // sign / verify item here before adding to db
 
   // add to local db only
-  const key = generateKey(item);
-  const { type } = item;
+  // const key = generateKey(item);
+  // const { type } = item;
 
   // if not in local db then add to local db
   try {
-    debug(`Putting item into local database\nKey: ${key}\nType: ${type}\nData: ${JSON.stringify(item)}`);
-    const result = Database.put(key, type, item);
+    debug(`Putting item into local database:\n${JSON.stringify(item)}`);
+    const result = Database.put(item);
     if (!result) {
       return new Response(ResponseTypes.Error, 'Unknown error putting item into database.');
     }
@@ -257,8 +258,8 @@ function pubItem(item) {
 
   // send to peers / dht
   try {
-    debug(`Sending ${key} to providers...`);
-    const result = sendItemToProviders(key, type, item);
+    debug(`Sending ${item.key} to providers...`);
+    const result = sendItemToProviders(item);
     if (!result) {
       return new Response(ResponseTypes.Error, 'Error sending item to providers.');
     }
@@ -291,17 +292,17 @@ function updateUserFeed(document) {
   newFeed.signature = signature;
 
   // update local db
-  Database.put(newFeed.id, 'feed', newFeed);
+  Database.put(newFeed);
 
   // update user last feed
   user.lastFeed = newFeed.id;
-  Database.put(user.publicKey, 'user', user);
+  Database.put(user);
 
   // send feed to providers
-  sendItemToProviders(newFeed.id, 'feed', newFeed);
+  sendItemToProviders(newFeed);
 
   // send updated user to providers
-  sendItemToProviders(user.publicKey, 'user', user);
+  sendItemToProviders(user);
 }
 
 function getFollowedFeeds() {
@@ -386,15 +387,15 @@ async function sendRequestToProvider(request, provider) {
   }
 }
 
-async function sendItemToProviders(key, type, data) {
-  const providers = getProviders(key, type);
+async function sendItemToProviders(item) {
+  const providers = getProviders(item.key, item.type);
 
   // if no providers were given, return error
   if (!providers || providers.length === 0) {
     return new Response(ResponseTypes.Error, 'No providers found for item.');
   }
 
-  const request = new Request(RequestTypes.Put, { key, type, data });
+  const request = new Request(RequestTypes.Put, { item });
 
   // map the array of providers to an array of promises
   const promises = providers.map((provider) => sendRequestToProvider(request, provider));
