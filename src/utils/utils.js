@@ -100,6 +100,8 @@ function generateRandomFeed() {
 
   feed.owner = generateKey(faker.string.alphanumeric(16));
   feed.key = generateKey(feed);
+  feed.signature = null;
+
   return feed;
 }
 
