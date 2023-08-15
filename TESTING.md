@@ -1,16 +1,23 @@
 ## Database
-- [ ] creating a database
-- [ ] reading a database from disk
+- [x] creating a database
+- [x] reading a database from disk
 
-- [ ] database put
-  - [ ] document
+- [x] database put
+  - [x] document
+  - [x] user
+  - [ ] feed
+
+- [x] database get
+  - [x] document
   - [ ] user
   - [ ] feed
 
-- [] database get
-  - [ ] document
-  - [ ] user
-  - [ ] feed
+## Utils
+- [ ] Random Item Generation
+  - [ ] Document
+  - [ ] User
+  - [ ] Feed
+- [ ] Keys/Hashes
 
 ## Validation
 - [ ] Validations

@@ -43,7 +43,7 @@ function createNewUser(_nickname) {
 
   const user = {
     type: 'user',
-    publicKey,
+    key: publicKey,
     nickname,
     lastAddress: null,
     lastSeen: null,

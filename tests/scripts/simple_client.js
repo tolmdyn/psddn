@@ -16,8 +16,8 @@ const WebSocket = require('ws');
 const { program } = require('commander');
 
 const { RequestTypes, Request } = require('../../src/models/request');
-const { ResponseTypes, Response } = require('../../src/models/response');
-const { getHash } = require('../../src/utils/utils');
+// const { ResponseTypes, Response } = require('../../src/models/response');
+// const { getHash } = require('../../src/utils/utils');
 
 /**
  * Get the parameters from the process arguments
@@ -46,7 +46,7 @@ rl.on('line', (input) => {
     console.log('Invalid command', request);
     return;
   }
-
+  console.log('\n\n', JSON.stringify(request));
   ws.send(JSON.stringify(request));
 
   // const JSONRequest = buildRequest(request);
@@ -87,15 +87,15 @@ function parseCommand(command) {
     }
   } else if (commandType === 'put') {
     // const [key, type, data] = args;
-    const key = args[0];
-    const type = args[1];
-    const data = JSON.parse(args.slice(2).join(' '));
+    // const key = args[0];
+    // const type = args[1];
+    // const data = JSON.parse(args.slice(2).join(' '));
 
-    // const match = input.match(/[^ ]+ (.+)/);
-    // const data = JSON.parse(match[1]);
+    // Possibly improve this JSON parsing
+    const item = JSON.parse(args.join(' '));
 
-    if (key && type && data) {
-      request = new Request(RequestTypes.Put, { key, type, data });
+    if (item.key && item.type) {
+      request = new Request(RequestTypes.Put, item);
     }
   } else if (commandType === 'ping') {
     request = new Request(RequestTypes.Ping);
