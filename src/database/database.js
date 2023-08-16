@@ -12,7 +12,7 @@ const debug = require('debug')('database');
 const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils'); // TODO: Should this be handled as a verification step, not in database?
 const { isValidItemType, Types } = require('../models/types');
 
-const databaseFolderPath = path.join(__dirname, './../../data');
+const databaseFolderPath = path.join(__dirname, './../../data/');
 const databasePath = path.join(__dirname, './../../data/database.db');
 
 /**
@@ -25,6 +25,7 @@ class Database {
 
   // If no path is provided, use default path, otherwise use provided path
   constructor(customPath) {
+    debug('Custom path:', customPath);
     // Create folder if it doesn't exist
     if (!customPath) {
       Database.createDatabaseFolder();
@@ -204,6 +205,78 @@ class Database {
         throw new Error(error);
       }
     }
+  }
+
+  /**
+   * @description: Delete item from database
+   * @param {string} key - Key (hash/id) of item to delete
+   * @param {string} type - Type of item to delete
+   * @return {object} Result of database query
+   */
+  delete(key, type) {
+    if (!isValidItemType(type)) {
+      throw new Error('Invalid item type.');
+    }
+
+    if (!isValidKeyFormat(key)) {
+      throw new Error('Invalid key format.');
+    }
+
+    const item = this.get(key, type);
+    if (!item) {
+      throw new Error('Item not found in database.');
+    }
+
+    const query = this.#db.prepare(`DELETE FROM ${type} WHERE key = ?;`);
+    const result = query.run(key);
+
+    if (result.changes !== 1) {
+      throw new Error('Error deleting item from database.');
+    }
+
+    // Should return the deleted item
+    return item;
+  }
+
+  deleteUser(publicKey) {
+    return this.delete(publicKey, Types.User);
+  }
+
+  /**
+   * @description: Update item in database
+   * @param {object} item - Item to update in database
+   * @return {object} Result of database action
+   */
+  update(item) {
+    const { key, type } = item;
+    let query;
+
+    if (!isValidItemType(type)) {
+      throw new Error('Invalid item type.');
+    }
+
+    if (!isValidKeyForItem(key, item)) {
+      throw new Error('Key is not a valid hash for the item.');
+    }
+
+    if (!this.get(key, type)) {
+      query = this.#db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`);
+    } else {
+      query = this.#db.prepare(`UPDATE ${type} SET json_data = ? WHERE key = ?;`);
+    }
+
+    const result = query.run(JSON.stringify(item), key);
+
+    if (result.changes !== 1) {
+      throw new Error('Error updating item in database.');
+    }
+
+    // Should return the updated item
+    return item;
+  }
+
+  updateUser(user) {
+    return this.update(user);
   }
 }
 

@@ -196,6 +196,56 @@ describe('Database Tests', () => {
       expect(keys.includes(user.key)).to.equal(true);
     });
   });
+
+  // it('should get all users from the database with a limit', () => {
+  //   const keys = insertTestUsers(testDB);
+
+  //   const users = testDB.getAllUsers(10);
+  //   expect(users).to.exist;
+  //   expect(users).to.be.an('array');
+  //   expect(users.length).to.equal(10);
+
+  //   users.forEach((user) => {
+  //     expect(keys.includes(user.key)).to.equal(true);
+  //   });
+  // }
+
+  // it('should get all users from the database with a limit and offset', () => {
+
+  it('should update a user in the database', () => {
+    const testUser = generateRandomUser();
+    testDB.put(testUser);
+
+    const updatedUser = generateRandomUser();
+    updatedUser.key = testUser.key;
+    updatedUser.username = 'updated_username';
+
+    const result = testDB.updateUser(updatedUser);
+    expect(result).to.exist;
+    expect(result).to.deep.equal(updatedUser);
+
+    const retrievedUser = testDB.getUser(testUser.key);
+    expect(retrievedUser).to.exist;
+    expect(retrievedUser).to.deep.equal(updatedUser);
+  });
+
+  it('should delete a user from the database', () => {
+    const testUser = generateRandomUser();
+    testDB.put(testUser);
+
+    const result = testDB.deleteUser(testUser.key);
+    expect(result).to.exist;
+    expect(result).to.deep.equal(testUser);
+
+    const retrievedUser = testDB.getUser(testUser.key);
+    expect(retrievedUser).to.not.exist;
+  });
+
+  it('should throw an error when trying to delete non-existent user', () => {
+    const testUser = generateRandomUser();
+
+    expect(() => testDB.deleteUser(testUser.key)).to.throw('Item not found in database.');
+  });
 });
 
 function insertTestUsers(testDB) {
