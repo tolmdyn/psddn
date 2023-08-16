@@ -9,7 +9,7 @@ const debug = require('debug')('routing');
 const cache = require('./cache');
 // const Address = require('../models/address');
 
-function getProviders(key, type) {
+async function getProviders(key, type) {
   debug(`Getting providers for key: ${key} and type: ${type}`);
   // TODO:
   // - search local db for providers
@@ -20,11 +20,15 @@ function getProviders(key, type) {
 
   // CACHE PROVIDERS
   const providers = cache.getProviders(key, type);
+  // .add([
+  //  { ip: '127.0.0.1', port: 8080 },
+  // { ip: '127.0.0.1', port: 8081 },
+  // { ip: '127.0.0.1', port: 8082 }]);
 
   // DHT PROVIDERS
 
   // return dummy providers
-  return providers.add([{ ip: '127.0.0.1', port: 8080 }, { ip: '127.0.0.1', port: 8081 }, { ip: '127.0.0.1', port: 8082 }]);
+  return providers;
 }
 
 module.exports = {

@@ -12,6 +12,7 @@ const RequestTypes = {
   Put: 'put',
   Ping: 'ping',
   Message: 'message',
+  Handshake: 'handshake',
 };
 
 /**

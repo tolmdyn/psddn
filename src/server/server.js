@@ -9,15 +9,25 @@ const WebSocket = require('ws');
 const debug = require('debug')('server');
 // const path = require('path');
 
-const Database = require('../database/dbInstance');
+// const Database = require('../database/dbInstance');
 
 // const { documentSchema } = require('../models/validation');
 const { isValidItemType } = require('../models/types');
 const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils');
 const { RequestTypes } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
+const { getUserSessionUser, setUserSessionAddress } = require('../auth/auth');
+const { addRemotePeer } = require('../network/cache');
 
-function handleRequest(message) {
+let Database;
+
+let server;
+
+function initServer(dbInstance) {
+  Database = dbInstance;
+}
+
+function handleRequest(message, address) {
   const request = JSON.parse(message);
 
   debug('Request:', request);
@@ -38,6 +48,10 @@ function handleRequest(message) {
 
   if (requestType === RequestTypes.Message) {
     return handleMessage(requestData);
+  }
+
+  if (requestType === RequestTypes.Handshake) {
+    return handleHandshake(requestData, address);
   }
 
   return 'Invalid request type';
@@ -73,12 +87,13 @@ function handleGet(request) {
 }
 
 // This is modified so that it just accepts an item, which has embedded a key and type.
-function handlePut(item) {
+function handlePut(request) {
   // const { key, type, data } = request;
-
+  const { item } = request;
   const { key, type } = item;
 
-  // console.log(key, type, item);
+  console.log(key, type, item);
+
   if (!key || !type) {
     return new Response(ResponseTypes.Error, 'Invalid request, missing parameters.');
   }
@@ -118,19 +133,70 @@ function handleMessage(request) {
   return new Response(ResponseTypes.Success, 'Message received.');
 }
 
-const port = process.env.S_PORT || 8080;
-const server = new WebSocket.Server({ port });
+// const remoteAddress = request.socket.remoteAddress.replace(/^.*:/, ''); // ipv6 hybrid
+//     const { remotePort } = request.socket;
+//     // Add the origin peer to the cache
+//     addRemotePeer({ ip: remoteAddress, port: remotePort });
 
-server.on('connection', (socket, request) => {
-  debug(`Connection: ${request.socket.remoteAddress}:${request.socket.remotePort}`);
-  socket.on('message', (message) => {
-    const response = handleRequest(message.toString());
-    socket.send(JSON.stringify(response));
+function handleHandshake(request, originAddress) {
+  const { originKey, originPort, address } = request;
+  debug(`Handling handshake on ${JSON.stringify(address)} from ${originKey}.`);
+
+  // get current user info
+  const user = getUserSessionUser();
+  // debug('User:', user);
+  // hack - we don't know our own external address before handshaking
+
+  if (user.lastAddress === null
+      || user.lastAddress.ip !== address.ip
+      || user.lastAddress.port !== address.port) {
+    setUserSessionAddress(address);
+    user.lastAddress = address;
+  }
+
+  // debug('Adding Remote:', originAddress, ':', originPort);
+  try {
+    addRemotePeer(originKey, { ip: originAddress.replace(/^.*:/, ''), port: originPort });
+  } catch (error) {
+    debug('Error adding remote peer:', error);
+  }
+
+  return new Response(ResponseTypes.Success, user);
+}
+
+// const port = process.env.S_PORT || 8080;
+
+function startServer(port) {
+  server = new WebSocket.Server({ port });
+
+  server.on('connection', (socket, request) => {
+    debug(`Connection from: ${request.socket.remoteAddress}:${request.socket.remotePort}`);
+    socket.on('message', (message) => {
+      const response = handleRequest(message, request.socket.remoteAddress);
+      socket.send(JSON.stringify(response));
+    });
   });
-});
 
-server.on('listening', () => {
-  debug(`Server running at ${server.address().address}:${server.address().port}`);
-});
+  server.on('listening', () => {
+    debug(`Server running at ${server.address().address}:${server.address().port}`);
+  });
 
-module.exports = { server };
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`Error: Port ${port} is already in use.`);
+    } else {
+      console.error('An error occured starting the server:', error);
+    }
+    process.exit(1);
+  });
+
+  return server;
+}
+
+function shutdownServer() {
+  server.close();
+  // Do other things..?
+  debug('Server stopped by process.');
+}
+
+module.exports = { initServer, startServer, shutdownServer };

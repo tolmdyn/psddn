@@ -9,7 +9,7 @@ const joi = require('joi');
 
 // const keyRegex = /^[A-Za-z0-9+/]{43,}(={0,2})$/;
 const keyRegex = /^[A-Za-z0-9+/]{43,46}(={0,2})$/;
-
+const longKeyRegex = /^[A-Za-z0-9+/]{87,88}(={0,2})$/;
 /**
  * ADDRESS SCHEMA
  * Address schema to validate IP address and port.
@@ -167,4 +167,5 @@ module.exports = {
   feedSchema,
   validateItem,
   keyRegex,
+  longKeyRegex,
 };

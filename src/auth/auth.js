@@ -10,14 +10,30 @@ const debug = require('debug')('auth');
 const nacl = require('tweetnacl');
 nacl.util = require('tweetnacl-util');
 
+// const { generateKey } = require('../utils/utils');
 // const { User } = require('../models/types');
 
-// class UserKeyPair {
-//   constructor(pubKey, secKey) {
-//     this.pubKey = pubKey;
-//     this.secKey = secKey;
-//   }
-// }
+let userSession = null;
+
+function setUserSession(session) {
+  userSession = session;
+}
+
+function setUserSessionAddress(address) {
+  userSession.user.lastAddress = address;
+}
+
+function getUserSession() {
+  return userSession;
+}
+
+function getUserSessionKey() {
+  return userSession.publicKey;
+}
+
+function getUserSessionUser() {
+  return userSession.user;
+}
 
 /**
  * @description: Create a new keypair object, encoded as base64 strings.
@@ -53,20 +69,49 @@ function createNewUser(_nickname) {
   return { user, secretKey };
 }
 
-// If the user UID is also a public key then this function is not needed,
-// as the public key can be used to verify the user.
-// /**
-//  * Fetch the public key for a user from the database,
-//  * or from the network if not found in the database.
-//  * @param {*} user The user to fetch the public key for
-//  * @returns The public key for the user
-//  */
-// function getUserPubKey(user) {
-//   // fetch the user from the db
-//   // return the public key
+function createNewUserProfile(user, password, secretKey) {
+  // Validate the inputs
 
-//   return user.pubKey;
-// }
+  const { publicKey } = nacl.sign.keyPair.fromSecretKey(nacl.util.decodeBase64(secretKey));
+
+  if (user.key !== publicKey) {
+    throw new Error('User key does not match secret key');
+  }
+
+  // Encrypt the secret key with the password (not implemented yet)
+  const encryptedSecretKey = encryptSecretKey(secretKey, password);
+
+  // Create the user profile object
+  const userProfile = {
+    type: 'userProfile',
+    key: publicKey,
+    secretKey: encryptedSecretKey,
+    userObject: user,
+    following: [],
+  };
+
+  return userProfile;
+}
+
+function encryptSecretKey(secretKey, password) {
+  // TODO: Implement this using pbkdf
+  return secretKey;
+  // const passwordHash = generateKey(password);
+  // console.log('passwordHash:', passwordHash);
+  // const secretKeyBuffer = nacl.util.decodeBase64(secretKey);
+  // const passwordHashBuffer = nacl.util.decodeBase64(passwordHash);
+
+  // const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
+  // console.log('nonce:', nonce);
+  // const encryptedSecretKeyBuffer = nacl.secretbox(secretKeyBuffer, nonce, passwordHashBuffer);
+  // const encryptedSecretKey = nacl.util.encodeBase64(encryptedSecretKeyBuffer);
+
+  // return encryptedSecretKey;
+}
+
+function decryptSecretKey(encryptedSecretKey, password) {
+  // TODO: Implement this using pbkdf
+}
 
 function authenticateUser(publicKey, secretKey) {
   let authenticated = false;
@@ -149,6 +194,11 @@ function verifyMessage(message, signature, publicKey) {
 // console.log(`verified2: "${verified2}"`);
 
 module.exports = {
+  setUserSession,
+  getUserSession,
+  getUserSessionKey,
+  getUserSessionUser,
+  setUserSessionAddress,
   createNewUser,
   authenticateUser,
   signMessage,

@@ -43,21 +43,187 @@
 // -Get a list of all cached peers
 // -Get a list of all followed peers
 // -Get provider(s) for a specific key and type (will return all providers in this router)
+//
+// ------------------------------------------------------------------------------------
+//
+// If we want to make the cache more sophisticated and track users and items then we could add the
+// following functions:
+//
+// Announce Functions:
+// -Announce a new peer to the network?
+//  (e.g a new peer logs on and announces to bootstrap peers)
+// -Announce a new item to the network?
+//  (e.g. a user creates a new item)
+// -Announce an item provider to the network?
+//  (called simultaneously with the above to provide the item and when a peer successully
+//  retrieves an item from another peer)
 
 const debug = require('debug')('cache');
 const WebSocket = require('ws');
 
-const { Database } = require('../database/dbInstance');
+// const { Database } = require('../database/dbInstance');
 const { generateRandomUser } = require('../utils/utils');
 const { Request, RequestTypes } = require('../models/request');
 const { Response, ResponseTypes } = require('../models/response');
+const { loadBootstrapAddresses } = require('./bootstrap');
 
-// The cache itself is private to this module
+const { getUserSessionKey } = require('../auth/auth');
+
+const refreshSeconds = 60;
+
+// The cache itself is 'private' to this module
 const cache = new Map();
 
+let Database;
+let localServerPort;
+
+// --------------------- Startup functions ----------------------------
+
+function initCache(dbInstance) {
+  Database = dbInstance;
+}
+// consider splitting bootstrapping function out to utils
+async function startCache(bootstrapFilepath, port) {
+  localServerPort = port;
+  // Load bootstrap peers from file
+  if (bootstrapFilepath) {
+    debug(`Loading bootstrap peers from: ${bootstrapFilepath}`);
+
+    try {
+      const bootstrapPeers = loadBootstrapAddresses(bootstrapFilepath);
+      debug('Bootstrap peers:', bootstrapPeers);
+
+      if (bootstrapPeers) {
+        const bootstrapPromises = bootstrapPeers.map((address) => requestPeerInfo(address));
+
+        const results = await Promise.all(bootstrapPromises);
+
+        // for each resolved promise, if peer info, then add it to the cache
+        debug('Bootstrap results:', JSON.stringify(results));
+        results.forEach((result) => {
+          if (result != null && result.responseType === ResponseTypes.Success) {
+            // Validate then add the peer to the cache
+            const peer = result.responseData;
+            peer.lastSeen = Date.now();
+            // debug(`Adding bootstrap peer: ${JSON.stringify(peer)}`);
+            addPeer(peer);
+          }
+        });
+      }
+    } catch (error) {
+      debug(`Error loading bootstrap peers: ${error}`);
+    }
+  }
+
+  // Load all saved peers from the database
+  loadCache();
+
+  // Start the Timer
+  startRefreshScheduler();
+}
+
+function shutdownCache() {
+  debug('Shutting down cache');
+  stopRefreshScheduler();
+  saveCache();
+}
+
+// --------------------- Cache functions ------------------------------
+/**
+ * @description: Request peer user info from a bootstrap peer address.
+ * @param {Object} address Object containing peer ip and port.
+ * @returns {Object} Peer (user) object.
+ */
+async function requestPeerInfo(address) {
+  debug(`Requesting peer info from: ${address.ip}:${address.port}`);
+  const originKey = getUserSessionKey();
+  // debug(`User key: ${userKey}`);
+  // Send a request to the peer for its user info
+  try {
+    const ws = new WebSocket(`ws://${address.ip}:${address.port}`);
+
+    const peerInfo = await new Promise((resolve) => {
+      ws.on('open', () => {
+        // Add our user info to the request
+        const request = new Request(RequestTypes.Handshake, {
+          originKey, address, originPort: localServerPort,
+        });
+        ws.send(JSON.stringify(request));
+      });
+
+      ws.on('message', (message) => {
+        const response = JSON.parse(message);
+        debug(`Response: ${JSON.stringify(response)}`);
+        resolve(response);
+        // if (response.responseType === ResponseTypes.Success) {
+        //   resolve(response);
+        // } else {
+        //   resolve(null);
+        // }
+        ws.close(); // is this ever executed?
+      });
+
+      ws.on('error', (error) => {
+        debug(`Error getting info for peer: ${JSON.stringify(address)} - ${error}`);
+        resolve(null);
+      });
+    });
+
+    return peerInfo;
+  } catch (error) {
+    debug(`Error refreshing peer: ${JSON.stringify(address)} - ${error}`);
+    return null;
+  }
+}
+
+/*
+// in server:
+const remoteAddress = request.socket.remoteAddress.replace(/^.*:/, ''); // ipv6 hybrid
+    const { remotePort } = request.socket;
+    // Add the origin peer to the cache
+    addRemotePeer({ ip: remoteAddress, port: remotePort });
+*/
+async function addRemotePeer(key, address) {
+  debug(`Adding remote peer: ${key}, ${JSON.stringify(address)}`);
+  // if cache contains key
+  if (cache.has(key)) {
+    debug(`Peer already in cache: ${key}`);
+    updatePeerLastAddress(key, address);
+    return;
+  }
+
+  const response = await requestPeerInfo(address);
+  if (response) {
+    const peer = response.responseData;
+    debug(`Received remote peer info: ${JSON.stringify(peer)}`);
+    peer.lastSeen = Date.now();
+    addPeer(peer);
+  }
+}
+
+/**
+ * @description: Get providers for a specific item (key and type). At the moment just return
+ * all active peers in the cache. Later on this could be filtered by interest groups or
+ * followed peers. Or the peers could be queried for the item asynchronously.
+ * @param {*} key The key of the item
+ * @param {*} type The type of the item
+ * @returns {Array} An array of peers
+ */
 function getProviders(key, type) {
   debug(`Getting providers for key: ${key} and type: ${type}`);
-  return getAllPeers();
+
+  // Get all active peers from the cache
+  const peers = getAllPeers();
+  const providers = [];
+
+  peers.forEach((peer) => {
+    // For each peer
+    // Check if it has / might have the item
+    // If it does then add it to the providers list
+    providers.push(peer);
+  });
+
+  return providers;
 }
 
 function addPeer(peer) {
@@ -72,6 +238,8 @@ function removePeer(key) {
 
 function updatePeer(peer) {
   debug(`Updating peer: ${peer.key}`);
+  // Update some of the parameters?
+  // LastSeen ?
   cache.set(peer.key, peer);
 }
 
@@ -85,11 +253,11 @@ function getAllPeers() {
   return cache;
 }
 
-function getFollowedPeers(user) {
-  debug(`Getting followed peers for user: ${user}`);
+function getFollowedPeers(followedPeerIDs) {
+  // debug(`Getting followed peers for user: ${user}`);
 
   // Get followed peer ids from user object
-  const followedPeerIDs = user.following;
+  // const followedPeerIDs = user.following;
 
   // Get each followed peer from the cache (if available)
   const peers = [];
@@ -138,6 +306,10 @@ function updatePeerLastAddress(key, address) {
   }
 }
 
+/**
+ * @description: Refresh the cache by checking if each peer is still active.
+ * If the peer is not active then remove it from the cache.
+ */
 async function refreshCache() {
   debug('Refreshing cache');
   // Go through each peer in the cache and check if it is still active
@@ -155,6 +327,12 @@ async function refreshCache() {
   await Promise.all(refreshPromises);
 }
 
+/**
+ * @description Refresh a single peer in the cache. This is done by opening a websocket
+ * and sending a ping. If the peer responds then it is still active. Inactive peers are
+ * removed from the cache.
+ * @param {*} peer The peer to refresh ()
+ */
 async function refreshPeer(peer) {
   // Check if the peer is still active
   // If the peer is still active
@@ -225,10 +403,11 @@ function loadCache() {
 
   // Load all users from the database
   // Add each peer to the cache if there is a last seen timestamp and address
-  const peers = Database.getUsers();
+  const peers = Database.getAllUsers();
+  debug(`Found ${peers.length} peers in database.`);
 
   peers.forEach((peer) => {
-    if (peer.lastSeen && peer.address) {
+    if (peer.lastSeen && peer.lastAddress) {
       addPeer(peer);
     }
   });
@@ -238,10 +417,7 @@ function loadCache() {
 
 function saveCache() {
   refreshCache();
-
   // Save all peers in the cache to the database
-  // This is done by replacing the entire table
-  // with the contents of the cache
   cache.forEach((peer) => {
     // For each peer
     // If in database, then update the last seen timestamp and address
@@ -255,9 +431,10 @@ function saveCache() {
         dbPeer.lastSeen = peer.lastSeen;
         dbPeer.lastAddress = peer.lastAddress;
         Database.updateUser(dbPeer);
+        // Database.updateUser(peer);
       } else {
         // Peer does not exist in database so add it
-        Database.addUser(peer);
+        Database.put(peer);
       }
     } catch (error) {
       debug(`Error saving peer: ${peer.key} - ${error}`);
@@ -276,7 +453,7 @@ class RefeshScheduler {
 
   start() {
     this.refreshTimer = setInterval(this.refreshFunction, this.refreshInterval);
-    this.refreshFunction();
+    // this.refreshFunction();
   }
 
   stop() {
@@ -287,36 +464,73 @@ class RefeshScheduler {
   }
 }
 
+const refreshScheduler = new RefeshScheduler(refreshCache, refreshSeconds);
+
+function startRefreshScheduler() {
+  refreshScheduler.start();
+}
+
+function stopRefreshScheduler() {
+  refreshScheduler.stop();
+}
+
+// Load all followed peers from the database
+// Load all cached peers from disk
+// Refresh the cache
+// Start the Timer
+
 // const refreshScheduler = new RefeshScheduler(refreshCache, 60);
 // refreshScheduler.start();
 
 // --------------------- Testing functions ----------------------------
 
-function buildDummyCache() {
-  // Build a dummy cache for testing
-  // This is done by adding dummy peers to the cache
-  // The peers are not added to the database
-  // The peers are not checked for activity
-  debug('Building dummy cache');
+// function buildDummyCache() {
+//   // Build a dummy cache for testing
+//   // This is done by adding dummy peers to the cache
+//   // The peers are not added to the database
+//   // The peers are not checked for activity
+//   debug('Building dummy cache');
 
-  for (let i = 0; i < 5; i += 1) {
-    const peer = generateRandomUser();
-    peer.lastAddress.ip = '127.0.0.1';
-    peer.lastAddress.port = 8080 + i;
-    peer.lastSeen = Date.now();
-    addPeer(peer);
-  }
-}
+//   for (let i = 0; i < 5; i += 1) {
+//     const peer = generateRandomUser();
+//     peer.lastAddress.ip = '127.0.0.1';
+//     peer.lastAddress.port = 8080 + i;
+//     peer.lastSeen = Date.now();
+//     addPeer(peer);
+//   }
+// }
 
-async function refreshTest() {
-  buildDummyCache();
-  debug('Cache:', cache);
+// async function refreshTest() {
+//   buildDummyCache();
+//   debug('Cache:', cache);
 
-  await refreshCache();
+//   await refreshCache();
 
-  debug('Cache:', cache);
-}
+//   debug('Cache:', cache);
+// }
 
 // refreshTest();
-// const refreshScheduler = new RefeshScheduler(refreshCache, 10);
-// refreshScheduler.start();
+
+// Some of these do not need to be exported
+module.exports = {
+  initCache,
+  startCache,
+  shutdownCache,
+  getProviders,
+  addRemotePeer,
+  addPeer,
+  requestPeerInfo,
+  // removePeer,
+  // updatePeer,
+  // getPeer,
+  // getAllPeers,
+  // getFollowedPeers,
+  // getPeerAddress,
+  // updatePeerLastSeen,
+  // updatePeerLastAddress,
+  loadCache,
+  saveCache,
+  // buildDummyCache,
+  // startRefreshScheduler,
+  // stopRefreshScheduler,
+};

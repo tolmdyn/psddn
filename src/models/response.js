@@ -16,12 +16,12 @@ const ResponseTypes = {
  * @description: Represents a response object
  * @class Response
  * @param {string} type - Type of response
- * @param {string} message - Response message/content
+ * @param {string} data - Response message/content
  */
 class Response {
-  constructor(type, message) {
+  constructor(type, data) {
     this.responseType = type;
-    this.responseMessage = message;
+    this.responseData = data;
   }
 }
 

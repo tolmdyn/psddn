@@ -55,8 +55,15 @@
 const WebSocket = require('ws');
 const debug = require('debug')('client');
 
-const Database = require('../database/dbInstance');
-const { authenticateUser, signMessage, createNewUser } = require('../auth/auth');
+// const Database = require('../database/dbInstance');
+const {
+  setUserSession,
+  authenticateUser,
+  signMessage,
+  createNewUser,
+  getUserSession,
+} = require('../auth/auth');
+
 const { RequestTypes, Request } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
 const { isValidItemType } = require('../models/types');
@@ -67,7 +74,15 @@ const { validateItem } = require('../models/validation');
 /* --- AUTH --- */
 // Maybe these can be moved to auth.js
 
-let userSession = null;
+// let userSession = null;
+let Database = null;
+
+function initClient(dbInstance) {
+  Database = dbInstance;
+
+  createNewUserSession('testuser');
+  debug('User session created.', getUserSession());
+}
 
 /**
  * @description Authenticates a user session using a public key and secret key.
@@ -78,7 +93,8 @@ let userSession = null;
 function authenticateUserSession(publicKey, secretKey) {
   try {
     if (authenticateUser(publicKey, secretKey)) {
-      userSession = { publicKey, secretKey };
+      // userSession = { publicKey, secretKey };
+      setUserSession({ publicKey, secretKey });
       return true;
     }
     debug('Authentication Failed (Incorrect key?)');
@@ -96,11 +112,11 @@ function authenticateUserSession(publicKey, secretKey) {
  */
 function createNewUserSession(nickname) {
   const { user, secretKey } = createNewUser(nickname);
-  userSession = { publicKey: user.key, secretKey };
-
+  const userSession = { publicKey: user.key, secretKey, user };
+  setUserSession(userSession);
   // add user to local db OR add user to 'userprofiles'
   // TODO: figure out what to do with the secretKey
-  putItem(user);
+  // putItem(user);
 
   return user;
 }
@@ -147,7 +163,8 @@ async function getItem(key, type) {
 }
 
 async function getItemFromProviders(key, type) {
-  const providers = getProviders(key, type);
+  const providers = await getProviders(key, type);
+  debug('Providers:', providers);
 
   if (!providers || providers.length === 0) {
     return new Response(ResponseTypes.Error, 'No providers found for item.');
@@ -160,10 +177,11 @@ async function getItemFromProviders(key, type) {
 
   // wait for all promises to resolve
   const results = await Promise.all(promises);
+  debug('Results from providers:', results);
 
   // find successful responses
   const successfulResult = results.filter((result) => result !== null)
-    .find((result) => result.type === ResponseTypes.Success);
+    .find((result) => result.responseType === ResponseTypes.Success);
 
   if (successfulResult) {
     return successfulResult;
@@ -254,7 +272,7 @@ function pubItem(item) {
   }
 
   // update feed
-  updateUserFeed(item);
+  // updateUserFeed(item);
 
   // send to peers / dht
   try {
@@ -278,9 +296,10 @@ function pubItem(item) {
  */
 function updateUserFeed(document) {
   // if this is always called internally then we shouldn't need to verify document
+  const { userSession } = getUserSession();
 
   // get last user feed
-  const user = Database.get(userSession.publicKey, 'user');
+  const user = Database.get(userSession.key, 'user');
   const lastFeed = Database.get(user.lastFeed, 'feed');
 
   // append new items
@@ -315,8 +334,6 @@ function getFollowedFeeds() {
   // update local db
 }
 
-/** -------------------------- internal use functions ---------------------------------- */
-
 /**
  * @description Generic function to sends a "request" (e.g. GET, PUT, etc) to a
  * provider.
@@ -324,8 +341,10 @@ function getFollowedFeeds() {
  * type and/or data of the item.
  */
 async function sendRequestToProvider(request, provider) {
+  const { ip, port } = provider.lastAddress;
+
   try {
-    const ws = new WebSocket(`ws://${provider.ip}:${provider.port}`);
+    const ws = new WebSocket(`ws://${ip}:${port}`);
 
     return new Promise((resolve, reject) => {
       ws.on('error', (err) => {
@@ -350,10 +369,10 @@ async function sendRequestToProvider(request, provider) {
             const response = JSON.parse(message);
             debug('Response:', response);
 
-            if (response.type === ResponseTypes.Success) {
+            if (response.responseType === ResponseTypes.Success) {
               ws.close();
               resResolve(response);
-            } else if (response.type === ResponseTypes.Error) {
+            } else if (response.responseType === ResponseTypes.Error) {
               ws.close();
 
               // Should it resolve with the error Response instead?
@@ -388,12 +407,13 @@ async function sendRequestToProvider(request, provider) {
 }
 
 async function sendItemToProviders(item) {
-  const providers = getProviders(item.key, item.type);
+  const providers = await getProviders(item.key, item.type);
 
   // if no providers were given, return error
   if (!providers || providers.length === 0) {
     return new Response(ResponseTypes.Error, 'No providers found for item.');
   }
+  debug('Providers:', providers);
 
   const request = new Request(RequestTypes.Put, { item });
 
@@ -451,6 +471,7 @@ async function sendItemToProviders(item) {
 /* -------------------------------- ----------------- -------------------------------- */
 
 module.exports = {
+  initClient,
   authenticateUserSession,
   createNewUserSession,
   getItem,
