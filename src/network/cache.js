@@ -259,6 +259,7 @@ function getAllPeers() {
   return cache;
 }
 
+// TODO need to test this
 function getFollowedPeers(followedPeerIDs) {
   // debug(`Getting followed peers for user: ${user}`);
 
@@ -279,6 +280,7 @@ function getFollowedPeers(followedPeerIDs) {
   return peers;
 }
 
+// TODO need to test this
 function getPeerAddress(key) {
   debug(`Getting address for peer: ${key}`);
   const peer = getPeer(key);
@@ -318,11 +320,6 @@ function updatePeerLastAddress(key, address) {
  */
 async function refreshCache() {
   debug('Refreshing cache');
-  // Go through each peer in the cache and check if it is still active
-  // If not active then remove it from the cache
-  // This performs each refresh (check/remove) in parallel
-  // But it could also send out the checks, wait for them all to resolve
-  // and then remove the inactive peers
 
   const refreshPromises = [];
 
@@ -330,6 +327,7 @@ async function refreshCache() {
     refreshPromises.push(refreshPeer(peer));
   });
 
+  // Wait for all refresh promises to resolve
   await Promise.all(refreshPromises);
 }
 
@@ -341,11 +339,7 @@ async function refreshCache() {
  */
 async function refreshPeer(peer) {
   // Check if the peer is still active
-  // If the peer is still active
-  // the last seen timestamp is updated
-  // If not then remove it from the cache?
   debug(`Refreshing peer: ${peer.key}`);
-
   const peerOnline = await checkPeerOnline(peer);
 
   if (peerOnline) {
@@ -361,24 +355,19 @@ async function refreshPeer(peer) {
 
 async function checkPeerOnline(peer) {
   debug(`Checking if peer is online: ${peer.key} - ${peer.lastAddress.ip}:${peer.lastAddress.port}`);
-  // Check if the peer is still active
-  // This is done by opening a websocket and sending a ping
-  // If the peer responds then it is still active
-  // Returns boolean
+  // Check if the peer is still active by opening a websocket and sending a 'ping' request
   try {
     const ws = new WebSocket(`ws://${peer.lastAddress.ip}:${peer.lastAddress.port}`);
 
     const peerOnline = await new Promise((resolve) => {
       ws.on('open', () => {
-        // debug(`Ping peer: ${peer.key}`);
         const request = new Request(RequestTypes.Ping, null);
         ws.send(JSON.stringify(request));
       });
 
       ws.on('message', (message) => {
-        // debug(`Pong peer: ${peer.key}`);
         const response = JSON.parse(message);
-        if (response.responseType === ResponseTypes.Success) {
+        if (isSuccessResponse(response)) {
           resolve(true);
         } else {
           resolve(false);
@@ -406,16 +395,14 @@ async function checkPeerOnline(peer) {
 
 function loadCache() {
   debug('Loading cache');
-
-  // Load all users from the database
-  // Add each peer to the cache if there is a last seen timestamp and address
+  // Load all users from the database, then add each seen peer to the cache
   const peers = Database.getAllUsers();
   debug(`Found ${peers.length} peers in database.`);
 
   peers.forEach((peer) => {
     if (peer.lastSeen && peer.lastAddress) {
+      // add remote so that it sends a handshake request so connection is mutual
       addRemotePeer(peer.key, peer.lastAddress);
-      // addPeer(peer);
     }
   });
 
@@ -423,14 +410,15 @@ function loadCache() {
 }
 
 function saveCache() {
+  // Final refresh of cache before saving
   refreshCache();
-  // Save all peers in the cache to the database
+
+  debug(`Saving cache of ${cache.size} peers to database`);
   cache.forEach((peer) => {
     // For each peer
     // If in database, then update the last seen timestamp and address
     // If not in database, then add the peer to the database
     try {
-      // const dbPeer = database.getUser(peer.key);
       const dbPeer = Database.getUser(peer.key);
 
       if (dbPeer) {
@@ -438,9 +426,8 @@ function saveCache() {
         dbPeer.lastSeen = peer.lastSeen;
         dbPeer.lastAddress = peer.lastAddress;
         Database.updateUser(dbPeer);
-        // Database.updateUser(peer);
       } else {
-        // Peer does not exist in database so add it
+        // Peer does not exist in database so put it
         Database.put(peer);
       }
     } catch (error) {
@@ -459,11 +446,13 @@ class RefeshScheduler {
   }
 
   start() {
+    debug('Starting refresh scheduler');
     this.refreshTimer = setInterval(this.refreshFunction, this.refreshInterval);
     // this.refreshFunction();
   }
 
   stop() {
+    debug('Stopping refresh scheduler');
     if (this.refreshTimer) {
       clearInterval(this.refreshTimer);
       this.refreshTimer = null;
@@ -520,24 +509,18 @@ function stopRefreshScheduler() {
 
 // Some of these do not need to be exported
 module.exports = {
+  // start up functions
   initCache,
   startCache,
   shutdownCache,
+  // providers
   getProviders,
+  // server -> handshake
   addRemotePeer,
-  addPeer,
-  requestPeerInfo,
-  // removePeer,
-  // updatePeer,
-  // getPeer,
-  // getAllPeers,
+  // addPeer,
+  // requestPeerInfo,
   // getFollowedPeers,
   // getPeerAddress,
-  // updatePeerLastSeen,
-  // updatePeerLastAddress,
-  loadCache,
-  saveCache,
-  // buildDummyCache,
-  // startRefreshScheduler,
-  // stopRefreshScheduler,
+  // loadCache,
+  // saveCache,
 };

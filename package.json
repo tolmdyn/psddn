@@ -4,7 +4,7 @@
   "description": "A Node P2P Content Sharing Network",
   "main": "bin/app.js",
   "scripts": {
-    "debug": "DEBUG=server,client,database,cache node bin/testApp.js -p 8080 -db ./data/test.db -b ./data/bootstrap.json",
+    "debug": "DEBUG=server,client,database,cache node bin/testApp.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json",
     "test": "mocha tests/**/*.test.js",
     "test:database": "mocha tests/database.test.js",
     "test:validation": "mocha tests/validation.*.test.js",
