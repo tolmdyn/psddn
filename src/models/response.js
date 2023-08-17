@@ -15,13 +15,13 @@ const ResponseTypes = {
 /**
  * @description: Represents a response object
  * @class Response
- * @param {string} type - Type of response
- * @param {string} data - Response message/content
+ * @param {string} responseType - Type of response
+ * @param {string} responseData - Response message/content
  */
 class Response {
-  constructor(type, data) {
-    this.responseType = type;
-    this.responseData = data;
+  constructor(responseType, responseData) {
+    this.responseType = responseType;
+    this.responseData = responseData;
   }
 }
 

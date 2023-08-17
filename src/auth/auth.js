@@ -194,13 +194,16 @@ function verifyMessage(message, signature, publicKey) {
 // console.log(`verified2: "${verified2}"`);
 
 module.exports = {
+  authenticateUser,
   setUserSession,
   getUserSession,
   getUserSessionKey,
   getUserSessionUser,
   setUserSessionAddress,
+
   createNewUser,
-  authenticateUser,
+  createNewUserProfile,
+
   signMessage,
   verifyMessage,
 };

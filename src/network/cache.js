@@ -130,7 +130,7 @@ function shutdownCache() {
 
 function isSuccessResponse(response) {
   return (response != null
-    && response.instanceof(Response)
+    && response instanceof Response
     && response.responseType === ResponseTypes.Success);
 }
 
