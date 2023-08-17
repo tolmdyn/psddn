@@ -1,5 +1,5 @@
 const fs = require('fs');
-const debug = require('debug')('bootstrap');
+// const debug = require('debug')('bootstrap');
 
 function loadBootstrapAddresses(filepath) {
   const bootstrapPeers = JSON.parse(fs.readFileSync(filepath, 'utf8'));

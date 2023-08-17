@@ -260,37 +260,37 @@ function getAllPeers() {
 }
 
 // TODO need to test this
-function getFollowedPeers(followedPeerIDs) {
-  // debug(`Getting followed peers for user: ${user}`);
+// function getFollowedPeers(followedPeerIDs) {
+//   // debug(`Getting followed peers for user: ${user}`);
 
-  // Get followed peer ids from user object
-  // const followedPeerIDs = user.following;
+//   // Get followed peer ids from user object
+//   // const followedPeerIDs = user.following;
 
-  // Get each followed peer from the cache (if available)
-  const peers = [];
-  followedPeerIDs.forEach((peer) => {
-    const cachedPeer = getPeer(peer);
+//   // Get each followed peer from the cache (if available)
+//   const peers = [];
+//   followedPeerIDs.forEach((peer) => {
+//     const cachedPeer = getPeer(peer);
 
-    // If not found in cache then it is null
-    if (cachedPeer) {
-      peers.push(getPeer(peer));
-    }
-  });
+//     // If not found in cache then it is null
+//     if (cachedPeer) {
+//       peers.push(getPeer(peer));
+//     }
+//   });
 
-  return peers;
-}
+//   return peers;
+// }
 
 // TODO need to test this
-function getPeerAddress(key) {
-  debug(`Getting address for peer: ${key}`);
-  const peer = getPeer(key);
-  if (peer) {
-    return { ip: peer.ip, port: peer.port };
-  }
+// function getPeerAddress(key) {
+//   debug(`Getting address for peer: ${key}`);
+//   const peer = getPeer(key);
+//   if (peer) {
+//     return { ip: peer.ip, port: peer.port };
+//   }
 
-  debug(`Peer not found: ${key}`);
-  return null;
-}
+//   debug(`Peer not found: ${key}`);
+//   return null;
+// }
 
 function updatePeerLastSeen(key) {
   debug(`Updating last seen for peer: ${key}`);
