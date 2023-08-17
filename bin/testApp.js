@@ -7,7 +7,7 @@ const cache = require('../src/network/cache');
 const server = require('../src/server/server');
 
 const createDatabaseInstance = require('../src/database/dbInstance');
-const shutdown = require('../src/utils/shutdown');
+require('../src/utils/shutdown');
 
 const { startUI } = require('../src/ui');
 
