@@ -62,7 +62,7 @@ const debug = require('debug')('cache');
 const WebSocket = require('ws');
 
 // const { Database } = require('../database/dbInstance');
-const { generateRandomUser } = require('../utils/utils');
+// const { generateRandomUser } = require('../utils/utils');
 const { Request, RequestTypes } = require('../models/request');
 const { Response, ResponseTypes } = require('../models/response');
 const { loadBootstrapAddresses } = require('./bootstrap');
@@ -101,7 +101,7 @@ async function startCache(bootstrapFilepath, port) {
         // for each resolved promise, if peer info, then add it to the cache
         debug('Bootstrap results:', JSON.stringify(results));
         results.forEach((result) => {
-          if (result != null && result.responseType === ResponseTypes.Success) {
+          if (isSuccessResponse(result)) {
             // Validate then add the peer to the cache
             const peer = result.responseData;
             peer.lastSeen = Date.now();
@@ -126,6 +126,12 @@ function shutdownCache() {
   debug('Shutting down cache');
   stopRefreshScheduler();
   saveCache();
+}
+
+function isSuccessResponse(response) {
+  return (response != null
+    && response.instanceof(Response)
+    && response.responseType === ResponseTypes.Success);
 }
 
 // --------------------- Cache functions ------------------------------
@@ -408,7 +414,8 @@ function loadCache() {
 
   peers.forEach((peer) => {
     if (peer.lastSeen && peer.lastAddress) {
-      addPeer(peer);
+      addRemotePeer(peer.key, peer.lastAddress);
+      // addPeer(peer);
     }
   });
 
