@@ -80,10 +80,18 @@ let Database = null;
 function initClient(dbInstance) {
   Database = dbInstance;
 
-  createNewUserSession('testuser');
-  debug('User session created.', getUserSession());
+  // createNewUserSession('testuser');
+  // debug('User session created.', getUserSession());
 }
 
+function loginUserSession(key, password) {
+  // get user from local db
+  // const user = Database.getUser(key);
+  // if (!user) {
+  //   return new Response(ResponseTypes.Error, 'User not found.');
+  // }
+  debug(`Logging in user session... Key: ${key}, Password: ${password}`);
+}
 /**
  * @description Authenticates a user session using a public key and secret key.
  * @param {string} publicKey The public key of the user.
@@ -110,7 +118,7 @@ function authenticateUserSession(publicKey, secretKey) {
  * @param {} nickname Optional nickname to use for the user, not neccessarily unique.
  * @returns A new user object. (maybe with the secret key also ?)
  */
-function createNewUserSession(nickname) {
+async function createNewUserSession(nickname, password) {
   const { user, secretKey } = createNewUser(nickname);
   const userSession = { publicKey: user.key, secretKey, user };
   setUserSession(userSession);
@@ -424,7 +432,7 @@ async function sendItemToProviders(item) {
   const results = await Promise.all(promises);
 
   const successfulResponsesCount = results
-    .filter((result) => result !== null && result.type === ResponseTypes.Success).length;
+    .filter((result) => result !== null && result.responseType === ResponseTypes.Success).length;
 
   debug('Number of successful responses:', successfulResponsesCount);
 

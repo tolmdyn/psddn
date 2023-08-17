@@ -28,25 +28,48 @@ const options = program.opts();
 const port = options.port || 8080;
 const dbName = options.dbname || null;
 const bootstrapFilepath = options.bootstrap || null;
-const UIType = options.interface || 'none';
+const UIType = options.interface || null;
 
-/* init database */
+// Database
 const dbInstance = createDatabaseInstance(dbName);
 
-/* init instances */
-client.initClient(dbInstance);
-// authenticate client usersession
+initialise(UIType, dbInstance, port, bootstrapFilepath);
 
-server.initServer(dbInstance);
-server.startServer(port);
+async function initialise(initUI, initDbInstance, initPort, initBootstrapFilepath) {
+  // Interface and Session
+  if (!initUI) {
+    await client.createNewUserSession();
+    console.log('Headless mode - created dummy user session');
+  } else {
+    console.log('Starting UI:', initUI);
+    await startUI(initUI);
+  }
+  // Client
+  await client.initClient(initDbInstance);
 
-cache.initCache(dbInstance);
-cache.startCache(bootstrapFilepath, port); // add bootstrap peers, start timer, etc
+  // Server
+  await server.initServer(initDbInstance);
+  await server.startServer(initPort);
+
+  // Cache
+  await cache.initCache(initDbInstance);
+  await cache.startCache(initBootstrapFilepath, port); // add bootstrap peers, start timer, etc
+}
 
 /* start interface */
-startUI(UIType);
+// startUI(UIType);
 
-module.exports = {
-  client,
-  cache,
-};
+/* init instances */
+// client.initClient(dbInstance);
+// authenticate client usersession
+
+// server.initServer(dbInstance);
+// server.startServer(port);
+
+// cache.initCache(dbInstance);
+// cache.startCache(bootstrapFilepath, port); // add bootstrap peers, start timer, etc
+
+// module.exports = {
+//   client,
+//   cache,
+// };

@@ -17,10 +17,11 @@ function selectUI(UIType) {
   }
 }
 
-function startUI(UIType) {
+async function startUI(UIType) {
   UI = selectUI(UIType);
+
   if (UI) {
-    UI.start();
+    await UI.start();
   }
 
   return UI;

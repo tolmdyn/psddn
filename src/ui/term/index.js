@@ -7,9 +7,54 @@ const { shutdown } = require('../../utils/shutdown');
 let rl = null;
 
 // console.log('web interface loaded');
-function start() {
+async function start() {
   debug('starting terminal UI');
+
+  // let userSession;
+
   createInterface();
+
+  // while (!userSession) {
+  const userSession = await initUserSession();
+  console.log('userSession:', userSession);
+  // }
+
+  // await createInterface();
+}
+
+function askQuestion(question) {
+  return new Promise((resolve) => {
+    rl.question(question, (answer) => {
+      resolve(answer);
+    });
+  });
+}
+
+async function initUserSession() {
+  // create new user
+  // or sign in as existing user
+  console.log('Would you like to CREATE a new user session or LOGIN to an existing one?');
+  const choice = await askQuestion('Please enter "create" or "login": ');
+
+  if (choice === 'create') {
+    const nickname = await askQuestion('Enter a nickname: ');
+    const password = await askQuestion('Enter a password: ');
+    // const user = { nickname, password };
+    const userSession = await client.createNewUserSession(nickname, password);
+    return userSession;
+  }
+
+  if (choice === 'login') {
+    const nickname = await askQuestion('Enter your nickname: ');
+    const password = await askQuestion('Enter your password: ');
+    const userSession = await client.loginUserSession(nickname, password); // NOT IMPLEMENTED
+    return userSession;
+  }
+
+  console.log('Invalid choice.');
+
+  // loop until valid choice?
+  return initUserSession();
 }
 
 async function handleGet(args) {
@@ -45,6 +90,18 @@ async function handlePut(args) {
   return null;
 }
 
+async function handlePub(args) {
+  const item = parseItem(args.join(' '));
+
+  if (item) {
+    const response = await client.pubItem(item);
+    return response;
+  }
+
+  console.log('Invalid publish command. Usage: publish <item>');
+  return null;
+}
+
 async function handleCommand(command) {
   // build request object from command...
   const [commandAction, ...args] = command.split(' ');
@@ -57,6 +114,14 @@ async function handleCommand(command) {
     return handlePut(args);
   }
 
+  if (commandAction === 'publish') {
+    return handlePub(args);
+  }
+
+  if (commandAction === 'help') {
+    return 'Available commands: get, put, exit';
+  }
+
   if (commandAction === 'exit') {
     shutdown('Shutting down...');
   }
@@ -65,7 +130,7 @@ async function handleCommand(command) {
   return null;
 }
 
-function createInterface() {
+async function createInterface() {
   rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,

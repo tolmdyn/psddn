@@ -195,6 +195,7 @@ function verifyMessage(message, signature, publicKey) {
 
 module.exports = {
   authenticateUser,
+
   setUserSession,
   getUserSession,
   getUserSessionKey,

@@ -129,8 +129,7 @@ function shutdownCache() {
 }
 
 function isSuccessResponse(response) {
-  return (response != null
-    && response instanceof Response
+  return (response !== null
     && response.responseType === ResponseTypes.Success);
 }
 
@@ -255,7 +254,7 @@ function getPeer(key) {
 }
 
 function getAllPeers() {
-  debug('Getting all peers');
+  debug(`Getting all peers ${JSON.stringify(cache)}`);
   return cache;
 }
 
@@ -329,6 +328,7 @@ async function refreshCache() {
 
   // Wait for all refresh promises to resolve
   await Promise.all(refreshPromises);
+  debug(`Cache ${cache.size}`);
 }
 
 /**
