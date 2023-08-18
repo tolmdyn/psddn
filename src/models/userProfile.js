@@ -37,4 +37,4 @@ const userProfileSchema = joi.object({
 
 });
 
-module.exports = userProfileSchema;
+module.exports = { userProfileSchema };

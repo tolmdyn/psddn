@@ -32,23 +32,25 @@ const UIType = options.interface || null;
 
 // Database
 const dbInstance = createDatabaseInstance(dbName);
+client.initClient(dbInstance);
+server.initServer(dbInstance);
 
 initialise(UIType, dbInstance, port, bootstrapFilepath);
 
 async function initialise(initUI, initDbInstance, initPort, initBootstrapFilepath) {
-  // Interface and Session
+  // Interface and Session - (cleanup!)
   if (!initUI) {
-    await client.createNewUserSession();
+    await client.loginNewUser();
     console.log('Headless mode - created dummy user session');
   } else {
     console.log('Starting UI:', initUI);
     await startUI(initUI);
   }
   // Client
-  await client.initClient(initDbInstance);
+  // await client.initClient(initDbInstance);
 
   // Server
-  await server.initServer(initDbInstance);
+  // await server.initServer(initDbInstance);
   await server.startServer(initPort);
 
   // Cache

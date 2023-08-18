@@ -55,13 +55,8 @@
 const WebSocket = require('ws');
 const debug = require('debug')('client');
 
-// const Database = require('../database/dbInstance');
 const {
-  setUserSession,
-  authenticateUser,
-  signMessage,
-  createNewUser,
-  getUserSession,
+  authNewUser, authUserKey, getUserSessionKey,
 } = require('../auth/auth');
 
 const { RequestTypes, Request } = require('../models/request');
@@ -70,9 +65,6 @@ const { isValidItemType } = require('../models/types');
 const { isValidKeyFormat } = require('../utils/utils');
 const { getProviders } = require('../network/providers');
 const { validateItem } = require('../models/validation');
-
-/* --- AUTH --- */
-// Maybe these can be moved to auth.js
 
 // let userSession = null;
 let Database = null;
@@ -84,32 +76,17 @@ function initClient(dbInstance) {
   // debug('User session created.', getUserSession());
 }
 
-function loginUserSession(key, password) {
-  // get user from local db
-  // const user = Database.getUser(key);
-  // if (!user) {
-  //   return new Response(ResponseTypes.Error, 'User not found.');
-  // }
-  debug(`Logging in user session... Key: ${key}, Password: ${password}`);
-}
-/**
- * @description Authenticates a user session using a public key and secret key.
- * @param {string} publicKey The public key of the user.
- * @param {string} secretKey The secret key of the user.
- * @returns {boolean} True if the user was authenticated, false otherwise.
- */
-function authenticateUserSession(publicKey, secretKey) {
+function loginUser(key, password) {
   try {
-    if (authenticateUser(publicKey, secretKey)) {
-      // userSession = { publicKey, secretKey };
-      setUserSession({ publicKey, secretKey });
-      return true;
-    }
-    debug('Authentication Failed (Incorrect key?)');
-  } catch (err) {
-    debug('Authentication Error:', err);
+    const newUser = authUserKey(key, password);
+    debug('User:', newUser, 'Secret Key:', newUser.secretKey);
+    return newUser;
+  } catch {
+    debug('Error creating new user session.');
   }
-  return false;
+
+  debug(`Logging in user session... Key: ${key}, Password: ${password}`);
+  return null;
 }
 
 /**
@@ -118,15 +95,17 @@ function authenticateUserSession(publicKey, secretKey) {
  * @param {} nickname Optional nickname to use for the user, not neccessarily unique.
  * @returns A new user object. (maybe with the secret key also ?)
  */
-async function createNewUserSession(nickname, password) {
-  const { user, secretKey } = createNewUser(nickname);
-  const userSession = { publicKey: user.key, secretKey, user };
-  setUserSession(userSession);
-  // add user to local db OR add user to 'userprofiles'
-  // TODO: figure out what to do with the secretKey
-  // putItem(user);
+function loginNewUser(nickname, password) {
+  try {
+    const { userProfile, secretKey } = authNewUser(nickname, password);
+    const newUser = userProfile.userObject;
+    debug('NEW User:', newUser.key, 'Secret Key:', secretKey);
+    return newUser;
+  } catch (error) {
+    debug('Error creating new user session.', error);
+  }
 
-  return user;
+  return null;
 }
 
 /* --- ACTIONS --- */
@@ -297,6 +276,10 @@ function pubItem(item) {
   }
 }
 
+// addPeer
+
+// followPeer
+
 /**
  * @description Updates the current user's feed with a new document.
  * @param {} document The item to be added to the feed.
@@ -304,10 +287,11 @@ function pubItem(item) {
  */
 function updateUserFeed(document) {
   // if this is always called internally then we shouldn't need to verify document
-  const { userSession } = getUserSession();
+
+  // const userSession = getUserSession();
 
   // get last user feed
-  const user = Database.get(userSession.key, 'user');
+  const user = Database.get(getUserSessionKey(), 'user');
   const lastFeed = Database.get(user.lastFeed, 'feed');
 
   // append new items
@@ -315,8 +299,8 @@ function updateUserFeed(document) {
   newFeed.items.push(document);
 
   // sign the new feed
-  const signature = signMessage(newFeed, userSession.secretKey);
-  newFeed.signature = signature;
+  // const signature = signMessage(newFeed);
+  // newFeed.signature = signature;
 
   // update local db
   Database.put(newFeed);
@@ -480,8 +464,11 @@ async function sendItemToProviders(item) {
 
 module.exports = {
   initClient,
-  authenticateUserSession,
-  createNewUserSession,
+  loginUser,
+  loginNewUser,
+
+  // authenticateUserSession,
+  // createNewUserSession,
   getItem,
   putItem,
   pubItem,

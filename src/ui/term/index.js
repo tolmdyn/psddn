@@ -14,12 +14,8 @@ async function start() {
 
   createInterface();
 
-  // while (!userSession) {
   const userSession = await initUserSession();
-  console.log('userSession:', userSession);
-  // }
-
-  // await createInterface();
+  debug('userSession:', userSession);
 }
 
 function askQuestion(question) {
@@ -40,14 +36,14 @@ async function initUserSession() {
     const nickname = await askQuestion('Enter a nickname: ');
     const password = await askQuestion('Enter a password: ');
     // const user = { nickname, password };
-    const userSession = await client.createNewUserSession(nickname, password);
+    const userSession = await client.loginNewUser(nickname, password);
     return userSession;
   }
 
   if (choice === 'login') {
     const nickname = await askQuestion('Enter your nickname: ');
     const password = await askQuestion('Enter your password: ');
-    const userSession = await client.loginUserSession(nickname, password); // NOT IMPLEMENTED
+    const userSession = await client.loginUserPassword(nickname, password); // NOT IMPLEMENTED
     return userSession;
   }
 

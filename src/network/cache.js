@@ -64,9 +64,10 @@ const WebSocket = require('ws');
 // const { Database } = require('../database/dbInstance');
 // const { generateRandomUser } = require('../utils/utils');
 const { Request, RequestTypes } = require('../models/request');
-const { Response, ResponseTypes } = require('../models/response');
+const { ResponseTypes } = require('../models/response');
 const { loadBootstrapAddresses } = require('./bootstrap');
 
+// Could this be passed in at init?? (YES_)
 const { getUserSessionKey } = require('../auth/auth');
 
 const refreshSeconds = 60;
@@ -361,7 +362,7 @@ async function checkPeerOnline(peer) {
 
     const peerOnline = await new Promise((resolve) => {
       ws.on('open', () => {
-        const request = new Request(RequestTypes.Ping, null);
+        const request = new Request(RequestTypes.Ping, { targetPeer: peer.key });
         ws.send(JSON.stringify(request));
       });
 

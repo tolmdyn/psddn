@@ -122,6 +122,6 @@ module.exports = {
   isValidKeyForItem,
   isValidKeyFormat,
   generateRandomDocument,
-  generateRandomUser,
+  // generateRandomUser,
   generateRandomFeed,
 };
