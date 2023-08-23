@@ -98,28 +98,22 @@ async function handlePub(args) {
   return null;
 }
 
+const commandHandlers = {
+  get: handleGet,
+  put: handlePut,
+  publish: handlePub,
+  help: () => `Available commands: ${Object.keys(commandHandlers).join(', ')}`,
+  exit: () => shutdown('Shutting down...'),
+};
+
 async function handleCommand(command) {
   // build request object from command...
   const [commandAction, ...args] = command.split(' ');
 
-  if (commandAction === 'get') {
-    return handleGet(args);
-  }
+  const handler = commandHandlers[commandAction];
 
-  if (commandAction === 'put') {
-    return handlePut(args);
-  }
-
-  if (commandAction === 'publish') {
-    return handlePub(args);
-  }
-
-  if (commandAction === 'help') {
-    return 'Available commands: get, put, exit';
-  }
-
-  if (commandAction === 'exit') {
-    shutdown('Shutting down...');
+  if (handler) {
+    return handler(args);
   }
 
   console.log('Invalid command');
