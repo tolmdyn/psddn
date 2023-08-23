@@ -122,25 +122,12 @@ function loginNewUser(nickname, password) {
 
 /* --- USER PROFILE --- */
 function saveUserProfile(userProfile) {
-  try {
-    saveUserProfileFile(userProfile);
-    // Database.saveUserProfile(userProfile.key, userProfile);
-  } catch (err) {
-    // debug('Error saving user profile:', err);
-    throw new Error('Error saving user profile');
-  }
+  Database.putUserProfile(userProfile);
 }
 
 // Temporary functions until Database.saveProfile is implemented
 function loadUserProfile(key) {
-  try {
-    const userProfile = loadUserProfileFile(key);
-    // const userProfile = Database.getUserProfile(key);
-    return userProfile;
-  } catch (err) {
-    // debug('Error loading user profile:', err);
-    throw new Error('Error loading user profile');
-  }
+  return Database.getUserProfile(key);
 }
 
 async function saveUserProfileFile(userProfile) {
