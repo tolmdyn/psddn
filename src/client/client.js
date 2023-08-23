@@ -51,12 +51,15 @@
  * -get user info
  *
  */
-
+const fs = require('fs');
 const WebSocket = require('ws');
 const debug = require('debug')('client');
 
 const {
-  authNewUser, authUserKey, getUserSessionKey,
+  authNewUser,
+  authUserWithKey,
+  authUserWithPassword,
+  getUserSessionKey,
 } = require('../auth/auth');
 
 const { RequestTypes, Request } = require('../models/request');
@@ -77,15 +80,23 @@ function initClient(dbInstance) {
 }
 
 function loginUser(key, password) {
+  // OR loginUser(key, password, secretKey) {
+  // if password, if secretkey
   try {
-    const newUser = authUserKey(key, password);
-    debug('User:', newUser, 'Secret Key:', newUser.secretKey);
+    const userProfile = loadUserProfile(key);
+    // Login with secretKey
+    // const newUser = authUserWithKey(key, password, userProfile);
+
+    // Login with password
+    const newUser = authUserWithPassword(key, password, userProfile);
+    debug('User:', newUser.key);
     return newUser;
-  } catch {
-    debug('Error creating new user session.');
+  } catch (error) {
+    debug('Error creating new user session.', error.message);
+    process.exit(1);
   }
 
-  debug(`Logging in user session... Key: ${key}, Password: ${password}`);
+  // debug(`Logging in user session... Key: ${key}, Password: ${password}`);
   return null;
 }
 
@@ -100,14 +111,61 @@ function loginNewUser(nickname, password) {
     const { userProfile, secretKey } = authNewUser(nickname, password);
     const newUser = userProfile.userObject;
     debug('NEW User:', newUser.key, 'Secret Key:', secretKey);
+    saveUserProfile(userProfile);
     return newUser;
   } catch (error) {
-    debug('Error creating new user session.', error);
+    debug('Error creating new user session.', error.message);
   }
 
   return null;
 }
 
+/* --- USER PROFILE --- */
+function saveUserProfile(userProfile) {
+  try {
+    saveUserProfileFile(userProfile);
+    // Database.saveUserProfile(userProfile.key, userProfile);
+  } catch (err) {
+    // debug('Error saving user profile:', err);
+    throw new Error('Error saving user profile');
+  }
+}
+
+// Temporary functions until Database.saveProfile is implemented
+function loadUserProfile(key) {
+  try {
+    const userProfile = loadUserProfileFile(key);
+    // const userProfile = Database.getUserProfile(key);
+    return userProfile;
+  } catch (err) {
+    // debug('Error loading user profile:', err);
+    throw new Error('Error loading user profile');
+  }
+}
+
+async function saveUserProfileFile(userProfile) {
+  // return this.put(userProfile, Types.UserProfile);
+  const profileString = JSON.stringify(userProfile);
+  const { key } = userProfile;
+  try {
+    await fs.writeFileSync(`userProfile${key}.json`, profileString);
+  } catch (error) {
+    throw new Error('Error saving user profile');
+  }
+  debug('Saved user profile.');
+}
+
+function loadUserProfileFile(publicKey) {
+  // return this.get(publicKey, Types.UserProfile);
+  try {
+    const profileString = fs.readFileSync(`userProfile${publicKey}.json`);
+    const profile = JSON.parse(profileString);
+    debug('Loaded user profile.');
+    return profile;
+  } catch (error) {
+    throw new Error('Error loading user profile');
+  }
+}
 /* --- ACTIONS --- */
 
 async function getItem(key, type) {

@@ -278,6 +278,14 @@ class Database {
   updateUser(user) {
     return this.update(user);
   }
+
+  static saveUserProfile(userProfile) {
+    return this.put(userProfile, Types.UserProfile);
+  }
+
+  static loadUserProfile(publicKey) {
+    return this.get(publicKey, Types.UserProfile);
+  }
 }
 
 // module.exports = new Database(databasePath);

@@ -28,7 +28,11 @@
  *  shareable over the network to allow presistent profiles
  *  across multiple devices.
  *
- * Authentication process:
+ *  The encrypted secret key is used for authentication rather than a
+ *  password hash because the secret key is used to verify/sign transactions but
+ *  shouldn't be stored in plain text.
+ *
+ * Authentication processes:
  *
  * - Login or Create new User.
  * - Load or Create User Profile.
@@ -85,44 +89,25 @@ const debug = require('debug')('auth');
 const nacl = require('tweetnacl');
 nacl.util = require('tweetnacl-util');
 
-// const { userSchema, userProfileSchema } = require('../models/types');
+const { encryptWithPassword, decryptWithPassword } = require('./encrypt');
 
-// const { Database } = require('../database/dbInstance');
+// const Database = require('../database/dbInstance');
 
-// class UserSession {
-//   #userProfile;
+// let userSession = null;
+// let Database = null;
 
-//   #secretKey;
+// function initAuth(dbInstance) {
+//   Database = dbInstance;
 
-//   constructor(userProfile, secretKey) {
-//     this.userProfile = userProfile;
-//     this.secretKey = secretKey;
-//   }
-
-//   get userProfile() {
-//     return this.userProfile;
-//   }
-
-//   get userKey() {
-//     return this.userProfile.key;
-//   }
-
-//   get secretKey() {
-//     return this.secretKey;
-//   }
-
-//   get followed() {
-//     return this.userProfile.following;
-//   }
+//   // createNewUserSession('testuser');
+//   // debug('User session created.', getUserSession());
 // }
 
 /* User Session */
-
 let userSession = null;
 
 function setUserSession(userProfile, secretKey) {
   userSession = { userProfile, secretKey };
-  // userSession = new UserSession(userProfile, secretKey);
 }
 
 function getUserSessionProfile() {
@@ -141,13 +126,19 @@ function getUserSessionAddress() {
   return userSession.userProfile.userObject.lastAddress;
 }
 
-// Used by Server Handshake, but there must be a better way.
+// Used by Server Handshake, unfortunately
 function setUserSessionAddress(address) {
   userSession.userProfile.userObject.lastAddress = address;
 }
 
 /* User Functions */
-
+/**
+ * @description: Authenticate a NEW user with a password.
+ * @param {string} nickname The desired nickname (optional) of the user
+ * @param {string} password The desired password of the user
+ * @returns {object} An object containing the user profile and secret key
+ * @throws {Error} If the user is not authenticated or user profile cannot be saved
+ */
 function authNewUser(nickname, password) {
   // Create a new user
   const { user, secretKey } = createNewUser(nickname);
@@ -157,7 +148,7 @@ function authNewUser(nickname, password) {
   // Create a new user profile
   const userProfile = createNewUserProfile(user, password, secretKey);
 
-  // Store the user profile (when implemented_)
+  // Store the user profile ((DONE IN CLIENT)
   // saveUserProfile(userProfile);
 
   // Set user session
@@ -167,20 +158,20 @@ function authNewUser(nickname, password) {
   return { userProfile, secretKey };
 }
 
-function authUserKey(key, secretKey) {
+/**
+ * @description: Authenticate a user with a publicKey and secretKey.
+ * @param {*} key The public key of the user
+ * @param {*} secretKey The secret key of the user
+ * @returns {object} The user profile object
+ * @throws {Error} If the user cannot be authenticated
+ */
+function authUserWithKey(key, secretKey, userProfile) {
   // Authenticate the user
   if (!authenticateKeyPair(key, secretKey)) {
     throw new Error('Invalid key or secret');
   }
-  // Retrieve the user profile OR create a new one
-  const userProfile = null;
-  // try {
-  // const userProfile = loadUserProfile(key);
 
-  if (!userProfile) {
-    createNewUserProfile(key, secretKey);
-    // saveUserProfile(userProfile);
-  }
+  // const userProfile = loadUserProfile(key);
 
   // Set user session
   setUserSession(userProfile, secretKey);
@@ -189,11 +180,30 @@ function authUserKey(key, secretKey) {
   return userProfile;
 }
 
-function authUserPassword(key, password) {
-  // get the secret key from the password
-  const secretKey = decryptSecretKey(key, password);
+/**
+ * @description: Authenticate a user with a publicKey and password.
+ * @param {*} key The public key of the user
+ * @param {*} password The password of the user
+ * @returns {object} The user profile object
+ * @throws {Error} If the user cannot be authenticated
+ */
+function authUserWithPassword(key, password, userProfile) {
+  // The user profile is retrieved from the database.
+  // const userProfile = loadUserProfile(key);
 
-  return authUserKey(key, secretKey);
+  // The secret key is decrypted with the password.
+  const secretKey = decryptWithPassword(password, userProfile.secretKey);
+
+  // The user is authenticated with the public key & secret key.
+  if (!authenticateKeyPair(key, secretKey)) {
+    throw new Error('Invalid key or secret');
+  }
+
+  // Set user session
+  setUserSession(userProfile, secretKey);
+
+  // return something
+  return userProfile;
 }
 
 /**
@@ -238,7 +248,7 @@ function createNewUserProfile(user, password, secretKey) {
   }
 
   // Encrypt the secret key with the password (not implemented yet)
-  const encryptedSecretKey = encryptSecretKey(secretKey, password);
+  const encryptedSecretKey = encryptWithPassword(password, secretKey);
 
   // Create the user profile object
   const userProfile = {
@@ -250,31 +260,6 @@ function createNewUserProfile(user, password, secretKey) {
   };
 
   return userProfile;
-}
-
-// function createUserSession(userProfile, password) {
-
-// }
-
-function encryptSecretKey(secretKey, password) {
-  // TODO: Implement this using pbkdf
-  return secretKey;
-  // const passwordHash = generateKey(password);
-  // console.log('passwordHash:', passwordHash);
-  // const secretKeyBuffer = nacl.util.decodeBase64(secretKey);
-  // const passwordHashBuffer = nacl.util.decodeBase64(passwordHash);
-
-  // const nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
-  // console.log('nonce:', nonce);
-  // const encryptedSecretKeyBuffer = nacl.secretbox(secretKeyBuffer, nonce, passwordHashBuffer);
-  // const encryptedSecretKey = nacl.util.encodeBase64(encryptedSecretKeyBuffer);
-
-  // return encryptedSecretKey;
-}
-
-function decryptSecretKey(encryptedSecretKey, password) {
-  // TODO: Implement this using pbkdf
-  return encryptedSecretKey;
 }
 
 /**
@@ -336,12 +321,14 @@ function verifyMessage(message, signature, publicKey) {
 }
 
 /* User Profile Functions */
+// moved to client, prevent circle dependency
 
 // function saveUserProfile(userProfile) {
 //   try {
 //     Database.saveUserProfile(userProfile.key, userProfile);
 //   } catch (err) {
 //     debug('Error saving user profile:', err);
+//     throw new Error('Error saving user profile');
 //   }
 // }
 
@@ -351,16 +338,18 @@ function verifyMessage(message, signature, publicKey) {
 //     return userProfile;
 //   } catch (err) {
 //     debug('Error loading user profile:', err);
+//     throw new Error('Error loading user profile');
 //   }
-//   return null;
 // }
 
 /* Temporary tests */
 
 module.exports = {
+  // initAuth,
+
   authNewUser,
-  authUserKey,
-  authUserPassword,
+  authUserWithKey,
+  authUserWithPassword,
 
   // authenticateUser,
   // setUserSession,

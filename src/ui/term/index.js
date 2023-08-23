@@ -41,9 +41,9 @@ async function initUserSession() {
   }
 
   if (choice === 'login') {
-    const nickname = await askQuestion('Enter your nickname: ');
-    const password = await askQuestion('Enter your password: ');
-    const userSession = await client.loginUserPassword(nickname, password); // NOT IMPLEMENTED
+    const key = await askQuestion('Enter your key: ');
+    const secret = await askQuestion('Enter your secret: ');
+    const userSession = await client.loginUser(key, secret); // to check
     return userSession;
   }
 

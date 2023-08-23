@@ -6,7 +6,7 @@
 const objecthash = require('object-hash');
 const { faker } = require('@faker-js/faker');
 
-const { createNewUser } = require('../auth/auth');
+// const { createNewUser } = require('../auth/auth');
 
 /**
  * Get a consistent hash of an object, to be used as a key in a map.
@@ -72,20 +72,20 @@ function generateRandomDocument() {
   return document;
 }
 
-function generateRandomUser(keepSecretKey = false) {
-  const { user, secretKey } = createNewUser(faker.internet.userName());
-  user.lastAddress = { ip: faker.internet.ipv4(), port: faker.internet.port() };
-  user.lastSeen = faker.date.recent().toISOString();
-  // Add feed key here after implementing feeds
-  // user.lastFeed = null;
+// function generateRandomUser(keepSecretKey = false) {
+//   const { user, secretKey } = createNewUser(faker.internet.userName());
+//   user.lastAddress = { ip: faker.internet.ipv4(), port: faker.internet.port() };
+//   user.lastSeen = faker.date.recent().toISOString();
+//   // Add feed key here after implementing feeds
+//   // user.lastFeed = null;
 
-  if (keepSecretKey) {
-    // embed secretKey in user object for testing
-    user.secretKey = secretKey;
-  }
+//   if (keepSecretKey) {
+//     // embed secretKey in user object for testing
+//     user.secretKey = secretKey;
+//   }
 
-  return user;
-}
+//   return user;
+// }
 
 function generateRandomFeed() {
   // TODO: Implement
