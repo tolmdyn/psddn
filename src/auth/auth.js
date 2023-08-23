@@ -137,6 +137,10 @@ function getUserSessionUser() {
   return userSession.userProfile.userObject;
 }
 
+function getUserSessionAddress() {
+  return userSession.userProfile.userObject.lastAddress;
+}
+
 // Used by Server Handshake, but there must be a better way.
 function setUserSessionAddress(address) {
   userSession.userProfile.userObject.lastAddress = address;
@@ -146,7 +150,7 @@ function setUserSessionAddress(address) {
 
 function authNewUser(nickname, password) {
   // Create a new user
-  const { user, secretKey } = createNewUserF(nickname);
+  const { user, secretKey } = createNewUser(nickname);
   debug('New user:', user);
   debug('New secret key:', secretKey);
 
@@ -210,7 +214,7 @@ function createNewKeypair() {
  * @param {*} _nickname An optional nickname to use for the user
  * @returns An object containting the new user object and the secret key
  */
-function createNewUserF(_nickname) {
+function createNewUser(_nickname) {
   const { publicKey, secretKey } = createNewKeypair();
   const nickname = _nickname || null;
 
@@ -364,6 +368,7 @@ module.exports = {
   getUserSessionKey,
   getUserSessionUser,
   getUserSessionProfile,
+  getUserSessionAddress,
 
   setUserSessionAddress,
 
