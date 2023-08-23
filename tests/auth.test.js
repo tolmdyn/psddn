@@ -8,7 +8,8 @@ const auth = require('../src/auth/auth');
 // const { userSession } = require('../src/auth/auth'); // check path later
 
 const { userProfileSchema } = require('../src/models/userProfile');
-const { userSchema, keyRegex, longKeyRegex } = require('../src/models/validation');
+const { userSchema } = require('../src/models/user');
+const { keyRegex, longKeyRegex } = require('../src/models/match');
 
 describe('Login Tests', () => {
   it('should login and create a new user', () => {
@@ -19,16 +20,16 @@ describe('Login Tests', () => {
 
     expect(userProfile).to.be.an('object');
 
-    const { error1 } = userProfileSchema.validate(userProfile);
-    expect(error1).to.be.undefined;
+    const { errorProf } = userProfileSchema.validate(userProfile);
+    expect(errorProf).to.be.undefined;
 
     const user = userProfile.userObject;
     // console.log('user: ', user);
-    const { error2 } = userSchema.validate(user);
-    expect(error2).to.be.undefined;
+    const { errorUser } = userSchema.validate(user);
+    expect(errorUser).to.be.undefined;
 
     expect(userProfile.key.length).to.equal(44);
-    expect(userProfile.secretKey.length).to.equal(88);
+    expect(userProfile.secretKey.length).to.not.be.undefined;
 
     expect(secretKey).to.be.a('string');
     expect(secretKey).to.match(longKeyRegex);

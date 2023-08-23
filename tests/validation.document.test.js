@@ -5,8 +5,8 @@
 const { expect } = require('chai');
 
 // import the document schema
-const { documentSchema } = require('../src/models/validation');
-const { generateRandomDocument } = require('../src/utils/utils');
+const { documentSchema } = require('../src/models/document');
+const { generateRandomDocument } = require('./scripts/generate');
 
 describe('Document Validation Tests', () => {
   it('should validate a valid document', () => {

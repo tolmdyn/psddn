@@ -5,6 +5,7 @@ const Types = {
   Feed: 'feed',
   User: 'user',
   Document: 'document',
+  UserProfile: 'userProfile',
 };
 
 /**

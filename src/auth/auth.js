@@ -320,28 +320,6 @@ function verifyMessage(message, signature, publicKey) {
   return verified;
 }
 
-/* User Profile Functions */
-// moved to client, prevent circle dependency
-
-// function saveUserProfile(userProfile) {
-//   try {
-//     Database.saveUserProfile(userProfile.key, userProfile);
-//   } catch (err) {
-//     debug('Error saving user profile:', err);
-//     throw new Error('Error saving user profile');
-//   }
-// }
-
-// function loadUserProfile(key) {
-//   try {
-//     const userProfile = Database.getUserProfile(key);
-//     return userProfile;
-//   } catch (err) {
-//     debug('Error loading user profile:', err);
-//     throw new Error('Error loading user profile');
-//   }
-// }
-
 /* Temporary tests */
 
 module.exports = {
@@ -353,6 +331,7 @@ module.exports = {
 
   // authenticateUser,
   // setUserSession,
+  createNewUser, // Only used outside of this module by tests so consider copying to tests
 
   getUserSessionKey,
   getUserSessionUser,

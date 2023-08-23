@@ -11,7 +11,8 @@
  */
 
 const joi = require('joi');
-const { userSchema, keyRegex, longKeyRegex } = require('./validation');
+const { userSchema } = require('./user');
+const { keyRegex, longKeyRegex } = require('./match');
 
 const userProfileSchema = joi.object({
   type: joi.string()

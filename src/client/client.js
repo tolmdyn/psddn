@@ -130,29 +130,30 @@ function loadUserProfile(key) {
   return Database.getUserProfile(key);
 }
 
-async function saveUserProfileFile(userProfile) {
-  // return this.put(userProfile, Types.UserProfile);
-  const profileString = JSON.stringify(userProfile);
-  const { key } = userProfile;
-  try {
-    await fs.writeFileSync(`userProfile${key}.json`, profileString);
-  } catch (error) {
-    throw new Error('Error saving user profile');
-  }
-  debug('Saved user profile.');
-}
+// async function saveUserProfileFile(userProfile) {
+//   // return this.put(userProfile, Types.UserProfile);
+//   const profileString = JSON.stringify(userProfile);
+//   const { key } = userProfile;
+//   try {
+//     await fs.writeFileSync(`userProfile${key}.json`, profileString);
+//   } catch (error) {
+//     throw new Error('Error saving user profile');
+//   }
+//   debug('Saved user profile.');
+// }
 
-function loadUserProfileFile(publicKey) {
-  // return this.get(publicKey, Types.UserProfile);
-  try {
-    const profileString = fs.readFileSync(`userProfile${publicKey}.json`);
-    const profile = JSON.parse(profileString);
-    debug('Loaded user profile.');
-    return profile;
-  } catch (error) {
-    throw new Error('Error loading user profile');
-  }
-}
+// function loadUserProfileFile(publicKey) {
+//   // return this.get(publicKey, Types.UserProfile);
+//   try {
+//     const profileString = fs.readFileSync(`userProfile${publicKey}.json`);
+//     const profile = JSON.parse(profileString);
+//     debug('Loaded user profile.');
+//     return profile;
+//   } catch (error) {
+//     throw new Error('Error loading user profile');
+//   }
+// }
+
 /* --- ACTIONS --- */
 
 async function getItem(key, type) {

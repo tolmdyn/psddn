@@ -5,8 +5,8 @@
 const { expect } = require('chai');
 
 // import the user schema
-const { userSchema } = require('../src/models/validation');
-const { generateRandomUser } = require('../src/utils/utils');
+const { userSchema } = require('../src/models/user');
+const { generateRandomUser } = require('./scripts/generate');
 
 describe('User Validation Tests', () => {
   it('should validate a valid user with all fields correct', () => {

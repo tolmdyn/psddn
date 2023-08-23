@@ -5,10 +5,8 @@
 const fs = require('fs');
 const { expect } = require('chai');
 
-// import the document schema
-const { documentSchema } = require('../src/models/validation');
 const { Database } = require('../src/database/database');
-const { generateRandomDocument, generateRandomUser, generateKey } = require('../src/utils/utils');
+const { generateRandomDocument, generateRandomUser } = require('./scripts/generate');
 const { Types } = require('../src/models/types');
 
 describe('Database Tests', () => {
@@ -245,6 +243,24 @@ describe('Database Tests', () => {
     const testUser = generateRandomUser();
 
     expect(() => testDB.deleteUser(testUser.key)).to.throw('Item not found in database.');
+  });
+
+  /* -------- FEED -------- */
+  it('should insert a valid feed into the database', () => {
+
+  });
+
+  it('should get a valid feed from the database', () => {
+    // TODO
+  });
+
+  /* USER PROFILE */
+  it('should insert a valid user profile into the database', () => {
+    // TODO
+  });
+
+  it('should get a valid user profile from the database', () => {
+    // TODO
   });
 });
 

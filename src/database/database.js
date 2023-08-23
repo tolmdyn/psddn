@@ -66,13 +66,27 @@ class Database {
    * @return {boolean} True if the database has the right tables, false otherwise
    */
   databaseHasTables() {
-    const result = this.#db.prepare("SELECT name FROM sqlite_schema WHERE type='table' AND name IN ('feed', 'document', 'user');").all();
+    const typeNames = Object.values(Types);
+    const typesQuery = typeNames.map((typeName) => `'${typeName}'`).join(', ');
 
-    // result must have the three table names in it
-    if (result.length === 3) {
-      return true;
+    const result = this.#db.prepare(`SELECT name FROM sqlite_schema WHERE type='table' AND name IN (${typesQuery});`).all();
+
+    const existingTableNames = result.map((table) => table.name);
+
+    const missingTables = typeNames.filter((typeName) => !existingTableNames.includes(typeName));
+
+    if (missingTables.length > 0) {
+      debug('Database is missing tables:', missingTables);
+      return false;
     }
-    return false;
+
+    return true;
+    // // result must have the three table names in it
+    // if (result.length === Types.length) {
+    //   return true;
+    // }
+    // debug('Database does not have the right tables.', result);
+    // return false;
   }
 
   /**
@@ -107,10 +121,19 @@ class Database {
         );
       `).run();
 
+    this.#db.prepare(`
+        CREATE TABLE "userProfile" (
+         "id" INTEGER UNIQUE,
+         "key" TEXT NOT NULL UNIQUE,
+         "json_data" JSON NOT NULL,
+         PRIMARY KEY("id" AUTOINCREMENT)
+        );
+      `).run();
+
     debug('Tables created successfully.');
 
     if (!this.databaseHasTables()) {
-      throw new Error('Unable to create tables.');
+      throw new Error('Unable to verify tables.');
     }
   }
 
@@ -279,12 +302,14 @@ class Database {
     return this.update(user);
   }
 
-  static saveUserProfile(userProfile) {
-    return this.put(userProfile, Types.UserProfile);
+  putUserProfile(userProfile) {
+    debug('putUserProfile:', userProfile, userProfile.key, userProfile.type);
+    return this.put(userProfile);
   }
 
-  static loadUserProfile(publicKey) {
-    return this.get(publicKey, Types.UserProfile);
+  getUserProfile(key) {
+    // debug('getUserProfile:', key);
+    return this.get(key, Types.UserProfile);
   }
 }
 

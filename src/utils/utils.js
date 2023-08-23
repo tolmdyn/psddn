@@ -31,7 +31,7 @@ function isValidKeyForItem(_key, item) {
   }
   // because user objects may have different parameters
   // we use the public key as the key instead ?
-  if (item.type === 'user') {
+  if (item.type === 'user' || item.type === 'userProfile') {
     return _key === item.key;
   }
 

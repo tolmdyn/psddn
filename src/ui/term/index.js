@@ -42,7 +42,7 @@ async function initUserSession() {
 
   if (choice === 'login') {
     const key = await askQuestion('Enter your key: ');
-    const secret = await askQuestion('Enter your secret: ');
+    const secret = await askQuestion('Enter your password: ');
     const userSession = await client.loginUser(key, secret); // to check
     return userSession;
   }

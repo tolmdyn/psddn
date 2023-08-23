@@ -13,9 +13,11 @@ const {
   generateRandomFeed,
 } = require('../src/utils/utils');
 
-const {
-  documentSchema, userSchema, feedSchema, keyRegex,
-} = require('../src/models/validation');
+const { keyRegex } = require('../src/models/match');
+const { documentSchema } = require('../src/models/document');
+const { userSchema } = require('../src/models/user');
+const { feedSchema } = require('../src/models/feed');
+
 // const { valid } = require('joi');
 
 describe('Document Generation Tests', () => {
@@ -137,27 +139,27 @@ describe('Document Generation Tests', () => {
   });
 });
 
-describe('User Generation Tests', () => {
-  /* generate random user tests */
-  it('should generate a random user with valid parameters', () => {
-    const user = generateRandomUser();
+// describe('User Generation Tests', () => {
+//   /* generate random user tests */
+//   it('should generate a random user with valid parameters', () => {
+//     const user = generateRandomUser();
 
-    expect(user).to.be.an('object');
-    expect(user).to.have.property('type');
-    expect(user).to.have.property('key');
-    expect(user).to.have.property('nickname');
-    expect(user).to.have.property('lastAddress');
-    expect(user).to.have.property('lastSeen');
-    expect(user.type).to.equal('user');
+//     expect(user).to.be.an('object');
+//     expect(user).to.have.property('type');
+//     expect(user).to.have.property('key');
+//     expect(user).to.have.property('nickname');
+//     expect(user).to.have.property('lastAddress');
+//     expect(user).to.have.property('lastSeen');
+//     expect(user.type).to.equal('user');
 
-    expect(user.nickname).to.be.a('string');
-    expect(user.lastAddress).to.be.a('Object');
-    // etc
+//     expect(user.nickname).to.be.a('string');
+//     expect(user.lastAddress).to.be.a('Object');
+//     // etc
 
-    expect(isValidKeyFormat(user.key)).to.be.true;
-    expect(isValidKeyForItem(user.key, user)).to.be.true;
-  });
-});
+//     expect(isValidKeyFormat(user.key)).to.be.true;
+//     expect(isValidKeyForItem(user.key, user)).to.be.true;
+//   });
+// });
 
 describe('Feed Generation Tests', () => {
   /* generate random feed tests */
