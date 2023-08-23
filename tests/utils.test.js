@@ -8,11 +8,8 @@ const {
   generateKey,
   isValidKeyForItem,
   isValidKeyFormat,
-  generateRandomDocument,
-  generateRandomUser,
-  generateRandomFeed,
 } = require('../src/utils/utils');
-
+const { generateRandomDocument, generateRandomFeed, generateRandomUser } = require('./scripts/generate');
 const { keyRegex } = require('../src/models/match');
 const { documentSchema } = require('../src/models/document');
 const { userSchema } = require('../src/models/user');

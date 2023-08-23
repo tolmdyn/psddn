@@ -5,8 +5,6 @@
  * @todo Split into separate files, Add regex validations for strings
  */
 
-const joi = require('joi');
-
 const { userSchema } = require('./user');
 const { feedSchema } = require('./feed');
 const { documentSchema } = require('./document');
