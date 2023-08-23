@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Terminal Interface</title>
+</head>
+<body>
+  <input id="commandInput" type="text">
+  <button id="sendButton">Send</button>
+  <div id="output"></div>
+
+  <script>
+    const socket = new WebSocket('ws://localhost:3000'); // WebSocket server URL
+
+    const commandInput = document.getElementById('commandInput');
+    const sendButton = document.getElementById('sendButton');
+    const outputDiv = document.getElementById('output');
+
+    socket.addEventListener('message', (event) => {
+      const response = event.data;
+      outputDiv.textContent = response;
+    });
+
+    sendButton.addEventListener('click', () => {
+      const command = commandInput.value;
+      socket.send(command);
+    });
+  </script>
+</body>
+</html>

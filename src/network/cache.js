@@ -64,10 +64,11 @@ const WebSocket = require('ws');
 // const { Database } = require('../database/dbInstance');
 // const { generateRandomUser } = require('../utils/utils');
 const { Request, RequestTypes } = require('../models/request');
-const { Response, ResponseTypes } = require('../models/response');
+const { ResponseTypes } = require('../models/response');
 const { loadBootstrapAddresses } = require('./bootstrap');
 
-const { getUserSessionKey } = require('../auth/auth');
+// Could this be passed in at init?? (YES_)
+const { getUserSessionKey, getUserSessionAddress } = require('../auth/auth');
 
 const refreshSeconds = 60;
 
@@ -106,6 +107,7 @@ async function startCache(bootstrapFilepath, port) {
             const peer = result.responseData;
             peer.lastSeen = Date.now();
             // debug(`Adding bootstrap peer: ${JSON.stringify(peer)}`);
+            // should we use add remote peer instead ??
             addPeer(peer);
           }
         });
@@ -129,14 +131,15 @@ function shutdownCache() {
 }
 
 function isSuccessResponse(response) {
-  return (response != null
-    && response instanceof Response
+  return (response !== null
     && response.responseType === ResponseTypes.Success);
 }
 
 // --------------------- Cache functions ------------------------------
 /**
  * @description: Request peer user info from a bootstrap peer address.
+ * This is performed by sending a handshake request to the peer, using
+ * our own user address as the origin.
  * @param {Object} address Object containing peer ip and port.
  * @returns {Object} Peer (user) object.
  */
@@ -191,6 +194,18 @@ const remoteAddress = request.socket.remoteAddress.replace(/^.*:/, ''); // ipv6 
 */
 async function addRemotePeer(key, address) {
   debug(`Adding remote peer: ${key}, ${JSON.stringify(address)}`);
+  // if key is our own key then return
+  if (key === getUserSessionKey()) {
+    debug('Peer Key is self');
+    return;
+  }
+
+  // if address is our own address then return
+  if (isAddressSelf(address)) {
+    debug('Peer Address is self');
+    return;
+  }
+
   // if cache contains key
   if (cache.has(key)) {
     debug(`Peer already in cache: ${key}`);
@@ -202,10 +217,19 @@ async function addRemotePeer(key, address) {
   if (response) {
     const peer = response.responseData;
     debug(`Received remote peer info: ${JSON.stringify(peer)}`);
+    if (peer.key === getUserSessionKey()) {
+      debug('Actual remote peer key is self');
+      return;
+    }
     peer.lastSeen = Date.now();
     addPeer(peer);
   }
 }
+
+// announce peer functions
+// if a new peer has connected to us then we announce it to the network
+// this is done by sending a handshake request to each other peer in our cache
+// using the address of the new peer as the 'origin' address
 
 /**
  * @description: Get providers for a specific item (key and type). At the moment just return
@@ -255,8 +279,28 @@ function getPeer(key) {
 }
 
 function getAllPeers() {
-  debug('Getting all peers');
+  debug(`Getting all peers ${JSON.stringify(cache)}`);
   return cache;
+}
+
+// Redundant because the refresh function checks if a key is at the address and
+// removes it if it 'someone else'. So the cache should be consistent after a refresh.
+// function cacheContainsAddress(address) {
+//   debug(`Checking if cache contains address: ${JSON.stringify(address)}`);
+//   let contains = false;
+//   cache.forEach((peer) => {
+//     if (peer.lastAddress.ip === address.ip && peer.lastAddress.port === address.port) {
+//       contains = true;
+//     }
+//   });
+
+//   return contains;
+// }
+
+// The cache cannot contain a peer with our own address (ip + port) so we need to check for this
+function isAddressSelf(address) {
+  const addressSelf = getUserSessionAddress();
+  return addressSelf === address;
 }
 
 // TODO need to test this
@@ -329,6 +373,7 @@ async function refreshCache() {
 
   // Wait for all refresh promises to resolve
   await Promise.all(refreshPromises);
+  debug(`Cache ${cache.size}`);
 }
 
 /**
@@ -353,6 +398,7 @@ async function refreshPeer(peer) {
   }
 }
 
+// A more realistic approach would be a '3 strikes and you're out' policy before removing peer
 async function checkPeerOnline(peer) {
   debug(`Checking if peer is online: ${peer.key} - ${peer.lastAddress.ip}:${peer.lastAddress.port}`);
   // Check if the peer is still active by opening a websocket and sending a 'ping' request
@@ -361,7 +407,7 @@ async function checkPeerOnline(peer) {
 
     const peerOnline = await new Promise((resolve) => {
       ws.on('open', () => {
-        const request = new Request(RequestTypes.Ping, null);
+        const request = new Request(RequestTypes.Ping, { targetPeer: peer.key });
         ws.send(JSON.stringify(request));
       });
 
@@ -400,11 +446,15 @@ function loadCache() {
   debug(`Found ${peers.length} peers in database.`);
 
   peers.forEach((peer) => {
-    if (peer.lastSeen && peer.lastAddress) {
+    if ((peer.key !== getUserSessionKey())
+      && (peer.lastSeen && peer.lastAddress)
+      && (peer.lastAddress !== getUserSessionAddress())) {
       // add remote so that it sends a handshake request so connection is mutual
       addRemotePeer(peer.key, peer.lastAddress);
     }
   });
+
+  // Erase the saved peers from database?
 
   refreshCache();
 }

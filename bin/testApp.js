@@ -1,18 +1,13 @@
 const { program } = require('commander');
 
-// require('../src/database/dbInstance'); // Does this need to be here?
-
 const client = require('../src/client/client');
 const cache = require('../src/network/cache');
 const server = require('../src/server/server');
 
 const createDatabaseInstance = require('../src/database/dbInstance');
-const shutdown = require('../src/utils/shutdown');
+require('../src/utils/shutdown');
 
 const { startUI } = require('../src/ui');
-
-// Accept a JSON bootstrap peers file on cmd line, and parse it
-// const { bootstrapPeers } = require('../src/utils/bootstrap');
 
 /* parse command line args */
 program
@@ -28,25 +23,30 @@ const options = program.opts();
 const port = options.port || 8080;
 const dbName = options.dbname || null;
 const bootstrapFilepath = options.bootstrap || null;
-const UIType = options.interface || 'none';
+const UIType = options.interface || null;
 
-/* init database */
+// Database Inits
 const dbInstance = createDatabaseInstance(dbName);
-
-/* init instances */
 client.initClient(dbInstance);
-// authenticate client usersession
-
 server.initServer(dbInstance);
-server.startServer(port);
 
-cache.initCache(dbInstance);
-cache.startCache(bootstrapFilepath, port); // add bootstrap peers, start timer, etc
+// Start UI, then Server, then Cache, to prevent null session
+initialise(UIType, dbInstance, port, bootstrapFilepath);
 
-/* start interface */
-startUI(UIType);
+async function initialise(initUI, initDbInstance, initPort, initBootstrapFilepath) {
+  // UI and Session - (cleanup!)
+  if (!initUI) {
+    await client.loginNewUser();
+    console.log('Headless mode - created dummy user session');
+  } else {
+    console.log('Starting UI:', initUI);
+    await startUI(initUI);
+  }
 
-module.exports = {
-  client,
-  cache,
-};
+  // Server
+  await server.startServer(initPort);
+
+  // Cache
+  await cache.initCache(initDbInstance);
+  await cache.startCache(initBootstrapFilepath, port); // add bootstrap peers, start timer, etc
+}

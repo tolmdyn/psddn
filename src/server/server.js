@@ -16,7 +16,7 @@ const { isValidItemType } = require('../models/types');
 const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils');
 const { RequestTypes } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
-const { getUserSessionUser, setUserSessionAddress } = require('../auth/auth');
+const { getUserSessionKey, getUserSessionUser, setUserSessionAddress } = require('../auth/auth');
 const { addRemotePeer } = require('../network/cache');
 
 let Database;
@@ -43,7 +43,7 @@ function handleRequest(message, address) {
   }
 
   if (requestType === RequestTypes.Ping) {
-    return handlePing();
+    return handlePing(requestData);
   }
 
   if (requestType === RequestTypes.Message) {
@@ -121,9 +121,17 @@ function handlePut(request) {
   }
 }
 
-function handlePing() {
-  debug('Sending pong.');
-  return new Response(ResponseTypes.Success, 'Pong.');
+function handlePing(request) {
+  // debug('Handling ping.', request);
+  const { targetPeer } = request;
+  // debug(`Handling ping for ${targetPeer}.`);
+  // debug('I am user:', getUserSessionKey());
+  if (targetPeer === getUserSessionKey()) {
+    debug('Sending pong.');
+    return new Response(ResponseTypes.Success, 'Pong.');
+  }
+  // debug('Not at this address...');
+  return new Response(ResponseTypes.Error, 'Not at this address.');
 }
 
 function handleMessage(request) {
@@ -133,11 +141,6 @@ function handleMessage(request) {
   return new Response(ResponseTypes.Success, 'Message received.');
 }
 
-// const remoteAddress = request.socket.remoteAddress.replace(/^.*:/, ''); // ipv6 hybrid
-//     const { remotePort } = request.socket;
-//     // Add the origin peer to the cache
-//     addRemotePeer({ ip: remoteAddress, port: remotePort });
-
 function handleHandshake(request, originAddress) {
   const { originKey, originPort, address } = request;
   debug(`Handling handshake on ${JSON.stringify(address)} from ${originKey}.`);
@@ -146,10 +149,9 @@ function handleHandshake(request, originAddress) {
   const user = getUserSessionUser();
   // debug('User:', user);
   // hack - we don't know our own external address before handshaking
-
   if (user.lastAddress === null
-      || user.lastAddress.ip !== address.ip
-      || user.lastAddress.port !== address.port) {
+    || user.lastAddress.ip !== address.ip
+    || user.lastAddress.port !== address.port) {
     setUserSessionAddress(address);
     user.lastAddress = address;
   }
@@ -163,8 +165,6 @@ function handleHandshake(request, originAddress) {
 
   return new Response(ResponseTypes.Success, user);
 }
-
-// const port = process.env.S_PORT || 8080;
 
 function startServer(port) {
   server = new WebSocket.Server({ port });
