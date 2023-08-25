@@ -32,7 +32,8 @@ function isValidKeyForItem(_key, item) {
     return _key === item.key;
   }
 
-  const { key, ...itemContent } = item;
+  const { key, signature, ...itemContent } = item;
+
   return _key === generateKey(itemContent);
 }
 

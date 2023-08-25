@@ -15,7 +15,7 @@ async function start() {
   createInterface();
 
   const userSession = await initUserSession();
-  debug('userSession:', userSession);
+  debug('userSession', userSession);
 }
 
 function askQuestion(question) {

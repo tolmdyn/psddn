@@ -111,7 +111,6 @@ function loginUser(key, password) {
  * @returns A new user object. (maybe with the secret key also ?)
  */
 function loginNewUser(nickname, password) {
-  console.log('login', Database);
   try {
     const { userProfile, secretKey } = authNewUser(nickname, password);
     const newUser = userProfile.userObject;

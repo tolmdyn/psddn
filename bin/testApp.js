@@ -1,52 +1,47 @@
 const { program } = require('commander');
 
+// consider importing these in a separate file.
+const createDatabaseInstance = require('../src/database/dbInstance');
+
 const client = require('../src/client/client');
 const cache = require('../src/network/cache');
 const server = require('../src/server/server');
-
-const createDatabaseInstance = require('../src/database/dbInstance');
+const ui = require('../src/ui');
 require('../src/utils/shutdown');
 
-const { startUI } = require('../src/ui');
-
 /* parse command line args */
-program
-  .option('-a, --address <address>', 'Specify the IP address of the server') // useless as its always 127.0.0.1 :/
-  .option('-p, --port <port>', 'Specify the port of the server', parseInt)
-  .option('-db, --dbname <dbname>', 'Specify the name of the database instance')
-  .option('-b, --bootstrap <bootstrap>', 'Specify the bootstrap peers file')
-  .option('-i, --interface <interface>', 'Choose the user interface to use (none, web, terminal)');
-
-program.parse(process.argv);
-const options = program.opts();
-
-const port = options.port || 8080;
-const dbName = options.dbname || null;
-const bootstrapFilepath = options.bootstrap || null;
-const UIType = options.interface || null;
-
-// Database Inits
-const dbInstance = createDatabaseInstance(dbName);
-client.initClient(dbInstance);
-server.initServer(dbInstance);
+const options = parseOptions();
 
 // Start UI, then Server, then Cache, to prevent null session
-initialise(UIType, dbInstance, port, bootstrapFilepath);
+initialise(options.interface, options.dbname, options.port, options.bootstrap);
 
-async function initialise(initUI, initDbInstance, initPort, initBootstrapFilepath) {
-  // UI and Session - (cleanup!)
-  if (!initUI) {
-    await client.loginNewUser();
-    console.log('Headless mode - created dummy user session');
-  } else {
-    console.log('Starting UI:', initUI);
-    await startUI(initUI);
-  }
+async function initialise(initUI, dbName, initPort, initBootstrapFp) {
+  const dbInstance = createDatabaseInstance(dbName);
+  client.initClient(dbInstance);
+  server.initServer(dbInstance);
+
+  // UI and Session
+  await ui.startUI(initUI || 'none');
 
   // Server
-  await server.startServer(initPort);
+  await server.startServer(initPort || 8080);
 
   // Cache
-  await cache.initCache(initDbInstance);
-  await cache.startCache(initBootstrapFilepath, port); // add bootstrap peers, start timer, etc
+  await cache.initCache(dbInstance);
+  await cache.startCache(initBootstrapFp, initPort || 8080);
+}
+
+function parseOptions() {
+  program
+    .option('-a, --address <address>', 'Specify the IP address of the server') // it's always 127.0.0.1 :/
+    .option('-p, --port <port>', 'Specify the port of the server', parseInt)
+    .option('-db, --dbname <dbname>', 'Specify the name of the database instance')
+    .option('-b, --bootstrap <bootstrap>', 'Specify the bootstrap peers file')
+    .option('-i, --interface <interface>', 'Choose the user interface to use (none, web, terminal)')
+    .option('-d, --debug', 'Enable debug mode') // not yet implemented, on by default
+    .option('-u, --user <user>', 'Specify the user key to login with') // not yet implemented
+    .option('-s, --secret <secret>', 'Specify the user secret to login with'); // not yet implemented
+
+  program.parse(process.argv);
+  return program.opts();
 }

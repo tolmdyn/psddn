@@ -1,5 +1,6 @@
 // const webUI = require('./web/index');
 const termUI = require('./term/index');
+const headless = require('./headless/index');
 
 let UI = null;
 
@@ -7,7 +8,7 @@ function selectUI(UIType) {
   // console.log('Selecting UIType:', UIType);
   switch (UIType) {
     case null || 'none' || '':
-      return null;
+      return headless;
     case 'web':
       return null; // webUI;
     case 'term':
