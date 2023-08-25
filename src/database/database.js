@@ -130,6 +130,10 @@ class Database {
         );
       `).run();
 
+    this.#db.prepare(`
+      PRAGMA journal_mode=WAL;
+    `).run();
+
     debug('Tables created successfully.');
 
     if (!this.databaseHasTables()) {
@@ -272,7 +276,7 @@ class Database {
    */
   update(item) {
     const { key, type } = item;
-    let query;
+    let result;
 
     if (!isValidItemType(type)) {
       throw new Error('Invalid item type.');
@@ -283,12 +287,14 @@ class Database {
     }
 
     if (!this.get(key, type)) {
-      query = this.#db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`);
+      result = this.#db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`)
+        .run(key, JSON.stringify(item));
     } else {
-      query = this.#db.prepare(`UPDATE ${type} SET json_data = ? WHERE key = ?;`);
+      result = this.#db.prepare(`UPDATE ${type} SET json_data = ? WHERE key = ?;`)
+        .run(JSON.stringify(item), key);
     }
 
-    const result = query.run(JSON.stringify(item), key);
+    // const result = query.run(JSON.stringify(item), key);
 
     if (result.changes !== 1) {
       throw new Error('Error updating item in database.');
@@ -303,8 +309,13 @@ class Database {
   }
 
   putUserProfile(userProfile) {
-    debug('putUserProfile:', userProfile, userProfile.key, userProfile.type);
+    // debug('putUserProfile:', userProfile, userProfile.key, userProfile.type);
     return this.put(userProfile);
+  }
+
+  updateUserProfile(userProfile) {
+    // debug('updateUserProfile:', userProfile, userProfile.key, userProfile.type);
+    return this.update(userProfile);
   }
 
   getUserProfile(key) {
