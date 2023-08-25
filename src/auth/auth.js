@@ -1,9 +1,14 @@
 /**
  * @fileoverview This file contains the user authentication logic.
  * @module auth
+ *
+ * TODO: Split off signing and session into separate modules.
+ *
  * TODO: Add a function to fetch the user object from the database?
  * TODO: Add a function to fetch the user object from the network?
  * TODO: WRITE TESTS
+ *
+ *  This module doesn't interact with the database, only user profile/session.
  *
  * Definitions:
  *
