@@ -9,16 +9,15 @@ const { createNewUser } = require('../../src/auth/auth');
 function generateRandomDocument() {
   const document = {
     type: 'document',
-    // id: faker.string.alphanumeric(16),
     owner: generateKey(faker.string.alphanumeric(16)),
     timestamp: faker.date.recent().toISOString(),
     title: faker.lorem.words(3),
     content: faker.lorem.paragraph(),
     tags: [faker.lorem.word(), faker.lorem.word()],
-    signature: null,
   };
 
   document.key = generateKey(document);
+  document.signature = null;
 
   return document;
 }

@@ -10,6 +10,7 @@ const auth = require('../src/auth/auth');
 const { userProfileSchema } = require('../src/models/userProfile');
 const { userSchema } = require('../src/models/user');
 const { keyRegex, longKeyRegex } = require('../src/models/match');
+const { generateRandomDocument } = require('./scripts/generate');
 
 describe('Login Tests', () => {
   it('should login and create a new user', () => {
@@ -60,7 +61,70 @@ describe('User Session Tests', () => {
 
 // sign/verify tests
 describe('Sign/Verify Tests', () => {
-  it('should sign and verify a message', () => {
+  it('should sign a string message', () => {
+    const { userProfile, secretKey } = auth.authNewUser('testUser', 'testPassword');
+
+    const message = 'test message';
+    const signature = auth.signStringWithKey(message, secretKey);
+
+    expect(signature).to.not.be.undefined;
+    expect(signature).to.be.a('string');
+    expect(signature.length).to.equal(88);
+    expect(signature).to.match(longKeyRegex);
+  });
+
+  it('should verify a signed message', () => {
+    const { userProfile, secretKey } = auth.authNewUser('testUser', 'testPassword');
+
+    const message = 'test message';
+    const signature = auth.signStringWithKey(message, secretKey);
+
+    const verified = auth.verifyStringSignature(message, signature, userProfile.key);
+
+    expect(verified).to.be.true;
+  });
+
+  it('should not verify a signed message with the wrong key', () => {
     // todo
+  });
+
+  it('should not verify a signed message with the wrong message', () => {
+    // todo
+  });
+
+  it('should sign a document string', () => {
+    const { userProfile, secretKey } = auth.authNewUser('testUser', 'testPassword');
+
+    const testDocument = generateRandomDocument();
+    console.log(testDocument);
+
+    // unpack the item and stringify
+    const { signature: sig, ...itemContent } = testDocument;
+    const itemString = JSON.stringify(itemContent);
+
+    // console.log('itemString', itemString, 'sig', sig);
+    const signature = auth.signStringWithKey(itemString, secretKey);
+    // console.log('Document sig:', signature);
+
+    expect(signature).to.not.be.undefined;
+    expect(signature).to.be.a('string');
+    expect(signature.length).to.equal(88);
+    expect(signature).to.match(longKeyRegex);
+  });
+
+  it('should stringify and sign a document object', () => {
+    const { userProfile, secretKey } = auth.authNewUser('testUser', 'testPassword');
+
+    const testDocument = generateRandomDocument();
+    // console.log(testDocument);
+
+    // unpack the item and stringify
+    const signature = auth.signItem(testDocument, secretKey);
+
+    // console.log('Document Sig:', signature);
+    expect(signature).to.not.be.undefined;
+    expect(signature).to.be.a('string');
+    expect(signature.length).to.equal(88);
+    expect(signature).to.match(longKeyRegex);
   });
 });
