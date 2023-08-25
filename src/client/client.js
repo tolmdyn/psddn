@@ -51,32 +51,41 @@
  * -get user info
  *
  */
-const fs = require('fs');
-const WebSocket = require('ws');
+
+// const WebSocket = require('ws');
 const debug = require('debug')('client');
 
 const {
   authNewUser,
-  authUserWithKey,
+  // authUserWithKey,
   authUserWithPassword,
   getUserSessionKey,
+  signItem,
+  verifyItem,
+  getUserSessionProfile,
 } = require('../auth/auth');
 
 const { RequestTypes, Request } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
+
+const { getProviders, sendItemToProviders, sendRequestToProvider } = require('../network/providers');
+
 const { isValidItemType } = require('../models/types');
-const { isValidKeyFormat } = require('../utils/utils');
-const { getProviders } = require('../network/providers');
+const { isValidKeyFormat, generateKey } = require('../utils/utils');
 const { validateItem } = require('../models/validation');
 
-// let userSession = null;
+// client imports
+const { initDb } = require('./clientDb');
+const { loadUserProfile, saveUserProfile } = require('./userProfile');
+const {
+  updateUserFeed, getUserFeed, getFollowedFeeds, getFeed,
+} = require('./feed');
+
 let Database = null;
 
 function initClient(dbInstance) {
   Database = dbInstance;
-
-  // createNewUserSession('testuser');
-  // debug('User session created.', getUserSession());
+  initDb(dbInstance);
 }
 
 function loginUser(key, password) {
@@ -84,29 +93,25 @@ function loginUser(key, password) {
   // if password, if secretkey
   try {
     const userProfile = loadUserProfile(key);
-    // Login with secretKey
-    // const newUser = authUserWithKey(key, password, userProfile);
 
     // Login with password
-    const newUser = authUserWithPassword(key, password, userProfile);
-    debug('User:', newUser.key);
-    return newUser;
+    const authResult = authUserWithPassword(key, password, userProfile);
+    debug('User:', authResult.key);
+    return authResult;
   } catch (error) {
     debug('Error creating new user session.', error.message);
     process.exit(1);
   }
-
-  // debug(`Logging in user session... Key: ${key}, Password: ${password}`);
   return null;
 }
 
 /**
- * TODO - Provisional implementation - to be confirmed.
  * @description Creates a new user session and adds the user to the local database.
  * @param {} nickname Optional nickname to use for the user, not neccessarily unique.
  * @returns A new user object. (maybe with the secret key also ?)
  */
 function loginNewUser(nickname, password) {
+  console.log('login', Database);
   try {
     const { userProfile, secretKey } = authNewUser(nickname, password);
     const newUser = userProfile.userObject;
@@ -121,14 +126,13 @@ function loginNewUser(nickname, password) {
 }
 
 /* --- USER PROFILE --- */
-function saveUserProfile(userProfile) {
-  Database.putUserProfile(userProfile);
-}
+// function saveUserProfile(userProfile) {
+//   Database.putUserProfile(userProfile);
+// }
 
-// Temporary functions until Database.saveProfile is implemented
-function loadUserProfile(key) {
-  return Database.getUserProfile(key);
-}
+// function loadUserProfile(key) {
+//   return Database.getUserProfile(key);
+// }
 
 // async function saveUserProfileFile(userProfile) {
 //   // return this.put(userProfile, Types.UserProfile);
@@ -171,6 +175,27 @@ async function getItem(key, type) {
   }
 
   // check local db // should this be a seperate function?
+  const localResult = await getItemFromLocal(key, type);
+
+  if (localResult) {
+    if (localResult.responseType === ResponseTypes.Success) {
+      return localResult;
+    }
+    debug('Error getting item from local database:', localResult.data);
+  }
+
+  // Not found locally so try providers
+  try {
+    const result = await getItemFromProviders(key, type);
+    debug('Result from providers:', result);
+    return result;
+  } catch (err) {
+    debug('Error getting item from providers:', err);
+    return new Response(ResponseTypes.Error, 'Error getting item from providers.');
+  }
+}
+
+async function getItemFromLocal(key, type) {
   try {
     debug(`Getting item from local database\nKey: ${key}\nType: ${type}`);
     const item = Database.get(key, type);
@@ -183,16 +208,7 @@ async function getItem(key, type) {
     // Possibly massage the error message to make it more readable for users
     return new Response(ResponseTypes.Error, error.message);
   }
-
-  // try providers
-  try {
-    const result = await getItemFromProviders(key, type);
-    debug('Result from providers:', result);
-    return result;
-  } catch (err) {
-    debug('Error getting item from providers:', err);
-    return new Response(ResponseTypes.Error, 'Error getting item from providers.');
-  }
+  return null;
 }
 
 async function getItemFromProviders(key, type) {
@@ -244,11 +260,6 @@ function putItem(item) {
 
   // sign / verify item here before adding to db
 
-  // add to local db only
-  // const key = generateKey(item);
-  // const { type } = item;
-  // OR const { key, type } = item;
-
   try {
     debug(`Putting item into local database:\n${JSON.stringify(item)}`);
     const result = Database.put(item);
@@ -282,10 +293,6 @@ function pubItem(item) {
   }
 
   // sign / verify item here before adding to db
-
-  // add to local db only
-  // const key = generateKey(item);
-  // const { type } = item;
 
   // if not in local db then add to local db
   try {
@@ -322,158 +329,55 @@ function pubItem(item) {
   }
 }
 
+// function pingPeer(address) {
+//   // send ping to peer
+//   // wait for response
+//   // return response
+// }
 // addPeer
 
 // followPeer
 
-/**
- * @description Updates the current user's feed with a new document.
- * @param {} document The item to be added to the feed.
- * TODO: This is provisional and calls need to be tested / implemented.
- */
-function updateUserFeed(document) {
-  // if this is always called internally then we shouldn't need to verify document
+/* -------------------------------- New Post Functions ----------------------------- */
 
-  // const userSession = getUserSession();
+function createNewPost(title, content, tags) {
+  // create new document
+  const document = {
+    type: 'document',
+    owner: getUserSessionKey(),
+    timestamp: new Date().toISOString(),
+    title,
+    content,
+    tags,
+    // signature: null,
+  };
 
-  // get last user feed
-  const user = Database.get(getUserSessionKey(), 'user');
-  const lastFeed = Database.get(user.lastFeed, 'feed');
+  document.key = generateKey(document);
 
-  // append new items
-  const newFeed = lastFeed;
-  newFeed.items.push(document);
+  // sign the new document
+  const signature = signItem(document);
+  document.signature = signature;
 
-  // sign the new feed
-  // const signature = signMessage(newFeed);
-  // newFeed.signature = signature;
-
-  // update local db
-  Database.put(newFeed);
-
-  // update user last feed
-  user.lastFeed = newFeed.id;
-  Database.put(user);
-
-  // send feed to providers
-  sendItemToProviders(newFeed);
-
-  // send updated user to providers
-  sendItemToProviders(user);
-}
-
-function getFollowedFeeds() {
-  // get followed peers from local db
-  // get feeds for peers (if available)
-
-  // get feeds from local db
-  // get provider for each feed
-  // get feed from provider
-  // update local db
-}
-
-/**
- * @description Generic function to sends a "request" (e.g. GET, PUT, etc) to a
- * provider.
- * @param {Request} request The request to send to the providers. Containing the key,
- * type and/or data of the item.
- */
-async function sendRequestToProvider(request, provider) {
-  const { ip, port } = provider.lastAddress;
-
-  try {
-    const ws = new WebSocket(`ws://${ip}:${port}`);
-
-    return new Promise((resolve, reject) => {
-      ws.on('error', (err) => {
-        debug('Websocket error:', err);
-        // reject(err);
-        // Should it resolve with the error Response instead?
-        resolve(null);
-      });
-
-      // wait for connection to open before continuing
-      // await new Promise((resolve) => { ws.on('open', resolve); });
-
-      ws.on('open', () => {
-        ws.send(JSON.stringify(request));
-
-        let responseRecieved = false;
-
-        const responsePromise = new Promise((resResolve) => {
-          ws.on('message', (message) => {
-            responseRecieved = true;
-
-            const response = JSON.parse(message);
-            debug('Response:', response);
-
-            if (response.responseType === ResponseTypes.Success) {
-              ws.close();
-              resResolve(response);
-            } else if (response.responseType === ResponseTypes.Error) {
-              ws.close();
-
-              // Should it resolve with the error Response instead?
-              resResolve(null);
-            }
-          });
-        });
-
-        const timeoutPromise = new Promise((_, timeoutReject) => {
-          const timeoutId = setTimeout(() => {
-            if (!responseRecieved) {
-              ws.close();
-              debug('Connection or response timed out.');
-              timeoutReject(new Error('Connection or response timed out.'));
-            }
-          }, 10000); // 10 seconds timeout
-
-          // if response is recieved before timeout, cancel the timeout
-          responsePromise.finally(() => clearTimeout(timeoutId));
-        });
-
-        // Use Promise.race to resolve with the first resolved promise
-        return Promise.race([responsePromise, timeoutPromise])
-          .then((result) => { resolve(result); })
-          .catch((err) => { reject(err); });
-      });
-    });
-  } catch (err) {
-    debug('Error connecting to provider:', err);
-    return null;
-  }
-}
-
-async function sendItemToProviders(item) {
-  const providers = await getProviders(item.key, item.type);
-
-  // if no providers were given, return error
-  if (!providers || providers.length === 0) {
-    return new Response(ResponseTypes.Error, 'No providers found for item.');
-  }
-  debug('Providers:', providers);
-
-  const request = new Request(RequestTypes.Put, { item });
-
-  // map the array of providers to an array of promises
-  const promises = providers.map((provider) => sendRequestToProvider(request, provider));
-
-  // wait for all promises to resolve
-  const results = await Promise.all(promises);
-
-  const successfulResponsesCount = results
-    .filter((result) => result !== null && result.responseType === ResponseTypes.Success).length;
-
-  debug('Number of successful responses:', successfulResponsesCount);
-
-  if (successfulResponsesCount > 0) {
-    return new Response(ResponseTypes.Success, `Item sent to ${successfulResponsesCount} providers.`);
+  // verify sig
+  const verified = verifyItem(document);
+  debug('Verified:', verified);
+  if (!verified) {
+    debug('Error verifying item.');
+    throw new Error('Error unable to verify item.');
   }
 
-  // if no successful responses, return error
-  return new Response(ResponseTypes.Error, 'No provider recieved the item.');
+  // publish item
+  pubItem(document);
+
+  // update user feed
+  updateUserFeed(document);
 }
 
+/* -------------------------------- Debug Functions --------------------------------- */
+
+function getProfile() {
+  return getUserSessionProfile();
+}
 /* -------------------------------- Temporary tests -------------------------------- */
 
 // async function getTest(key) {
@@ -518,6 +422,11 @@ module.exports = {
   getItem,
   putItem,
   pubItem,
+
+  createNewPost,
+  getProfile,
+
+  getFeed,
+  getUserFeed,
   getFollowedFeeds,
-  updateUserFeed,
 };
