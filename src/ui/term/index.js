@@ -98,7 +98,7 @@ async function handlePub(args) {
   return null;
 }
 
-async function handleNewPost(args) {
+async function handleNewPost() {
   // const { title, content } = parseItem(args.join(' '));// FIX THIS!!
   const title = await askQuestion('Post title: ');
   const content = await askQuestion('Post content: ');
