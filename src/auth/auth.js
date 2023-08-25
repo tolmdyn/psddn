@@ -131,6 +131,19 @@ function setUserSessionAddress(address) {
   userSession.userProfile.userObject.lastAddress = address;
 }
 
+// function setUserSessionProfile(profile) {
+//   userSession.userProfile = profile;
+// }
+
+function getUserSessionFeed() {
+  return userSession.userProfile.userObject.lastFeed;
+}
+
+function setUserSessionFeed(feed) {
+  userSession.userProfile.userObject.lastFeed = feed.key;
+}
+//
+
 /* User Functions */
 /**
  * @description: Authenticate a NEW user with a password.
@@ -291,24 +304,43 @@ function authenticateKeyPair(publicKey, secretKey) {
 
 /* Signing / Verifying Functions */
 
-function signMessage(message, secretKey) {
+function signItem(item) {
+  const { secretKey } = userSession;
+
+  // unpack the item and stringify
+  const { signature, ...itemContent } = item;
+  const itemString = JSON.stringify(itemContent);
+
+  return signStringWithKey(itemString, secretKey);
+}
+
+function signStringWithKey(data, secretKey) {
   const secretKeyBuffer = nacl.util.decodeBase64(secretKey);
-  const messageBuffer = nacl.util.decodeUTF8(message);
-  const signatureBuffer = nacl.sign.detached(messageBuffer, secretKeyBuffer);
+  const dataBuffer = nacl.util.decodeUTF8(data);
+  const signatureBuffer = nacl.sign.detached(dataBuffer, secretKeyBuffer);
   const signature = nacl.util.encodeBase64(signatureBuffer);
 
   return signature;
 }
 
-function verifyMessage(message, signature, publicKey) {
+function verifyItem(item) {
+  // unpack the item and stringify
+  const { owner: publicKey } = item;
+  const { signature, ...itemContent } = item;
+  const data = JSON.stringify(itemContent);
+
+  return verifyStringSignature(data, signature, publicKey);
+}
+
+function verifyStringSignature(data, signature, publicKey) {
   let verified = false;
 
   try {
     const signatureBuffer = nacl.util.decodeBase64(signature);
     const publicKeyBuffer = nacl.util.decodeBase64(publicKey);
-    const messageBuffer = nacl.util.decodeUTF8(message);
+    const dataBuffer = nacl.util.decodeUTF8(data);
 
-    verified = nacl.sign.detached.verify(messageBuffer, signatureBuffer, publicKeyBuffer);
+    verified = nacl.sign.detached.verify(dataBuffer, signatureBuffer, publicKeyBuffer);
   } catch (err) {
     if (err instanceof TypeError) {
       debug(`Invalid format: "${signature}" or "${publicKey}"`);
@@ -331,16 +363,24 @@ module.exports = {
 
   // authenticateUser,
   // setUserSession,
-  createNewUser, // Only used outside of this module by tests so consider copying to tests
+  createNewUser,
 
   getUserSessionKey,
   getUserSessionUser,
   getUserSessionProfile,
   getUserSessionAddress,
+  getUserSessionFeed,
 
   setUserSessionAddress,
+  // setUserSessionProfile,
+  setUserSessionFeed,
 
-  signMessage,
-  verifyMessage,
+  // signMessage: signItem,
+  // signMessageWithKey: signStringWithKey,
+
+  verifyItem,
+  signItem,
+  verifyStringSignature,
+  signStringWithKey,
 
 };
