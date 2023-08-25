@@ -98,10 +98,47 @@ async function handlePub(args) {
   return null;
 }
 
+async function handleNewPost(args) {
+  // const { title, content } = parseItem(args.join(' '));// FIX THIS!!
+  const title = await askQuestion('Post title: ');
+  const content = await askQuestion('Post content: ');
+  if (title && content) {
+    const response = await client.createNewPost(title, content);
+    return response;
+  }
+
+  console.log('Invalid newPost command. Usage: newPost <title> <content>');
+  return null;
+}
+
+const debugCommands = {
+  profile: () => client.getProfile(),
+  session: () => client.getSession(),
+  user: () => client.getUser(),
+  feed: () => client.getFeed(),
+  posts: () => client.getPosts(),
+};
+
+async function handleDebug(args) {
+  const [command, ...cargs] = args;
+
+  const handler = debugCommands[command];
+
+  if (handler) {
+    return handler(cargs);
+  }
+
+  console.log('Invalid debug command');
+  return null;
+}
+
 const commandHandlers = {
   get: handleGet,
   put: handlePut,
   publish: handlePub,
+  newPost: handleNewPost,
+  // followUser: handleFollowUser,
+  debug: handleDebug,
   help: () => `Available commands: ${Object.keys(commandHandlers).join(', ')}`,
   exit: () => shutdown('Shutting down...'),
 };
