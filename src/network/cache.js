@@ -105,7 +105,8 @@ async function startCache(bootstrapFilepath, port) {
           if (isSuccessResponse(result)) {
             // Validate then add the peer to the cache
             const peer = result.responseData;
-            peer.lastSeen = Date.now();
+            // peer.lastSeen = Date.now();
+            peer.lastSeen = new Date().toISOString();
             // debug(`Adding bootstrap peer: ${JSON.stringify(peer)}`);
             // should we use add remote peer instead ??
             addPeer(peer);
@@ -221,7 +222,8 @@ async function addRemotePeer(key, address) {
       debug('Actual remote peer key is self');
       return;
     }
-    peer.lastSeen = Date.now();
+    // peer.lastSeen = Date.now();
+    peer.lastSeen = new Date().toISOString();
     addPeer(peer);
   }
 }
@@ -340,7 +342,8 @@ function updatePeerLastSeen(key) {
   debug(`Updating last seen for peer: ${key}`);
   const peer = getPeer(key);
   if (peer) {
-    peer.lastSeen = Date.now();
+    // peer.lastSeen = Date.now();
+    peer.lastSeen = new Date().toISOString();
     updatePeer(peer);
   } else {
     debug(`Peer not found: ${key}`);
