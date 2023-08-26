@@ -1,33 +1,21 @@
-const { getUserSessionKey, getUserSessionProfile, setUserSessionProfile } = require('../auth/auth');
-// const { updateUserSessionProfile } = require('../auth/userProfile');
-let Database = null;
+const { addUserToFollowing, removeUserFromFollowing, getUserSessionFollowing } = require('../auth/auth');
+const { saveUserProfile } = require('./userProfile');
 
-function setDb(dbInstance) {
-  Database = dbInstance;
+function followUser(user) {
+  addUserToFollowing(user);
+  saveUserProfile();
+
+  return getUserSessionFollowing();
 }
 
-function addUserToFollowers(newUser) {
-  // update userSession - updateUserSessionProfile();??
+function unfollowUser(user) {
+  removeUserFromFollowing(user);
+  saveUserProfile();
 
-  // get user profile
-  const profile = getUserSessionProfile();
-
-  // add user to followers
-  profile.user.followers.push(newUser.key);
-
-  setUserSessionProfile(profile); // :/
-
-  // save user profile
-  Database.update(profile);
-
-  // send user profile to providers?
+  return getUserSessionFollowing();
 }
 
-function removeUserFromFollowers(userId) {
-
-}
 module.exports = {
-  setDb,
-  addUserToFollowers,
-
+  followUser,
+  unfollowUser,
 };

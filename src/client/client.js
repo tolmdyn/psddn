@@ -63,23 +63,29 @@ const {
   signItem,
   verifyItem,
   getUserSessionProfile,
+  getUserSessionFollowing,
 } = require('../auth/auth');
 
 const { RequestTypes, Request } = require('../models/request');
 const { ResponseTypes, Response } = require('../models/response');
 
+const { Types } = require('../models/types');
+
 const { getProviders, sendItemToProviders, sendRequestToProvider } = require('../network/providers');
 
 const { isValidItemType } = require('../models/types');
-const { isValidKeyFormat, generateKey } = require('../utils/utils');
+const { isValidKeyFormat, generateKey, isValidKeyForItem } = require('../utils/utils');
 const { validateItem } = require('../models/validation');
 
 // client imports
 const { initDb } = require('./clientDb');
 const { loadUserProfile, saveUserProfile } = require('./userProfile');
 const {
-  updateUserFeed, getUserFeed, getFollowedFeeds, getFeed,
+  updateUserFeed, getUserFeed, getFeed,
 } = require('./feed');
+
+const { followUser, unfollowUser } = require('./follow');
+const { pingPeer, handshakePeer } = require('./peer');
 
 let Database = null;
 
@@ -232,6 +238,20 @@ async function getItemFromProviders(key, type) {
     .find((result) => result.responseType === ResponseTypes.Success);
 
   if (successfulResult) {
+    // add item to local db
+    const item = successfulResult.responseData;
+    try {
+      debug(`Putting item into local database:\n${JSON.stringify(item)}`);
+      const result = Database.put(item);
+      if (!result) {
+        console.log('Error putting item into local database. (No Response)');
+        // return new Response(ResponseTypes.Error, 'Error putting item into database.');
+      }
+    } catch (error) {
+      console.log('Error putting item into local database:', error);
+      // return new Response(ResponseTypes.Error, error.message);
+    }
+
     return successfulResult;
   }
 
@@ -255,6 +275,10 @@ function putItem(item) {
 
   if (!validateItem(item)) {
     return new Response(ResponseTypes.Error, `Provided item is not a valid ${item.type}.`);
+  }
+
+  if (!isValidKeyForItem(item.key, item)) {
+    return new Response(ResponseTypes.Error, 'Provided key is not valid for the item.');
   }
 
   // sign / verify item here before adding to db
@@ -328,6 +352,44 @@ function pubItem(item) {
   }
 }
 
+/* --------------------------------- Feed Functions --------------------------------- */
+// Doesnt handle errors yet
+
+async function getFollowedFeeds() {
+  // get userIds of followed peers
+  const followedPeers = getUserSessionFollowing();
+
+  // get the latest feed keys for each followed user
+  const feedKeys = [];
+
+  followedPeers.forEach(async (userKey) => {
+    const user = await getItem(userKey, Types.user);
+    feedKeys.push(user.lastFeed);
+  });
+
+  // get feeds from local db
+  const feeds = [];
+
+  feedKeys.forEach(async (key) => {
+    const feed = await getItem(key, Types.feed);
+    feeds.push(feed);
+  });
+
+  return feeds;
+}
+
+/* --------------------------------- Peer Functions --------------------------------- */
+
+// ping peer
+// function pingPeer(address) {
+// send ping to peer
+
+// wait for response
+// }
+
+// get info from peer
+// announce peer?
+// get peers from peer
 // function pingPeer(address) {
 //   // send ping to peer
 //   // wait for response
@@ -347,7 +409,7 @@ function createNewPost(title, content, tags) {
     timestamp: new Date().toISOString(),
     title,
     content,
-    tags,
+    tags: tags || [],
     // signature: null,
   };
 
@@ -365,11 +427,29 @@ function createNewPost(title, content, tags) {
     throw new Error('Error unable to verify item.');
   }
 
+  let res;
+
   // publish item
-  pubItem(document);
+  pubItem(document)
+    .then((response) => {
+      console.log('Pub result:', response);
+      res = response;
+    });
 
   // update user feed
   updateUserFeed(document);
+
+  return res;
+}
+
+/* -------------------------------- Shutdown Functions ------------------------------- */
+
+function shutdownClient() {
+  // close connections
+  // ?
+
+  // save profile
+  saveUserProfile();
 }
 
 /* -------------------------------- Debug Functions --------------------------------- */
@@ -377,47 +457,12 @@ function createNewPost(title, content, tags) {
 function getProfile() {
   return getUserSessionProfile();
 }
-/* -------------------------------- Temporary tests -------------------------------- */
-
-// async function getTest(key) {
-//   const res = await getItem(key, 'document');
-//   console.log('Trying to get item', key, ':\n', res);
-// }
-
-// async function test() {
-//   getTest('20292bf632e04f4c');
-//   getTest('0000000000000000');
-// }
-
-// test();
-
-// const doc = {
-//   type: 'document',
-//   id: '1231231231231999',
-//   owner: '20292bf632e04f4c',
-//   timestamp: '2021-03-25T18:00:00.000Z',
-//   title: 'Second Test Document',
-//   content: 'This is a test document.',
-//   tags: ['test', 'document'],
-// };
-
-// // The problem with testing is that we need to use two separate databases for pubbing.
-// async function pubTest(item) {
-//   const res = await pubItem(item);
-//   console.log('>> Pubbing item Response:', res);
-// }
-
-// pubTest(doc);
-
-/* -------------------------------- ----------------- -------------------------------- */
 
 module.exports = {
   initClient,
   loginUser,
   loginNewUser,
 
-  // authenticateUserSession,
-  // createNewUserSession,
   getItem,
   putItem,
   pubItem,
@@ -428,4 +473,12 @@ module.exports = {
   getFeed,
   getUserFeed,
   getFollowedFeeds,
+
+  followUser,
+  unfollowUser,
+
+  pingPeer, // debug only
+  handshakePeer, // debug only
+
+  shutdownClient,
 };

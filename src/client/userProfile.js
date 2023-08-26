@@ -1,6 +1,6 @@
 // const debug = require('debug')('client');
 // const { getDb } = require('./clientDb');
-// const { getUserSessionProfile } = require('../auth/auth');
+const { getUserSessionProfile, updateUserSessionLastSeen } = require('../auth/auth');
 
 let Database = null;
 
@@ -10,8 +10,9 @@ function updateUserProfile(userProfile) {
   // save profile to db
 }
 
-function saveUserProfile(userProfile) {
-  // console.log('saveUserProfile', userProfile);
+function saveUserProfile() {
+  updateUserSessionLastSeen();
+  const userProfile = getUserSessionProfile();
   Database.updateUserProfile(userProfile);
 }
 

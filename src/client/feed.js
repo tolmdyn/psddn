@@ -10,11 +10,12 @@ const {
   // getUserSessionKey,
   signItem,
   getUserSessionUser,
+  getUserSessionFeed,
   setUserSessionFeed,
-  getUserSessionProfile,
+  // getUserSessionFollowing,
 } = require('../auth/auth');
 
-// const { sendItemToProviders } = require('../network/providers');
+const { sendItemToProviders } = require('../network/providers');
 const { generateKey } = require('../utils/utils');
 
 const { saveUserProfile } = require('./userProfile');
@@ -46,6 +47,7 @@ function createNewFeed(user) {
   return feed;
 }
 
+// could client/get() be used here instead? - remove db dependency
 function getUserFeed(user) {
   const lastFeedId = user.lastFeed;
   debug('getUserFeed', lastFeedId);
@@ -59,8 +61,9 @@ function getUserFeed(user) {
 }
 
 function getFeed() {
-  return getUserFeed(getUserSessionUser());
+  return getUserSessionFeed();
 }
+
 /**
  * @description Updates the current user's feed with a new document.
  * @param {} document The item to be added to the feed.
@@ -74,12 +77,6 @@ function updateUserFeed(document) {
   const user = getUserSessionUser();
 
   const lastFeed = getUserFeed(user);
-  // debug('lastFeed', lastFeed);
-  // If there is a last feed, we want to strip off the key and signature
-  // so that we can sign the feed with the new document.
-  // if (lastFeed) {
-  //   newFeed = { ...lastFeed };
-  // }
 
   // If there is no last feed, we create a new feed.
   const newFeed = createNewFeed(user);
@@ -110,37 +107,22 @@ function updateUserFeed(document) {
   // update usersession and profile feed
   // update user profile and database
   setUserSessionFeed(newFeed);
-  saveUserProfile(getUserSessionProfile()); // hmmm
+  saveUserProfile(); // hmmm
 
   // // send feed to providers
-  // sendItemToProviders(lastFeed);
-  // debug('Updated user feed.', lastFeed);
+  sendItemToProviders(newFeed);
+  debug('Updated user feed.', newFeed);
 
   // // send updated user to providers
-  // sendItemToProviders(user);
-  // debug('Updated user.', user);
-}
-
-function getFollowedFeeds() {
-  // get followed peers from local db
-  //    const followedPeers = getUserSessionProfile().following;
-
-  // get feeds for peers (if available)
-  // for each followed peer,
-  //  -update lastFeed ?
-  //  -
-
-  // get feeds from local db
-  // get provider for each feed
-  // get feed from provider
-  // update local db
+  sendItemToProviders(user);
+  debug('Updated user.', user);
 }
 
 module.exports = {
   setDb,
   createNewFeed,
   updateUserFeed,
-  getFollowedFeeds,
+  // getFollowedFeeds,
   getUserFeed,
   getFeed,
 };
