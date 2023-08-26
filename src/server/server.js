@@ -123,14 +123,20 @@ function handlePut(request) {
 
 function handlePing(request) {
   // debug('Handling ping.', request);
+  if (!request) {
+    debug('No data.');
+    return new Response(ResponseTypes.Error, 'No data / targetpeer.');
+  }
+
   const { targetPeer } = request;
+
   // debug(`Handling ping for ${targetPeer}.`);
   // debug('I am user:', getUserSessionKey());
   if (targetPeer === getUserSessionKey()) {
     debug('Sending pong.');
     return new Response(ResponseTypes.Success, 'Pong.');
   }
-  // debug('Not at this address...');
+  debug('Not at this address...');
   return new Response(ResponseTypes.Error, 'Not at this address.');
 }
 

@@ -227,6 +227,10 @@ class Database {
       return item;
     } catch (error) {
       if (error.message.includes('UNIQUE constraint failed')) {
+        if (type === Types.User) {
+          debug('User already exists in database, updating info.');
+          return this.updateUser(item);
+        }
         throw new Error('Key already exists in database.');
       } else {
         throw new Error(error);
@@ -305,7 +309,20 @@ class Database {
   }
 
   updateUser(user) {
-    return this.update(user);
+    try {
+      const existingUser = this.getUser(user.key);
+      if (existingUser) {
+        if (!existingUser.lastSeen || (existingUser.lastSeen < user.lastSeen)) {
+          debug('Updating existing user.');
+          return this.update(user);
+        }
+        debug('Existing user is newer, not updating.');
+        return existingUser;
+      }
+    } catch (error) {
+      debug('Error getting existing user from database.', error);
+    }
+    return this.put(user);
   }
 
   putUserProfile(userProfile) {

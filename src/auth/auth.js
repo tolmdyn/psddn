@@ -136,6 +136,10 @@ function setUserSessionAddress(address) {
   userSession.userProfile.userObject.lastAddress = address;
 }
 
+function updateUserSessionLastSeen() {
+  userSession.userProfile.userObject.lastSeen = new Date().toISOString();
+}
+
 // function setUserSessionProfile(profile) {
 //   userSession.userProfile = profile;
 // }
@@ -147,6 +151,27 @@ function getUserSessionFeed() {
 function setUserSessionFeed(feed) {
   userSession.userProfile.userObject.lastFeed = feed.key;
 }
+
+function getUserSessionFollowing() {
+  return userSession.userProfile.following;
+}
+
+function addUserToFollowing(userKey) {
+  const { following } = userSession.userProfile;
+
+  if (!following.includes(userKey)) {
+    following.push(userKey);
+  }
+}
+
+function removeUserFromFollowing(userKey) {
+  const { following } = userSession.userProfile;
+
+  if (following.includes(userKey)) {
+    following.splice(following.indexOf(userKey), 1);
+  }
+}
+
 //
 
 /* User Functions */
@@ -193,6 +218,7 @@ function authUserWithKey(key, secretKey, userProfile) {
 
   // Set user session
   setUserSession(userProfile, secretKey);
+  updateUserSessionLastSeen();
 
   // return something
   return userProfile;
@@ -219,6 +245,7 @@ function authUserWithPassword(key, password, userProfile) {
 
   // Set user session
   setUserSession(userProfile, secretKey);
+  updateUserSessionLastSeen();
 
   // return something
   return userProfile;
@@ -251,7 +278,7 @@ function createNewUser(_nickname) {
     key: publicKey,
     nickname,
     lastAddress: null,
-    lastSeen: null,
+    lastSeen: new Date().toISOString(),
     lastFeed: null,
   };
 
@@ -375,11 +402,13 @@ module.exports = {
   getUserSessionProfile,
   getUserSessionAddress,
   getUserSessionFeed,
+  getUserSessionFollowing,
 
   setUserSessionAddress,
   // setUserSessionProfile,
   setUserSessionFeed,
 
+  updateUserSessionLastSeen,
   // signMessage: signItem,
   // signMessageWithKey: signStringWithKey,
 
@@ -388,4 +417,6 @@ module.exports = {
   verifyStringSignature,
   signStringWithKey,
 
+  addUserToFollowing,
+  removeUserFromFollowing,
 };
