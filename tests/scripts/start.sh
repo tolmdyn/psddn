@@ -15,4 +15,4 @@ fi
 port=$((8080 + param))
 dbfile="test${param}.db"
 
-DEBUG=server,client,database,cache node bin/testApp.js -p $port -db ./data/$dbfile -i term
+DEBUG=routing,server,client,database,cache node bin/testApp.js -p $port -db ./data/$dbfile -i term

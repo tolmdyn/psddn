@@ -32,3 +32,6 @@ yarn.lock
 # Databases
 *.sqlite
 *.db
+*.db-shm
+*.db-wal
+

@@ -214,9 +214,9 @@ describe('Database Tests', () => {
     const testUser = generateRandomUser();
     testDB.put(testUser);
 
-    const updatedUser = generateRandomUser();
-    updatedUser.key = testUser.key;
-    updatedUser.username = 'updated_username';
+    const updatedUser = { ...testUser }; // generateRandomUser();
+    // updatedUser.key = testUser.key;
+    updatedUser.lastSeen = new Date().toISOString();
 
     const result = testDB.updateUser(updatedUser);
     expect(result).to.exist;
@@ -225,6 +225,23 @@ describe('Database Tests', () => {
     const retrievedUser = testDB.getUser(testUser.key);
     expect(retrievedUser).to.exist;
     expect(retrievedUser).to.deep.equal(updatedUser);
+  });
+
+  it('should update a user in the database', () => {
+    const testUser = generateRandomUser();
+    testUser.lastSeen = '2023-08-25T19:04:18.259Z';
+    testDB.put(testUser);
+
+    const updatedUser = { ...testUser };
+    updatedUser.lastSeen = '2022-08-25T10:04:18.259Z';
+
+    const result = testDB.updateUser(updatedUser);
+    expect(result).to.exist;
+    expect(result).to.deep.equal(testUser); // Why?
+
+    const retrievedUser = testDB.getUser(testUser.key);
+    expect(retrievedUser).to.exist;
+    expect(retrievedUser).to.deep.equal(testUser);
   });
 
   it('should delete a user from the database', () => {
@@ -247,7 +264,7 @@ describe('Database Tests', () => {
 
   /* -------- FEED -------- */
   it('should insert a valid feed into the database', () => {
-
+    // TODO
   });
 
   it('should get a valid feed from the database', () => {

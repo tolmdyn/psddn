@@ -134,6 +134,54 @@ describe('Document Generation Tests', () => {
 
     expect(key1).to.equal(key2);
   });
+
+  it('should generate a valid key for a document', () => {
+    const providedKey = 'MiRm77ENUCNp0bk40w6l+vJfZbtM14fRX/OxPqshzHA=';
+
+    const document = {
+      type: 'document',
+      owner: 'KsTEdLZFJn8tGeromEycmr+rhf9Ed0psqCjK9efbpBo=',
+      timestamp: '2023-08-25T12:24:29.154Z',
+      title: 'Title2',
+      content: 'Post2',
+      key: 'MiRm77ENUCNp0bk40w6l+vJfZbtM14fRX/OxPqshzHA=',
+      signature: 'pDnGNmkmJg9AV9D2NGvtjD2nLrdX9oiAQFtWhQfRE5BSvfcXq2iGSWb5lVgdTnGR306Z9BHd+jLvDvIvzFVOAg==',
+      tags: undefined,
+    };
+
+    const { key, signature, ...content } = document;
+    // console.log(key, signature, content);
+
+    // console.log(generateKey(content));
+    // content.tags = [];
+    // console.log(generateKey(content));
+
+    expect(key).to.equal(providedKey);
+    expect(generateKey(content)).to.equal(providedKey);
+    expect(isValidKeyFormat(key)).to.be.true;
+    expect(isValidKeyForItem(key, document)).to.be.true;
+  });
+
+  it('should generate a valid key for a document', () => {
+    const document = {
+      type: 'document',
+      owner: generateKey('random'),
+      timestamp: new Date().toISOString(),
+      title: 'Title',
+      content: 'Post',
+      tags: [],
+      // signature: null,
+    };
+
+    document.key = generateKey(document);
+
+    // sign the new document
+    document.signature = '12345';
+
+    const { key, signature, ...content } = document;
+    // console.log(key, signature, content);
+    expect(key).to.equal(generateKey(content));
+  });
 });
 
 // describe('User Generation Tests', () => {
