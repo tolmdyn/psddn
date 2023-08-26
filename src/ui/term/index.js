@@ -111,6 +111,30 @@ async function handleNewPost() {
   return null;
 }
 
+async function handlePing(args) {
+  const [ip, port] = args;
+  console.log('handlePing', ip, port);
+  if (ip && port) {
+    const response = await client.pingPeer(ip, port);
+    return response;
+  }
+
+  console.log('Invalid ping command. Usage: ping <ip> <port>');
+  return null;
+}
+
+async function handleHandshake(args) {
+  const [ip, port, localport] = args;
+  console.log('handleHandshake', ip, port);
+  if (ip && port && localport) {
+    const response = await client.handshakePeer(ip, port, localport);
+    return response;
+  }
+
+  console.log('Invalid handshake command. Usage: handshake <ip> <remoteport> <localport>');
+  return null;
+}
+
 const debugCommands = {
   profile: () => client.getProfile(),
   session: () => client.getSession(),
@@ -132,12 +156,40 @@ async function handleDebug(args) {
   return null;
 }
 
+async function handleFollowUser(args) {
+  console.log('handleFollowUser', args[0]);
+  const key = args[0];
+
+  if (key) {
+    const response = await client.followUser(key);
+    return response;
+  }
+
+  console.log('Invalid followUser command. Usage: followUser <user key>');
+  return null;
+}
+
+async function handleUnfollowUser(args) {
+  const key = args[0];
+
+  if (key) {
+    const response = await client.unfollowUser(key);
+    return response;
+  }
+
+  console.log('Invalid followUser command. Usage: followUser <user key>');
+  return null;
+}
+
 const commandHandlers = {
   get: handleGet,
   put: handlePut,
   publish: handlePub,
   newPost: handleNewPost,
-  // followUser: handleFollowUser,
+  followUser: handleFollowUser,
+  unfollowUser: handleUnfollowUser,
+  ping: handlePing,
+  hand: handleHandshake,
   debug: handleDebug,
   help: () => `Available commands: ${Object.keys(commandHandlers).join(', ')}`,
   exit: () => shutdown('Shutting down...'),
