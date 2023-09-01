@@ -34,12 +34,12 @@ function setDb(dbInstance) {
 function createNewFeed(user) {
   // create new feed
   const feed = {
-    type: 'feed',
+    // signature: null,
     // key: null,
+    type: 'feed',
     owner: user.key,
     timestamp: new Date().toISOString(),
     items: [],
-    // signature: null,
   };
 
   // feed.key = generateKey(feed);
@@ -72,25 +72,19 @@ function getFeed() {
 function updateUserFeed(document) {
   debug('updateUserFeed', document.key);
 
-  // get last user feed
-  // const user = Database.get(getUserSessionKey(), 'user');
   const user = getUserSessionUser();
-
   const lastFeed = getUserFeed(user);
 
   // If there is no last feed, we create a new feed.
   const newFeed = createNewFeed(user);
 
   if (lastFeed) {
-    // copy items from last feed
     newFeed.items = [...lastFeed.items];
   }
 
   // append new items
   newFeed.items.push(document.key);
-
   newFeed.key = generateKey(newFeed);
-
   // debug('lastFeed', lastFeed, 'newFeed', newFeed);
 
   // sign the new feed
@@ -107,7 +101,7 @@ function updateUserFeed(document) {
   // update usersession and profile feed
   // update user profile and database
   setUserSessionFeed(newFeed);
-  saveUserProfile(); // hmmm
+  saveUserProfile(); // hmm
 
   // // send feed to providers
   sendItemToProviders(newFeed);

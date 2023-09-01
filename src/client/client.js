@@ -87,6 +87,9 @@ const {
 const { followUser, unfollowUser } = require('./follow');
 const { pingPeer, handshakePeer } = require('./peer');
 
+// for debugging use only, to be removed
+const { getAllPeers } = require('../network/cache');
+
 let Database = null;
 
 function initClient(dbInstance) {
@@ -356,48 +359,45 @@ function pubItem(item) {
 // Doesnt handle errors yet
 
 async function getFollowedFeeds() {
-  // get userIds of followed peers
   const followedPeers = getUserSessionFollowing();
+  // debug('Followed peers:', followedPeers);
 
   // get the latest feed keys for each followed user
-  const feedKeys = [];
-
-  followedPeers.forEach(async (userKey) => {
-    const user = await getItem(userKey, Types.user);
-    feedKeys.push(user.lastFeed);
+  const feedKeysPromises = followedPeers.map(async (userKey) => {
+    try {
+      const response = await getItem(userKey, Types.User);
+      if (response.responseType === ResponseTypes.Success) {
+        const feedKey = response.responseData.lastFeed;
+        return feedKey;
+      }
+    } catch (error) {
+      debug('Error getting feed key:', error);
+    }
+    return null;
   });
 
-  // get feeds from local db
-  const feeds = [];
+  const feedKeys = await Promise.all(feedKeysPromises);
 
-  feedKeys.forEach(async (key) => {
-    const feed = await getItem(key, Types.feed);
-    feeds.push(feed);
+  // get the feeds from the keys
+  const feedPromises = feedKeys.map(async (key) => {
+    try {
+      const response = await getItem(key, Types.Feed);
+      // debug('Response:', response);
+      if (response.responseType === ResponseTypes.Success) {
+        const feed = response.responseData;
+        return feed;
+      }
+    } catch (error) {
+      debug('Error getting feed:', error);
+    }
+    return null;
   });
 
-  return feeds;
+  const feeds = await Promise.all(feedPromises);
+  // debug('Feeds:', feeds);
+
+  return feeds.filter((feed) => feed !== null);
 }
-
-/* --------------------------------- Peer Functions --------------------------------- */
-
-// ping peer
-// function pingPeer(address) {
-// send ping to peer
-
-// wait for response
-// }
-
-// get info from peer
-// announce peer?
-// get peers from peer
-// function pingPeer(address) {
-//   // send ping to peer
-//   // wait for response
-//   // return response
-// }
-// addPeer
-
-// followPeer
 
 /* -------------------------------- New Post Functions ----------------------------- */
 
@@ -454,6 +454,10 @@ function shutdownClient() {
 
 /* -------------------------------- Debug Functions --------------------------------- */
 
+function getCache() {
+  return getAllPeers();
+}
+
 function getProfile() {
   return getUserSessionProfile();
 }
@@ -477,8 +481,9 @@ module.exports = {
   followUser,
   unfollowUser,
 
-  pingPeer, // debug only
-  handshakePeer, // debug only
-
+  // debug functions
+  pingPeer,
+  handshakePeer,
+  getCache,
   shutdownClient,
 };
