@@ -18,11 +18,11 @@ function selectUI(UIType) {
   }
 }
 
-async function startUI(UIType) {
+async function startUI(UIType, user, secret) {
   UI = selectUI(UIType);
 
   if (UI) {
-    await UI.start();
+    await UI.start(user, secret);
   }
 
   return UI;
