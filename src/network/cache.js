@@ -150,7 +150,10 @@ async function requestPeerInfo(address) {
   // debug(`User key: ${userKey}`);
   // Send a request to the peer for its user info
   try {
-    const ws = new WebSocket(`ws://${address.ip}:${address.port}`);
+    const ws = new WebSocket(
+      `ws://${address.ip}:${address.port}`,
+      { handshakeTimeout: 4000 },
+    );
 
     const peerInfo = await new Promise((resolve) => {
       ws.on('open', () => {
@@ -285,20 +288,6 @@ function getAllPeers() {
   return cache;
 }
 
-// Redundant because the refresh function checks if a key is at the address and
-// removes it if it 'someone else'. So the cache should be consistent after a refresh.
-// function cacheContainsAddress(address) {
-//   debug(`Checking if cache contains address: ${JSON.stringify(address)}`);
-//   let contains = false;
-//   cache.forEach((peer) => {
-//     if (peer.lastAddress.ip === address.ip && peer.lastAddress.port === address.port) {
-//       contains = true;
-//     }
-//   });
-
-//   return contains;
-// }
-
 // The cache cannot contain a peer with our own address (ip + port) so we need to check for this
 function isAddressSelf(address) {
   const addressSelf = getUserSessionAddress();
@@ -406,7 +395,7 @@ async function checkPeerOnline(peer) {
   debug(`Checking if peer is online: ${peer.key} - ${peer.lastAddress.ip}:${peer.lastAddress.port}`);
   // Check if the peer is still active by opening a websocket and sending a 'ping' request
   try {
-    const ws = new WebSocket(`ws://${peer.lastAddress.ip}:${peer.lastAddress.port}`);
+    const ws = new WebSocket(`ws://${peer.lastAddress.ip}:${peer.lastAddress.port}`, { handshakeTimeout: 4000 });
 
     const peerOnline = await new Promise((resolve) => {
       ws.on('open', () => {
@@ -457,7 +446,7 @@ function loadCache() {
     }
   });
 
-  // Erase the saved peers from database?
+  // Erase the saved peers from database if offline?
 
   refreshCache();
 }
@@ -576,4 +565,5 @@ module.exports = {
   // getPeerAddress,
   // loadCache,
   // saveCache,
+  getAllPeers,
 };
