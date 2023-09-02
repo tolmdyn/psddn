@@ -132,7 +132,7 @@ function handlePing(request) {
 
   // debug(`Handling ping for ${targetPeer}.`);
   // debug('I am user:', getUserSessionKey());
-  if (targetPeer === getUserSessionKey()) {
+  if (targetPeer === getUserSessionKey() || targetPeer === null) {
     debug('Sending pong.');
     return new Response(ResponseTypes.Success, 'Pong.');
   }
