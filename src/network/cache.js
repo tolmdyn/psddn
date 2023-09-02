@@ -61,8 +61,6 @@
 const debug = require('debug')('cache');
 const WebSocket = require('ws');
 
-// const { Database } = require('../database/dbInstance');
-// const { generateRandomUser } = require('../utils/utils');
 const { Request, RequestTypes } = require('../models/request');
 const { ResponseTypes } = require('../models/response');
 const { loadBootstrapAddresses } = require('./bootstrap');
@@ -70,20 +68,34 @@ const { loadBootstrapAddresses } = require('./bootstrap');
 // Could this be passed in at init?? (YES_)
 const { getUserSessionKey, getUserSessionAddress } = require('../auth/auth');
 
+// The refresh interval in seconds
 const refreshSeconds = 60;
 
 // The cache itself is 'private' to this module
 const cache = new Map();
 
+// The database instance passed in at init
 let Database;
+
+// The local server port passed in at init
 let localServerPort;
 
-// --------------------- Startup functions ----------------------------
+/* --------------------- Startup functions ---------------------------- */
 
+/**
+ * @description: Initialise the cache module with the database instance from app.js.
+ * @param {*} dbInstance The singleton database instance.
+ */
 function initCache(dbInstance) {
   Database = dbInstance;
 }
-// consider splitting bootstrapping function out to utils
+
+/**
+ * @description: Start the cache module.
+ * @param {*} bootstrapFilepath The filepath of the bootstrap peers file.
+ * @param {*} port The port of the local server (for handshaking as it isn't always 8080)
+ * TODO: consider splitting bootstrapping requests out
+ */
 async function startCache(bootstrapFilepath, port) {
   localServerPort = port;
   // Load bootstrap peers from file
@@ -108,7 +120,7 @@ async function startCache(bootstrapFilepath, port) {
             // peer.lastSeen = Date.now();
             peer.lastSeen = new Date().toISOString();
             // debug(`Adding bootstrap peer: ${JSON.stringify(peer)}`);
-            // should we use add remote peer instead ??
+            // should we use add remote peer instead, as it ensures a two way handshake??
             addPeer(peer);
           }
         });
@@ -121,22 +133,32 @@ async function startCache(bootstrapFilepath, port) {
   // Load all saved peers from the database
   loadCache();
 
-  // Start the Timer
+  // Start the Refresh Timer
   startRefreshScheduler();
 }
 
+/**
+ * @description: "Cleanly" shutdown the cache module before program exit.
+ */
 function shutdownCache() {
   debug('Shutting down cache');
   stopRefreshScheduler();
   saveCache();
 }
 
+// --------------------- Cache functions ------------------------------
+
+/**
+ * @description: Helper funtion to check if a response is successful.
+ * @param {*} response The response object.
+ * @returns {Boolean} True if the response is a success response.
+ * TODO: This is not always used when it should be, and it is not as robust as it could be.
+ */
 function isSuccessResponse(response) {
   return (response !== null
     && response.responseType === ResponseTypes.Success);
 }
 
-// --------------------- Cache functions ------------------------------
 /**
  * @description: Request peer user info from a bootstrap peer address.
  * This is performed by sending a handshake request to the peer, using
@@ -173,7 +195,7 @@ async function requestPeerInfo(address) {
         // } else {
         //   resolve(null);
         // }
-        ws.close(); // is this ever executed?
+        ws.close();
       });
 
       ws.on('error', (error) => {
@@ -189,6 +211,17 @@ async function requestPeerInfo(address) {
   }
 }
 
+/**
+ * @description: Handshake with a peer to check if it is online. This exchanges peer info with a
+ * previously unknown peer and allows manual seeding of the cache by the user.
+ * Used by server module only, but included here to decouple network implementation.
+ * @param {*} ip The ip address of the peer
+ * @param {*} port The port of the peer
+ * @returns {Object} Response object.
+ * TODO: This has been left for compatibility with client but it should be combined with other
+ * duplicate functionality within cache to prevent overlapping.
+ * For example: pingPeer, addRemotePeer, requestPeerInfo perform similar functions.
+ */
 async function handshakePeer(ip, port) {
   const localPort = localServerPort;
 
@@ -221,6 +254,15 @@ async function handshakePeer(ip, port) {
   });
 }
 
+/**
+ * @description: Ping a peer to check if it is online. Used by client module.
+ * @param {*} ip
+ * @param {*} port
+ * @returns {Object} Response object.
+ * @returns {null} If the peer is not online.
+ * TODO: This has been left for compatibility with client but it should be combined with other
+ * duplicate functionality within cache to prevent overlapping.
+ */
 async function pingPeer(ip, port) {
   try {
     const ws = new WebSocket(
@@ -250,13 +292,13 @@ async function pingPeer(ip, port) {
   }
 }
 
-/*
-// in server:
-const remoteAddress = request.socket.remoteAddress.replace(/^.*:/, ''); // ipv6 hybrid
-    const { remotePort } = request.socket;
-    // Add the origin peer to the cache
-    addRemotePeer({ ip: remoteAddress, port: remotePort });
-*/
+/**
+ * @description: Add a remote peer to the cache. This is called by the server module when a new
+ * connection is made. The peer is added to the cache and a handshake request is sent to the peer
+ * to request its user info.
+ * @param {*} key The key of the peer
+ * @param {*} address The address of the peer: { ip, port }
+ */
 async function addRemotePeer(key, address) {
   debug(`Adding remote peer: ${key}, ${JSON.stringify(address)}`);
   // if key is our own key then return
@@ -292,7 +334,7 @@ async function addRemotePeer(key, address) {
   }
 }
 
-// announce peer functions
+// TODO: announce peer functions
 // if a new peer has connected to us then we announce it to the network
 // this is done by sending a handshake request to each other peer in our cache
 // using the address of the new peer as the 'origin' address
@@ -355,7 +397,7 @@ function isAddressSelf(address) {
   return addressSelf === address;
 }
 
-// TODO need to test this
+// TODO add functions to get latest followed peer info and add to cache.
 // function getFollowedPeers(followedPeerIDs) {
 //   // debug(`Getting followed peers for user: ${user}`);
 
@@ -376,7 +418,6 @@ function isAddressSelf(address) {
 //   return peers;
 // }
 
-// TODO need to test this
 // function getPeerAddress(key) {
 //   debug(`Getting address for peer: ${key}`);
 //   const peer = getPeer(key);
@@ -388,6 +429,10 @@ function isAddressSelf(address) {
 //   return null;
 // }
 
+/**
+ * @description: Update the last seen timestamp for a peer.
+ * @param {*} key The key of the peer
+ */
 function updatePeerLastSeen(key) {
   debug(`Updating last seen for peer: ${key}`);
   const peer = getPeer(key);
@@ -400,6 +445,11 @@ function updatePeerLastSeen(key) {
   }
 }
 
+/**
+ * @description: Update the last address for a peer.
+ * @param {*} key The key of the peer
+ * @param {*} address The address of the peer { ip, port }
+ */
 function updatePeerLastAddress(key, address) {
   debug(`Updating last address for peer: ${key}`);
   const peer = getPeer(key);
@@ -410,6 +460,62 @@ function updatePeerLastAddress(key, address) {
     debug(`Peer not found: ${key}`);
   }
 }
+
+// --------------------- Cache load/save functions --------------------------
+
+/**
+ * @description: Load all cached peers from the database.
+ */
+function loadCache() {
+  debug('Loading cache');
+  // Load all users from the database, then add each seen peer to the cache
+  const peers = Database.getAllUsers();
+  debug(`Found ${peers.length} peers in database.`);
+
+  peers.forEach((peer) => {
+    if ((peer.key !== getUserSessionKey())
+      && (peer.lastSeen && peer.lastAddress)
+      && (peer.lastAddress !== getUserSessionAddress())) {
+      // add remote so that it sends a handshake request so connection is mutual
+      addRemotePeer(peer.key, peer.lastAddress);
+    }
+  });
+
+  refreshCache();
+}
+
+/**
+ * @description: Save all cached peers to the database.
+ * TODO: This could be called periodically and on program exit.
+ */
+function saveCache() {
+  // Final refresh of cache before saving
+  refreshCache();
+
+  debug(`Saving cache of ${cache.size} peers to database`);
+  cache.forEach((peer) => {
+    // For each peer
+    // If in database, then update the last seen timestamp and address
+    // If not in database, then add the peer to the database
+    try {
+      const dbPeer = Database.getUser(peer.key);
+
+      if (dbPeer) {
+        // Peer exists in database so update it
+        dbPeer.lastSeen = peer.lastSeen;
+        dbPeer.lastAddress = peer.lastAddress;
+        Database.updateUser(dbPeer);
+      } else {
+        // Peer does not exist in database so put it
+        Database.put(peer);
+      }
+    } catch (error) {
+      debug(`Error saving peer: ${peer.key} - ${error}`);
+    }
+  });
+}
+
+/* --------------------- Cache refresh/heartbeat functions -------------------------- */
 
 /**
  * @description: Refresh the cache by checking if each peer is still active.
@@ -451,10 +557,17 @@ async function refreshPeer(peer) {
   }
 }
 
-// A more realistic approach would be a '3 strikes and you're out' policy before removing peer
+/**
+ * @description: Check if a peer is still active by opening a websocket and sending a ping.
+ * @param {*} peer The peer to check (key, ip, port)
+ * @returns {Boolean} True if the peer is active, false if not.
+ * TODO: A  more realistic approach would be a '3 strikes and you're out' policy before removing
+ * peers as sometimes connections might time out for random reasons but the peer is still online.
+ * TODO: Consider refactoring with the public ping / handshake functions used by client.
+ */
 async function checkPeerOnline(peer) {
   debug(`Checking if peer is online: ${peer.key} - ${peer.lastAddress.ip}:${peer.lastAddress.port}`);
-  // Check if the peer is still active by opening a websocket and sending a 'ping' request
+
   try {
     const ws = new WebSocket(`ws://${peer.lastAddress.ip}:${peer.lastAddress.port}`, { handshakeTimeout: 4000 });
 
@@ -492,55 +605,15 @@ async function checkPeerOnline(peer) {
   }
 }
 
-function loadCache() {
-  debug('Loading cache');
-  // Load all users from the database, then add each seen peer to the cache
-  const peers = Database.getAllUsers();
-  debug(`Found ${peers.length} peers in database.`);
+// --------------------- Refresh Scheduler functions --------------------------
 
-  peers.forEach((peer) => {
-    if ((peer.key !== getUserSessionKey())
-      && (peer.lastSeen && peer.lastAddress)
-      && (peer.lastAddress !== getUserSessionAddress())) {
-      // add remote so that it sends a handshake request so connection is mutual
-      addRemotePeer(peer.key, peer.lastAddress);
-    }
-  });
-
-  // Erase the saved peers from database if offline?
-
-  refreshCache();
-}
-
-function saveCache() {
-  // Final refresh of cache before saving
-  refreshCache();
-
-  debug(`Saving cache of ${cache.size} peers to database`);
-  cache.forEach((peer) => {
-    // For each peer
-    // If in database, then update the last seen timestamp and address
-    // If not in database, then add the peer to the database
-    try {
-      const dbPeer = Database.getUser(peer.key);
-
-      if (dbPeer) {
-        // Peer exists in database so update it
-        dbPeer.lastSeen = peer.lastSeen;
-        dbPeer.lastAddress = peer.lastAddress;
-        Database.updateUser(dbPeer);
-      } else {
-        // Peer does not exist in database so put it
-        Database.put(peer);
-      }
-    } catch (error) {
-      debug(`Error saving peer: ${peer.key} - ${error}`);
-    }
-  });
-}
-
-// --------------------- Heartbeat functions --------------------------
-
+/**
+ * @description: Class to manage the refresh scheduler.
+ * This is a simple timer which periodically calls the refresh function, this
+ * checks if each peer is still active and removes inactive peers from the cache.
+ * @param {*} refreshFunction The function to call when the timer expires.
+ * @param {*} intervalSeconds The interval in seconds.
+ */
 class RefeshScheduler {
   constructor(refreshFunction, intervalSeconds) {
     this.refreshFunction = refreshFunction;
@@ -563,69 +636,35 @@ class RefeshScheduler {
   }
 }
 
+// On module import, create a single private refresh scheduler instance
 const refreshScheduler = new RefeshScheduler(refreshCache, refreshSeconds);
 
+/**
+ * @description: Accessor function to externally start the refresh scheduler.
+ */
 function startRefreshScheduler() {
   refreshScheduler.start();
 }
 
+/**
+ * @description: Accessor function to externally stop the refresh scheduler.
+ */
 function stopRefreshScheduler() {
   refreshScheduler.stop();
 }
 
-// Load all followed peers from the database
-// Load all cached peers from disk
-// Refresh the cache
-// Start the Timer
+/* --------------------- Module Exports -------------------------- */
 
-// const refreshScheduler = new RefeshScheduler(refreshCache, 60);
-// refreshScheduler.start();
+// TODO: Some of these might not need to be exported, verify which
 
-// --------------------- Testing functions ----------------------------
-
-// function buildDummyCache() {
-//   // Build a dummy cache for testing
-//   // This is done by adding dummy peers to the cache
-//   // The peers are not added to the database
-//   // The peers are not checked for activity
-//   debug('Building dummy cache');
-
-//   for (let i = 0; i < 5; i += 1) {
-//     const peer = generateRandomUser();
-//     peer.lastAddress.ip = '127.0.0.1';
-//     peer.lastAddress.port = 8080 + i;
-//     peer.lastSeen = Date.now();
-//     addPeer(peer);
-//   }
-// }
-
-// async function refreshTest() {
-//   buildDummyCache();
-//   debug('Cache:', cache);
-
-//   await refreshCache();
-
-//   debug('Cache:', cache);
-// }
-
-// refreshTest();
-
-// Some of these do not need to be exported
 module.exports = {
-  // start up functions
   initCache,
   startCache,
   shutdownCache,
-  // providers
+
   getProviders,
-  // server -> handshake
+
   addRemotePeer,
-  // addPeer,
-  // requestPeerInfo,
-  // getFollowedPeers,
-  // getPeerAddress,
-  // loadCache,
-  // saveCache,
   getAllPeers,
   handshakePeer,
   pingPeer,
