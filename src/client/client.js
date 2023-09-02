@@ -56,13 +56,9 @@
 const debug = require('debug')('client');
 
 const {
-  authNewUser,
-  // authUserWithKey,
-  authUserWithPassword,
   getUserSessionKey,
   signItem,
   verifyItem,
-  getUserSessionProfile,
   getUserSessionFollowing,
 } = require('../auth/auth');
 
@@ -79,16 +75,14 @@ const { validateItem } = require('../models/validation');
 
 // client imports
 const { initDb } = require('./clientDb');
-const { loadUserProfile, saveUserProfile } = require('./userProfile');
-const {
-  updateUserFeed, getUserFeed, getFeed,
-} = require('./feed');
-
+const { saveUserProfile } = require('./userProfile');
+const { updateUserFeed, getUserFeed, getFeed } = require('./feed');
 const { followUser, unfollowUser } = require('./follow');
-const { pingPeer, handshakePeer } = require('./peer');
+// const { pingPeer, handshakePeer } = require('./peer');
+const { loginUser, loginNewUser } = require('./login');
 
 // for debugging use only, to be removed
-const { getAllPeers } = require('../network/cache');
+// const { getAllPeers } = require('../network/cache');
 
 let Database = null;
 
@@ -97,79 +91,48 @@ function initClient(dbInstance) {
   initDb(dbInstance);
 }
 
-function loginUser(key, password) {
-  // OR loginUser(key, password, secretKey) {
-  // if password, if secretkey
-  try {
-    const userProfile = loadUserProfile(key);
-
-    // Login with password
-    const authResult = authUserWithPassword(key, password, userProfile);
-    debug('User:', authResult.key);
-    return authResult;
-  } catch (error) {
-    debug('Error creating new user session.', error.message);
-    process.exit(1);
-  }
-  return null;
-}
-
-/**
- * @description Creates a new user session and adds the user to the local database.
- * @param {} nickname Optional nickname to use for the user, not neccessarily unique.
- * @returns A new user object. (maybe with the secret key also ?)
- */
-function loginNewUser(nickname, password) {
-  try {
-    const { userProfile, secretKey } = authNewUser(nickname, password);
-    const newUser = userProfile.userObject;
-    debug('NEW User:', newUser.key, 'Secret Key:', secretKey);
-    saveUserProfile(userProfile);
-    return newUser;
-  } catch (error) {
-    debug('Error creating new user session.', error.message);
-  }
-
-  return null;
-}
-
-/* --- USER PROFILE --- */
-// function saveUserProfile(userProfile) {
-//   Database.putUserProfile(userProfile);
-// }
-
-// function loadUserProfile(key) {
-//   return Database.getUserProfile(key);
-// }
-
-// async function saveUserProfileFile(userProfile) {
-//   // return this.put(userProfile, Types.UserProfile);
-//   const profileString = JSON.stringify(userProfile);
-//   const { key } = userProfile;
+// function loginUser(key, password) {
+//   // OR loginUser(key, password, secretKey) {
+//   // if password, if secretkey
 //   try {
-//     await fs.writeFileSync(`userProfile${key}.json`, profileString);
+//     const userProfile = loadUserProfile(key);
+
+//     // Login with password
+//     const authResult = authUserWithPassword(key, password, userProfile);
+//     debug('User:', authResult.key);
+//     return authResult;
 //   } catch (error) {
-//     throw new Error('Error saving user profile');
+//     debug('Error creating new user session.', error.message);
+//     // process.exit(1);
+//     throw new Error('Error creating new user session.');
 //   }
-//   debug('Saved user profile.');
+//   // return null;
 // }
 
-// function loadUserProfileFile(publicKey) {
-//   // return this.get(publicKey, Types.UserProfile);
+// /**
+//  * @description Creates a new user session and adds the user to the local database.
+//  * @param {} nickname Optional nickname to use for the user, not neccessarily unique.
+//  * @returns A new user object. (maybe with the secret key also ?)
+//  */
+// function loginNewUser(nickname, password) {
 //   try {
-//     const profileString = fs.readFileSync(`userProfile${publicKey}.json`);
-//     const profile = JSON.parse(profileString);
-//     debug('Loaded user profile.');
-//     return profile;
+//     const { userProfile, secretKey } = authNewUser(nickname, password);
+//     const newUser = userProfile.userObject;
+//     debug('NEW User:', newUser.key, 'Secret Key:', secretKey);
+//     saveUserProfile(userProfile);
+//     return newUser;
 //   } catch (error) {
-//     throw new Error('Error loading user profile');
+//     debug('Error creating new user session.', error.message);
+//     throw new Error('Error creating new user session.');
 //   }
+//   // return null;
 // }
 
 /* --- ACTIONS --- */
 
-async function getItem(key, type) {
-  // check the parameters are valid // should this be a seperate function?
+/* --------------------------------- Get Functions --------------------------------- */
+
+function validateGetParameters(key, type) {
   if (!key || !type) {
     return 'Invalid request, missing parameters';
   }
@@ -180,6 +143,16 @@ async function getItem(key, type) {
 
   if (!isValidKeyFormat(key)) {
     return new Response(ResponseTypes.Error, 'Invalid key format.');
+  }
+
+  return null;
+}
+
+async function getItem(key, type) {
+  // check the parameters are valid // should this be a seperate function?
+  const parameterError = validateGetParameters(key, type);
+  if (parameterError) {
+    return parameterError;
   }
 
   // check local db // should this be a seperate function?
@@ -201,6 +174,63 @@ async function getItem(key, type) {
     debug('Error getting item from providers:', err);
     return new Response(ResponseTypes.Error, 'Error getting item from providers.');
   }
+}
+
+// get the item from local db (if available) and from remote providers (if available)
+// if we have both, return the 'newest' one (by timestamp)
+// WARNING THIS ONLY WORKS WITH USERS AT THE MOMENT BECAUSE OF TIMESTAMP/LASTSEEN
+async function getLatestUser(key) {
+  // check the parameters are valid
+  // const parameterError = validateGetParameters(key, type);
+  // if (parameterError) {
+  //   return parameterError;
+  // }
+
+  // get item from local database
+  let localResult = null;
+  try {
+    localResult = await getItemFromLocal(key, Types.User);
+  } catch (error) {
+    debug('Error getting item from local database:', error);
+  }
+
+  // get item from providers
+  let providerResult = null;
+  try {
+    providerResult = await getItemFromProviders(key, Types.User);
+    debug('Result from providers:', providerResult);
+  } catch (err) {
+    debug('Error getting item from providers:', err);
+    return new Response(ResponseTypes.Error, 'Error getting item from providers.');
+  }
+
+  if (localResult && providerResult) {
+    // compare timestamps
+    const localTimestamp = new Date(localResult.responseData.lastSeen); // !
+    const providerTimestamp = new Date(providerResult.responseData.lastSeen); // !
+
+    if (localTimestamp > providerTimestamp) {
+      return localResult;
+    }
+    // update the local database with the provider result
+    try {
+      // Database.update(providerResult.responseData);
+      Database.updateUser(providerResult.responseData);
+    } catch (error) {
+      debug('Error updating item in local database:', error);
+    }
+    return providerResult;
+  }
+
+  if (localResult) {
+    return localResult;
+  }
+
+  if (providerResult) {
+    return providerResult;
+  }
+
+  return new Response(ResponseTypes.Error, 'Item not found.');
 }
 
 async function getItemFromLocal(key, type) {
@@ -262,12 +292,9 @@ async function getItemFromProviders(key, type) {
   return new Response(ResponseTypes.Error, 'No provider has the item.');
 }
 
-/**
- * @description Adds an item to the local database, Key and type are generated from the item.
- * @param {Object} item The item to be added to the database.
- */
-function putItem(item) {
-  // validate item
+/* --------------------------------- Put/Pub Functions --------------------------------- */
+
+function validatePutParameters(item) {
   if (!item) {
     return new Response(ResponseTypes.Error, 'Invalid request, missing item.');
   }
@@ -282,6 +309,20 @@ function putItem(item) {
 
   if (!isValidKeyForItem(item.key, item)) {
     return new Response(ResponseTypes.Error, 'Provided key is not valid for the item.');
+  }
+
+  return null;
+}
+
+/**
+ * @description Adds an item to the local database, Key and type are generated from the item.
+ * @param {Object} item The item to be added to the database.
+ */
+function putItem(item) {
+  // validate item
+  const parameterError = validatePutParameters(item);
+  if (parameterError) {
+    return parameterError;
   }
 
   // sign / verify item here before adding to db
@@ -306,20 +347,12 @@ function putItem(item) {
  */
 function pubItem(item) {
   // validate item
-  if (!item) {
-    return new Response(ResponseTypes.Error, 'Invalid request, missing item.');
-  }
-
-  if (!isValidItemType(item.type)) {
-    return new Response(ResponseTypes.Error, 'Invalid item type.');
-  }
-
-  if (!validateItem(item)) {
-    return new Response(ResponseTypes.Error, `Provided item is not a valid ${item.type}.`);
+  const parameterError = validatePutParameters(item);
+  if (parameterError) {
+    return parameterError;
   }
 
   // sign / verify item here before adding to db
-
   // if not in local db then add to local db
   try {
     debug(`Putting item into local database:\n${JSON.stringify(item)}`);
@@ -355,9 +388,42 @@ function pubItem(item) {
   }
 }
 
-/* --------------------------------- Feed Functions --------------------------------- */
-// Doesnt handle errors yet
+/* --------------------------------- Followed Functions --------------------------------- */
 
+/**
+ * @description Gets the latest findable users that the current user is following.
+ * @returns An array of user objects or an empty array.
+ */
+async function getFollowedUsers() {
+  const followedPeers = getUserSessionFollowing();
+  // debug('Followed peers:', followedPeers);
+  const userPromises = followedPeers.map(async (key) => {
+    try {
+      const response = await getLatestUser(key);
+      if (response.responseType === ResponseTypes.Success) {
+        const user = response.responseData;
+        return user;
+      }
+    } catch (error) {
+      debug('Error getting user:', error);
+    }
+    return null;
+  });
+
+  try {
+    const users = await Promise.all(userPromises);
+    // debug('Users:', users);
+    return users.filter((user) => user !== null);
+  } catch (error) {
+    debug('Error getting users:', error);
+    return [];
+  }
+}
+
+/**
+ * @description Gets the latest findable feeds from the current user's followed users.
+ * @returns An array of feed objects or an empty array.
+ */
 async function getFollowedFeeds() {
   const followedPeers = getUserSessionFollowing();
   // debug('Followed peers:', followedPeers);
@@ -365,7 +431,7 @@ async function getFollowedFeeds() {
   // get the latest feed keys for each followed user
   const feedKeysPromises = followedPeers.map(async (userKey) => {
     try {
-      const response = await getItem(userKey, Types.User);
+      const response = await getLatestUser(userKey);
       if (response.responseType === ResponseTypes.Success) {
         const feedKey = response.responseData.lastFeed;
         return feedKey;
@@ -393,10 +459,78 @@ async function getFollowedFeeds() {
     return null;
   });
 
-  const feeds = await Promise.all(feedPromises);
-  // debug('Feeds:', feeds);
+  let feeds = null;
 
-  return feeds.filter((feed) => feed !== null);
+  try {
+    const feedResults = await Promise.all(feedPromises);
+    // debug('Feeds:', feeds);
+    feeds = feedResults.filter((feed) => feed !== null);
+    // debug('Filtered feeds:', filteredFeeds);
+  } catch (error) {
+    debug('Error getting feeds:', error);
+    // return [];
+  }
+
+  if (feeds) {
+    try {
+      feeds.forEach((feed) => {
+        putItem(feed);
+      });
+    } catch (error) {
+      debug('Error putting new feeds into local database:', error.message);
+    }
+  }
+
+  return feeds;
+}
+
+/**
+ * @description Gets the latest findable documents from the current user's followed feeds.
+ * @returns An array of document objects or an empty array.
+ */
+async function getFollowedDocuments() {
+  // get followed feeds
+  const feeds = await getFollowedFeeds();
+
+  // get posts from feeds
+  const docKeys = feeds.flatMap((feed) => feed.items);
+
+  // assemble promises
+  const docPromises = docKeys.map(async (documentKey) => {
+    try {
+      const response = await getItem(documentKey, Types.Document);
+      if (response.responseType === ResponseTypes.Success) {
+        const document = response.responseData;
+        return document;
+      }
+    } catch (error) {
+      debug('Error getting post:', error);
+    }
+    return null;
+  });
+
+  // get documents
+  let documents = null;
+
+  try {
+    const postResults = await Promise.all(docPromises);
+    documents = postResults.filter((document) => document !== null);
+  } catch (error) {
+    debug('Error getting documents:', error);
+  }
+
+  // put posts into local db
+  if (documents) {
+    try {
+      documents.forEach((document) => {
+        putItem(document);
+      });
+    } catch (error) {
+      debug('Error putting new documents into local database:', error.message);
+    }
+  }
+
+  return documents;
 }
 
 /* -------------------------------- New Post Functions ----------------------------- */
@@ -446,13 +580,15 @@ function createNewPost(title, content, tags) {
 
 function shutdownClient() {
   // close connections
-  // ?
 
   // save profile
   saveUserProfile();
 }
 
 /* -------------------------------- Debug Functions --------------------------------- */
+
+const { getAllPeers, pingPeer, handshakePeer } = require('../network/cache');
+const { getUserSessionProfile } = require('../auth/auth');
 
 function getCache() {
   return getAllPeers();
@@ -461,6 +597,8 @@ function getCache() {
 function getProfile() {
   return getUserSessionProfile();
 }
+
+/* -------------------------------- Module Exports ---------------------------------- */
 
 module.exports = {
   initClient,
@@ -477,6 +615,8 @@ module.exports = {
   getFeed,
   getUserFeed,
   getFollowedFeeds,
+  getFollowedUsers,
+  getFollowedDocuments,
 
   followUser,
   unfollowUser,

@@ -1,8 +1,10 @@
-// const debug = require('debug')('client');
-// const { getDb } = require('./clientDb');
 const { getUserSessionProfile, updateUserSessionLastSeen } = require('../auth/auth');
 
 let Database = null;
+
+function setDb(dbInstance) {
+  Database = dbInstance;
+}
 
 function updateUserProfile(userProfile) {
   Database.updateUserProfile(userProfile);
@@ -20,13 +22,29 @@ function loadUserProfile(key) {
   return Database.getUserProfile(key);
 }
 
-function setDb(dbInstance) {
-  // Database = getDb();
-  Database = dbInstance;
-  // debug('setDb', Database, getDb);
-}
+// async function saveUserProfileFile(userProfile) {
+//   // return this.put(userProfile, Types.UserProfile);
+//   const profileString = JSON.stringify(userProfile);
+//   const { key } = userProfile;
+//   try {
+//     await fs.writeFileSync(`userProfile${key}.json`, profileString);
+//   } catch (error) {
+//     throw new Error('Error saving user profile');
+//   }
+//   debug('Saved user profile.');
+// }
 
-// setDb();
+// function loadUserProfileFile(publicKey) {
+//   // return this.get(publicKey, Types.UserProfile);
+//   try {
+//     const profileString = fs.readFileSync(`userProfile${publicKey}.json`);
+//     const profile = JSON.parse(profileString);
+//     debug('Loaded user profile.');
+//     return profile;
+//   } catch (error) {
+//     throw new Error('Error loading user profile');
+//   }
+// }
 
 module.exports = {
   saveUserProfile,
