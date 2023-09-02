@@ -1,5 +1,4 @@
 const client = require('../../client/client');
-const { ResponseTypes } = require('../../models/response');
 const { askQuestion, parseItem } = require('./termUtils');
 
 async function handleGet(args) {
@@ -51,18 +50,6 @@ async function handleNewPost() {
   return null;
 }
 
-async function handlePing(args) {
-  const [ip, port] = args;
-  // console.log('handlePing', ip, port);
-  if (ip && port) {
-    const response = await client.pingPeer(ip, port);
-    return response;
-  }
-
-  console.log('Invalid ping command. Usage: ping <ip> <port>');
-  return null;
-}
-
 async function handleFollowUser(args) {
   console.log('handleFollowUser', args[0]);
   const key = args[0];
@@ -88,39 +75,11 @@ async function handleUnfollowUser(args) {
   return null;
 }
 
-async function handleHandshake(args) {
-  const [ip, port, localport] = args;
-  // console.log('handleHandshake', ip, port);
-  if (ip && port && localport) {
-    try {
-      const response = await client.handshakePeer(ip, port, localport);
-      if (response) {
-        if (response.responseType === ResponseTypes.Success) { // ?
-          console.log('Handshake Success.');
-        } else {
-          console.log('Handshake Failed', response.responseData);
-        }
-        return response;
-        // console.log('handshakePeer response:', response);
-      }
-    } catch (error) {
-      console.log('Handshake Error:', error.message);
-    }
-
-    return null;
-  }
-
-  console.log('Invalid handshake command. Usage: hand <ip> <remoteport> <localport>');
-  return null;
-}
-
 module.exports = {
   handleGet,
   handlePut,
   handlePub,
   handleNewPost,
-  handlePing,
   handleFollowUser,
   handleUnfollowUser,
-  handleHandshake,
 };

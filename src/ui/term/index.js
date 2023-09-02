@@ -10,6 +10,9 @@ async function start(user, secret) {
 
   const userSession = await initUserSession(rl, user, secret);
   debug('userSession', userSession);
+
+  console.log('Login successful.');
+  console.log('Enter a command:');
 }
 
 module.exports = {

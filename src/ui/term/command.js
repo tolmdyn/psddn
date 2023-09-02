@@ -2,6 +2,7 @@ const handlers = require('./handlers');
 
 const client = require('../../client/client');
 const { shutdown } = require('../../utils/shutdown');
+const debug = require('./debug');
 
 const commandHandlers = {
   get: handlers.handleGet,
@@ -11,25 +12,24 @@ const commandHandlers = {
   followUser: handlers.handleFollowUser,
   unfollowUser: handlers.handleUnfollowUser,
   getFollowedFeeds: () => client.getFollowedFeeds(),
-  ping: handlers.handlePing,
-  hand: handlers.handleHandshake,
-  debug: handlers.handleDebug,
+  getFollowedUsers: () => client.getFollowedUsers(),
+  getFollowedDocuments: () => client.getFollowedDocuments(),
+  // ping: handlers.handlePing,
+  // hand: handlers.handleHandshake,
+  debug: debug.handleDebug,
   help: () => `Available commands: ${Object.keys(commandHandlers).join(', ')}`,
   exit: () => shutdown('Shutting down...'),
 };
 
 async function handleCommand(command) {
-  // build request object from command...
   const [commandAction, ...args] = command.split(' ');
-
   const handler = commandHandlers[commandAction];
 
-  // Should this await?
   if (handler) {
     return handler(args);
   }
 
-  console.log('Invalid command');
+  console.log('Invalid command. Type "help" for a list of commands.');
   return null;
 }
 

@@ -10,26 +10,43 @@ const ui = require('../src/ui');
 require('../src/utils/shutdown');
 
 /* parse command line args */
-const options = parseOptions();
+const commandOptions = parseOptions();
 
 // Start UI, then Server, then Cache, to prevent null session
-initialise(options.interface, options.dbname, options.port, options.bootstrap);
+// initialise(options.interface, options.dbname, options.port, options.bootstrap);
+initialise(commandOptions);
 
-async function initialise(initUI, dbName, initPort, initBootstrapFp) {
-  const dbInstance = createDatabaseInstance(dbName);
+async function initialise(options) {
+  const dbInstance = createDatabaseInstance(options.dbname);
   client.initClient(dbInstance);
   server.initServer(dbInstance);
 
   // UI and Session
-  await ui.startUI(initUI || 'none');
+  await ui.startUI(options.interface || 'none', options.user, options.secret);
 
   // Server
-  await server.startServer(initPort || 8080);
+  server.startServer(options.port || 8080);
 
   // Cache
-  await cache.initCache(dbInstance);
-  await cache.startCache(initBootstrapFp, initPort || 8080);
+  cache.initCache(dbInstance);
+  await cache.startCache(options.bootstrap, options.port || 8080);
 }
+
+// async function initialise(initUI, dbName, initPort, initBootstrapFp) {
+//   const dbInstance = createDatabaseInstance(dbName);
+//   client.initClient(dbInstance);
+//   server.initServer(dbInstance);
+
+//   // UI and Session
+//   await ui.startUI(initUI || 'none');
+
+//   // Server
+//   await server.startServer(initPort || 8080);
+
+//   // Cache
+//   await cache.initCache(dbInstance);
+//   await cache.startCache(initBootstrapFp, initPort || 8080);
+// }
 
 function parseOptions() {
   program
@@ -40,7 +57,7 @@ function parseOptions() {
     .option('-i, --interface <interface>', 'Choose the user interface to use (none, web, terminal)')
     .option('-d, --debug', 'Enable debug mode') // not yet implemented, on by default
     .option('-u, --user <user>', 'Specify the user key to login with') // not yet implemented
-    .option('-s, --secret <secret>', 'Specify the user secret to login with'); // not yet implemented
+    .option('-s, --secret <secret>', 'Specify the user password to login with'); // not yet implemented
 
   program.parse(process.argv);
   return program.opts();
