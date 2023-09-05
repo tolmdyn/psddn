@@ -10,7 +10,7 @@ module.exports = {
     {
       files: ['**/*.test.js'],
       rules: {
-        'no-unused-expressions': 'off',
+        'no-unused-expressions': 'warn',
         'no-unused-vars': 'off',
         'import/no-extraneous-dependencies': 'off',
       },
