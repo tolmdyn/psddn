@@ -1,4 +1,4 @@
-const client = require('../../client/client');
+const client = require('../../client');
 const { askQuestion, parseItem } = require('./termUtils');
 
 async function handleGet(args) {

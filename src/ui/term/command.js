@@ -1,6 +1,6 @@
 const handlers = require('./handlers');
 
-const client = require('../../client/client');
+const client = require('../../client');
 const { shutdown } = require('../../utils/shutdown');
 const debug = require('./debug');
 

@@ -1,5 +1,5 @@
 const { askQuestion, setReadline } = require('./termUtils');
-const client = require('../../client/client');
+const client = require('../../client');
 
 async function initUserSession(rl, user, secret) {
   setReadline(rl);

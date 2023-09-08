@@ -1,62 +1,51 @@
 /**
- * @description: Cached peers module.
+ * @description: Module to maintain a map of cached peers which can be used to
+ * request and receive items.
+ *
+ * The map is indexed by the public key of the peer and contains the following information:
+ * - public key
+ * - address (port, ip)
+ * - last seen timestamp
+ * - last address
+ *
+ * The simplest implementation just returns all known active peers and makes no attempt
+ * to filter for the correct or most likely provider(s) for an item as we would in a DHT.
+ *
+ * Peers are added to the cache:
+ * - From the database on startup
+ * - When a peer is manually added by client, and an address is provided
+ * - From the server module when an inbound connection is made
+ * - When a request is made for more peers
+ *
+ * The cache is periodically refreshed and pruned for inactive peers by the refresh scheduler.
+ * The refresh scheduler is started on startup and stopped on shutdown.
+ *
+ * At program exit all (active) cached peers are saved to the database.
+ *
+ *  -----------------------------------------------------------------------------------
+ * TODO:
+ *
+ * To prevent the cache from growing too large as new users are discovered, a Least Recently Used
+ * (LRU) cache could be implemented. This would require a timestamp for each peer and a function
+ * to remove the least recently 'seen'' peer when the cache is over a certain size.
+ *
+ * If we want to make the cache more sophisticated at discovering users and items then we could
+ * add the following features:
+ *    -Announce a new peer to the network?
+ *     (e.g. when a new peer logs on and announces to bootstrap peers)
+ *   -Announce a new item to the network?
+ *     -(e.g. when a user creates a new item)
+ *   -Announce an item provider to the network?
+ *     -(called simultaneously with the above to provide the item and when a peer successfully
+ *     retrieves an item from another peer)
+ *
+ * Filtering for which peers might be suitable for a request could be added via interest
+ * groups / following based on user followed peers and item tags.
+ *
+ * Additionally when requests are made for an item which doesn't exist at the current peer, they
+ * could be forwarded to other peers which might have the item. This would require management and a
+ * 'time-to-live' for each request to prevent infinite messaging loops etc.
  */
-
-// Maintain a map of cached peers which can be used to request and receive items.
-// The map is indexed by the public key of the peer.
-// The map contains the following information:
-// - public key
-// - ip address
-// - port
-// - last seen timestamp
-// - last address
-//
-// The cache should be periodically refreshed and pruned for inactive peers.
-//
-// At program exit should all active cached peers be pushed to the database?
-//
-// What we are looking for is basically an index of ACTIVE peer addresses/ports which can
-// be sent to the client when requested. At this point we dont need to worry about finding
-// the correct provider for an item as we would for DHT. Later on interest groups / following
-// could be implemented for the saved peers.
-//
-// The differences are yet to be determined between cached peers and the user database table.
-// Peers are added to the cache:
-// - From the database on startup
-// - When a peer is manually added by client, and an address is provided
-// - From the server module when an inbound connection is made
-// - When a request is made for more peers
-//
-// Functions:
-// -On startup -> Load any followed peers from the database
-// -On startup -> Load any cached peers from disk
-// -Refresh and prune all cached peers
-// -Get all providers for a specific key and type (simply gets all 'active' cached peers)
-// -Get a specific cached peer by public key (is this useful?)
-// -Add a new cached peer
-// -Remove a cached peer
-// -Update a cached peer
-// -Save all cached peers to disk/database
-// -Load all cached peers from disk/database
-//
-// -External functions:
-// -Get a list of all cached peers
-// -Get a list of all followed peers
-// -Get provider(s) for a specific key and type (will return all providers in this router)
-//
-// ------------------------------------------------------------------------------------
-//
-// If we want to make the cache more sophisticated and track users and items then we could add the
-// following functions:
-//
-// Announce Functions:
-// -Announce a new peer to the network?
-//  (e.g a new peer logs on and announces to bootstrap peers)
-// -Announce a new item to the network?
-//  (e.g. a user creates a new item)
-// -Announce an item provider to the network?
-//  (called simultaneously with the above to provide the item and when a peer successully
-//  retrieves an item from another peer)
 
 const debug = require('debug')('cache');
 const WebSocket = require('ws');

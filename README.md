@@ -16,10 +16,11 @@ A Peer-to-Peer Structured Data Distribution Network
 ## CLIENT
 ### Local actions
 - GET - retrieve a local resource
-- POST - create a local resource
+- PUT - create a local resource
+- PUBLISH - publish a new item
 - DELETE - delete a local resource ?
 - LIST - list local resources
-- UPDATE - update personal feed
+- UPDATE - update followed feeds
 
 ### Remote actions
 - REQ - retrieve a specific remote resource

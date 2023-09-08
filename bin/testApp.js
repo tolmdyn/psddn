@@ -3,7 +3,7 @@ const { program } = require('commander');
 // consider importing these in a separate file.
 const createDatabaseInstance = require('../src/database/dbInstance');
 
-const client = require('../src/client/client');
+const client = require('../src/client');
 const cache = require('../src/network/cache');
 const server = require('../src/server/server');
 const ui = require('../src/ui');
