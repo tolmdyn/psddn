@@ -37,13 +37,12 @@ function encryptWithPassword(password, data) {
   encryptedData += cipher.final('base64');
   const tag = cipher.getAuthTag().toString('base64');
 
-  const result = JSON.stringify({
+  return JSON.stringify({
     encryptedData,
     tag,
     salt: salt.toString('base64'),
     iv: iv.toString('base64'),
   });
-  return result;
 }
 
 /**
@@ -59,10 +58,9 @@ function decryptWithPassword(password, input) {
   const salt = Buffer.from(parsedData.salt, 'base64');
   const iv = Buffer.from(parsedData.iv, 'base64');
 
-  const derivedKey = crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');
-  const decipher = crypto.createDecipheriv('aes-256-gcm', derivedKey, iv);
-
   try {
+    const derivedKey = crypto.pbkdf2Sync(password, salt, 100000, 32, 'sha256');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', derivedKey, iv);
     decipher.setAuthTag(Buffer.from(tag, 'base64'));
     let decryptedData = decipher.update(encryptedData, 'base64', 'utf-8');
     decryptedData += decipher.final('utf-8');

@@ -183,21 +183,13 @@ function removeUserFromFollowing(userKey) {
  * @throws {Error} If the user is not authenticated or user profile cannot be saved
  */
 function authNewUser(nickname, password) {
-  // Create a new user
   const { user, secretKey } = createNewUser(nickname);
   debug('New user:', user);
   debug('New secret key:', secretKey);
 
-  // Create a new user profile
   const userProfile = createNewUserProfile(user, password, secretKey);
-
-  // Store the user profile ((DONE IN CLIENT)
-  // saveUserProfile(userProfile);
-
-  // Set user session
   setUserSession(userProfile, secretKey);
 
-  // return something
   return { userProfile, secretKey };
 }
 
@@ -209,7 +201,6 @@ function authNewUser(nickname, password) {
  * @throws {Error} If the user cannot be authenticated
  */
 function authUserWithKey(key, secretKey, userProfile) {
-  // Authenticate the user
   if (!authenticateKeyPair(key, secretKey)) {
     throw new Error('Invalid key or secret');
   }
@@ -292,7 +283,7 @@ function createNewUserProfile(user, password, secretKey) {
     throw new Error('User key does not match secret key');
   }
 
-  // Encrypt the secret key with the password (not implemented yet)
+  // We do not want to store the secret key in plain text, just in case.
   const encryptedSecretKey = encryptWithPassword(password, secretKey);
 
   // Create the user profile object
@@ -336,6 +327,11 @@ function authenticateKeyPair(publicKey, secretKey) {
 
 /* Signing / Verifying Functions */
 
+/**
+ * Helper function to obtain key and stringify item for use with signStringWithKey.
+ * @param {*} item The item to sign
+ * @returns The signature of the item, to be stored within the item
+ */
 function signItem(item) {
   const { secretKey } = userSession;
 
@@ -346,6 +342,12 @@ function signItem(item) {
   return signStringWithKey(itemString, secretKey);
 }
 
+/**
+ * Signs a string of data with a provided secret key.
+ * @param {*} data The data to sign (a string)
+ * @param {*} secretKey The secret key to sign the data with
+ * @returns The signature of the data, to be stored by caller
+ */
 function signStringWithKey(data, secretKey) {
   const secretKeyBuffer = nacl.util.decodeBase64(secretKey);
   const dataBuffer = nacl.util.decodeUTF8(data);
@@ -355,8 +357,13 @@ function signStringWithKey(data, secretKey) {
   return signature;
 }
 
+/**
+ * Verifies the signature of an item, public key is obtained from the item provided,
+ * @param {*} item The item to verify (feed, document)
+ * @returns {Boolean} True if the item is verified, false otherwise
+ * @throws {Error} If the item is not verified
+ */
 function verifyItem(item) {
-  // unpack the item and stringify
   const { owner: publicKey } = item;
   const { signature, ...itemContent } = item;
   const data = JSON.stringify(itemContent);
@@ -364,15 +371,23 @@ function verifyItem(item) {
   return verifyStringSignature(data, signature, publicKey);
 }
 
+/**
+ * Verifies the signature of a string of data.
+ * @param {*} data The data to verify (a string)
+ * @param {*} signature The signature of the data
+ * @param {*} publicKey The public key of the signer
+ * @returns {Boolean} True if the data is verified, false otherwise
+ * @throws {Error} If the data is not verified
+ */
 function verifyStringSignature(data, signature, publicKey) {
-  let verified = false;
+  // let verified = false;
 
   try {
     const signatureBuffer = nacl.util.decodeBase64(signature);
     const publicKeyBuffer = nacl.util.decodeBase64(publicKey);
     const dataBuffer = nacl.util.decodeUTF8(data);
 
-    verified = nacl.sign.detached.verify(dataBuffer, signatureBuffer, publicKeyBuffer);
+    return nacl.sign.detached.verify(dataBuffer, signatureBuffer, publicKeyBuffer);
   } catch (err) {
     if (err instanceof TypeError) {
       debug(`Invalid format: "${signature}" or "${publicKey}"`);
@@ -380,11 +395,9 @@ function verifyStringSignature(data, signature, publicKey) {
       debug('Error verifying:', err);
     }
   }
-
-  return verified;
+  return false;
+  // return verified;
 }
-
-/* Temporary tests */
 
 module.exports = {
   // initAuth,
