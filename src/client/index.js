@@ -515,12 +515,12 @@ const { pingPeer, handshakePeer, getCache, getProfile } = require('./debug');
 
 /* -------------------------------- Shutdown Functions ------------------------------- */
 
-function shutdownClient() {
-  // close connections
+// function shutdownClient() {
+//   // close connections
 
-  // save profile
-  saveUserProfile();
-}
+//   // save profile
+//   saveUserProfile();
+// }
 
 /* -------------------------------- Debug Functions --------------------------------- */
 
@@ -561,5 +561,6 @@ module.exports = {
   handshakePeer,
   getCache,
   getProfile,
-  shutdownClient,
+
+  shutdownClient: () => { saveUserProfile(); },
 };

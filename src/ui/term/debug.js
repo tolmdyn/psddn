@@ -1,4 +1,4 @@
-const client = require('../../client/client');
+const client = require('../../client');
 const { ResponseTypes } = require('../../models/response');
 
 const debugCommands = {
