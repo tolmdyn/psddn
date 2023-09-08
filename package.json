@@ -6,6 +6,7 @@
   "scripts": {
     "debug": "DEBUG=server,client,database,cache node bin/testApp.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json",
     "debug:t": "DEBUG=server,client,database,cache,auth node bin/testApp.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json -i term",
+    "debug:d": "DEBUG=server,client,database,cache,auth node bin/testApp.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json -i term -u kTxNyTcaOa1/TiJijJsXavzMZXBGfDfWp2G6gVtm3XY= -s password",
     "test": "mocha tests/**/*.test.js",
     "test:auth": "mocha tests/auth.test.js",
     "test:database": "mocha tests/database.test.js",
