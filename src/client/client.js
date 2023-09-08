@@ -1,3 +1,4 @@
+/* eslint-disable object-curly-newline */
 /**
  * @fileoverview Client functions for the application. To be used by the user interface.
  */
@@ -52,25 +53,7 @@
  *
  */
 
-// const WebSocket = require('ws');
-// const debug = require('debug')('client');
-
-// const {
-//   getUserSessionKey,
-//   signItem,
-//   verifyItem,
-//   getUserSessionFollowing,
-// } = require('../auth/auth');
-
-// const { RequestTypes, Request } = require('../models/request');
-// const { ResponseTypes } = require('../models/response');
-
-// const { Types } = require('../models/types');
-
-// const { isValidItemType } = require('../models/types');
-// const { generateKey } = require('../utils/utils');
-
-// client imports
+/* --------------------------------- Client Imports --------------------------------- */
 const { initDb } = require('./clientDb');
 const { saveUserProfile } = require('./userProfile');
 const { getUserFeed, getFeed } = require('./feed');
@@ -80,6 +63,7 @@ const { getItem } = require('./get');
 const { putItem, pubItem } = require('./putPub');
 const { createNewPost } = require('./newPost');
 const { getFollowedFeeds, getFollowedUsers, getFollowedDocuments } = require('./follow');
+const { pingPeer, handshakePeer, getCache, getProfile } = require('./debug');
 
 /* --------------------------------- Database --------------------------------- */
 
@@ -540,16 +524,16 @@ function shutdownClient() {
 
 /* -------------------------------- Debug Functions --------------------------------- */
 
-const { getAllPeers, pingPeer, handshakePeer } = require('../network/cache');
-const { getUserSessionProfile } = require('../auth/auth');
+// const { getAllPeers, pingPeer, handshakePeer } = require('../network/cache');
+// const { getUserSessionProfile } = require('../auth/auth');
 
-function getCache() {
-  return getAllPeers();
-}
+// function getCache() {
+//   return getAllPeers();
+// }
 
-function getProfile() {
-  return getUserSessionProfile();
-}
+// function getProfile() {
+//   return getUserSessionProfile();
+// }
 
 /* -------------------------------- Module Exports ---------------------------------- */
 
@@ -563,7 +547,6 @@ module.exports = {
   pubItem,
 
   createNewPost,
-  getProfile,
 
   getFeed,
   getUserFeed,
@@ -574,9 +557,9 @@ module.exports = {
   followUser,
   unfollowUser,
 
-  // debug functions
   pingPeer,
   handshakePeer,
   getCache,
+  getProfile,
   shutdownClient,
 };
