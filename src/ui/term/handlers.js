@@ -1,3 +1,5 @@
+const chalk = require('chalk');
+
 const client = require('../../client');
 const { askQuestion, parseItem } = require('./termUtils');
 
@@ -51,7 +53,6 @@ async function handleNewPost() {
 }
 
 async function handleFollowUser(args) {
-  console.log('handleFollowUser', args[0]);
   const key = args[0];
 
   if (key) {
@@ -75,6 +76,42 @@ async function handleUnfollowUser(args) {
   return null;
 }
 
+async function handleGetFollowedFeeds() {
+  const response = await client.getFollowedFeeds();
+
+  return response;
+}
+
+async function handleGetFollowedUsers() {
+  const response = await client.getFollowedUsers();
+
+  return response;
+}
+
+async function handleGetFollowedDocuments() {
+  const response = await client.getFollowedDocuments();
+
+  let result = '';
+
+  if (response) {
+  // Format and print the documents, add colours
+    response.forEach((document, index) => {
+      const formattedTimestamp = new Date(document.timestamp);
+      result += ('-----------------------------------\n');
+      result += `Document ${index + 1}:\n`;
+      result += `  Owner: ${chalk.green(`${document.owner}\n`)}`;
+      result += `  Title: ${chalk.green(`${document.title}`)}`;
+      result += ` Timestamp: ${chalk.green(`${formattedTimestamp.toLocaleDateString()} ${formattedTimestamp.toLocaleTimeString()}\n`)}`;
+      result += `  Content: ${chalk.green(`${document.content}\n`)}`;
+      // Add more properties as needed
+      result += ('-----------------------------------\n');
+    });
+  }
+
+  result = result || 'No documents found.';
+  return result;
+}
+
 module.exports = {
   handleGet,
   handlePut,
@@ -82,4 +119,7 @@ module.exports = {
   handleNewPost,
   handleFollowUser,
   handleUnfollowUser,
+  handleGetFollowedFeeds,
+  handleGetFollowedUsers,
+  handleGetFollowedDocuments,
 };

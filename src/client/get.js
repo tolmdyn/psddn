@@ -1,9 +1,9 @@
 const debug = require('debug')('client');
 
-const { isValidItemType, isValidKeyFormat } = require('../utils/utils');
+const { isValidKeyFormat } = require('../utils/utils');
 const { getProviders } = require('../network/providers');
 const { sendRequestToProvider } = require('../network/providers');
-const { Types } = require('../models/types');
+const { Types, isValidItemType } = require('../models/types');
 const { Request, RequestTypes } = require('../models/request');
 const { Response, ResponseTypes } = require('../models/response');
 
@@ -152,11 +152,11 @@ async function getItemFromProviders(key, type) {
       debug(`Putting item into local database:\n${JSON.stringify(item)}`);
       const result = Database.put(item);
       if (!result) {
-        console.log('Error putting item into local database. (No Response)');
+        debug('Error putting item into local database. (No Response)');
         // return new Response(ResponseTypes.Error, 'Error putting item into database.');
       }
     } catch (error) {
-      console.log('Error putting item into local database:', error);
+      debug('Error putting item into local database:', error);
       // return new Response(ResponseTypes.Error, error.message);
     }
 

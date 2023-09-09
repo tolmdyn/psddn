@@ -12,14 +12,14 @@ function followUser(user) {
   addUserToFollowing(user);
   saveUserProfile();
 
-  return getUserSessionFollowing();
+  return Object.fromEntries(getUserSessionFollowing());
 }
 
 function unfollowUser(user) {
   removeUserFromFollowing(user);
   saveUserProfile();
 
-  return getUserSessionFollowing();
+  return Object.fromEntries(getUserSessionFollowing());
 }
 
 /**
@@ -161,6 +161,8 @@ async function getFollowedDocuments() {
       debug('Error putting new documents into local database:', error.message);
     }
   }
+
+  documents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
   return documents;
 }

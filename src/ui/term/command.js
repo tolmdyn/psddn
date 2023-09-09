@@ -1,8 +1,7 @@
 const handlers = require('./handlers');
-
-const client = require('../../client');
 const { shutdown } = require('../../utils/shutdown');
 const debug = require('./debug');
+const { getUserSessionKey } = require('../../auth/auth');
 
 const commandHandlers = {
   get: handlers.handleGet,
@@ -11,14 +10,14 @@ const commandHandlers = {
   newPost: handlers.handleNewPost,
   followUser: handlers.handleFollowUser,
   unfollowUser: handlers.handleUnfollowUser,
-  getFollowedFeeds: () => client.getFollowedFeeds(),
-  getFollowedUsers: () => client.getFollowedUsers(),
-  getFollowedDocuments: () => client.getFollowedDocuments(),
+  getFollowedFeeds: handlers.handleGetFollowedFeeds,
+  getFollowedUsers: handlers.handleGetFollowedUsers,
+  getFollowedDocuments: handlers.handleGetFollowedDocuments,
   // ping: handlers.handlePing,
   // hand: handlers.handleHandshake,
   debug: debug.handleDebug,
   help: () => `Available commands: ${Object.keys(commandHandlers).join(', ')}`,
-  exit: () => shutdown('Shutting down...'),
+  exit: () => shutdown(`Shutting down ${getUserSessionKey()} session...`),
 };
 
 async function handleCommand(command) {

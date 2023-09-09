@@ -4,9 +4,10 @@
   "description": "A Node P2P Content Sharing Network",
   "main": "bin/app.js",
   "scripts": {
-    "debug": "DEBUG=server,client,database,cache node bin/testApp.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json",
+    "start": "node bin/psddn.js -p 8080 -b ./tests/scripts/bootstrap.json -i term",
+    "no-debug": "node bin/testApp.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json -i term",
     "debug:t": "DEBUG=server,client,database,cache,auth node bin/testApp.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json -i term",
-    "debug:d": "DEBUG=server,client,database,cache,auth node bin/testApp.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json -i term -u kTxNyTcaOa1/TiJijJsXavzMZXBGfDfWp2G6gVtm3XY= -s password",
+    "debug:d": "DEBUG=server,client,database,cache,auth node bin/testApp.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json -i term -u UcUQlVK13+qCwd2boEKjVpOgLUm+QBzFvpy/BEYgPjY= -s password",
     "test": "mocha tests/**/*.test.js",
     "test:auth": "mocha tests/auth.test.js",
     "test:database": "mocha tests/database.test.js",
@@ -26,6 +27,7 @@
   "dependencies": {
     "@faker-js/faker": "^8.0.2",
     "better-sqlite3": "^8.5.0",
+    "chalk": "^4.1.2",
     "commander": "^11.0.0",
     "debug": "^4.3.4",
     "joi": "^17.9.2",

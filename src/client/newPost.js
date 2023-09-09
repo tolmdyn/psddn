@@ -41,7 +41,7 @@ function createNewPost(title, content, tags) {
   // publish item
   pubItem(document)
     .then((response) => {
-      console.log('Pub result:', response);
+      debug('Pub result:', response);
       res = response;
     });
 

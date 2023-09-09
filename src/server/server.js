@@ -92,8 +92,6 @@ function handlePut(request) {
   const { item } = request;
   const { key, type } = item;
 
-  console.log(key, type, item);
-
   if (!key || !type) {
     return new Response(ResponseTypes.Error, 'Invalid request, missing parameters.');
   }
