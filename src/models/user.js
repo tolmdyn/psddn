@@ -53,6 +53,8 @@ const userSchema = joi.object({
     .length(16)
     .required()
     .allow(null),
+
+  // add signature ?
 });
 
 module.exports = {

@@ -28,6 +28,7 @@
     "better-sqlite3": "^8.5.0",
     "commander": "^11.0.0",
     "debug": "^4.3.4",
+    "dht-rpc": "^6.8.2",
     "joi": "^17.9.2",
     "nodemon": "^3.0.1",
     "object-hash": "^3.0.0",
