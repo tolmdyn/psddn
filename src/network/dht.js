@@ -38,6 +38,12 @@ let node;
 const PUT = 0; // define a command enum
 const GET = 1;
 
+let database = null;
+
+function setDb(dbInstance) {
+  database = dbInstance;
+}
+
 function initDHTNode() {
   debug(`Initialising DHT node with bootstrap: ${bootstrap}`);
 
@@ -75,6 +81,7 @@ function initDHTNode() {
       }
       debug('Value not found');
     }
+
     return null; // No error message?
   });
 
@@ -104,12 +111,15 @@ async function queryDHT(key) {
         const item = JSON.parse(data.value);
         if (item.key !== key) {
           console.log('Item found but key does not match:', key, '-->', item.key);
-          break;
+          // break;
+        } else {
+          console.log('Item found:', key, '-->', item);
         }
-        console.log('Item found:', key, '-->', item);
-        break;
+        return item;
+        // break;
       }
     }
+    // return null;
   } catch (e) {
     if (e.message === 'Too few nodes responded') {
       console.log('Too few nodes responded, item not found in DHT.');
@@ -119,6 +129,7 @@ async function queryDHT(key) {
   }
 
   console.log('Query finished. Exiting.');
+  return null;
 }
 
 async function storeDHT(key, value) {
@@ -126,10 +137,13 @@ async function storeDHT(key, value) {
   const q = node.query({ target: Buffer.from(key, 'base64'), command: PUT, value: val }, { commit: true });
 
   await q.finished();
+  console.log('Inserted item into DHT', key, '-->', value);
   debug('Inserted item into DHT', key, '-->', value);
+  return value; // success?
 }
 
 module.exports = {
+  setDb,
   initDHTNode,
   queryDHT,
   storeDHT,
