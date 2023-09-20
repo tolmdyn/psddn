@@ -110,10 +110,10 @@ async function queryDHT(key) {
       if (data.value) {
         const item = JSON.parse(data.value);
         if (item.key !== key) {
-          console.log('Item found but key does not match:', key, '-->', item.key);
+          debug('Item found but key does not match:', key, '-->', item.key);
           // break;
         } else {
-          console.log('Item found:', key, '-->', item);
+          debug('Item found:', key, '-->', item);
         }
         return item;
         // break;
@@ -122,13 +122,13 @@ async function queryDHT(key) {
     // return null;
   } catch (e) {
     if (e.message === 'Too few nodes responded') {
-      console.log('Too few nodes responded, item not found in DHT.');
+      debug('Too few nodes responded, item not found in DHT.');
     } else {
       throw e;
     }
   }
 
-  console.log('Query finished. Exiting.');
+  debug('Query finished, returning null.');
   return null;
 }
 
@@ -137,9 +137,13 @@ async function storeDHT(key, value) {
   const q = node.query({ target: Buffer.from(key, 'base64'), command: PUT, value: val }, { commit: true });
 
   await q.finished();
-  console.log('Inserted item into DHT', key, '-->', value);
+  // console.log('Inserted item into DHT', key, '-->', value);
   debug('Inserted item into DHT', key, '-->', value);
   return value; // success?
+}
+
+function shutdown() {
+  node.destroy();
 }
 
 module.exports = {
@@ -147,4 +151,5 @@ module.exports = {
   initDHTNode,
   queryDHT,
   storeDHT,
+  shutdown,
 };

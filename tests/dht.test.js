@@ -1,0 +1,86 @@
+/**
+ * @description Tests for the DHT
+ */
+
+const fs = require('fs');
+const { expect } = require('chai');
+
+const DHT = require('../src/network/dht');
+
+const { Database } = require('../src/database/database');
+const { generateRandomDocument, generateRandomUser } = require('./scripts/generate');
+const { Types } = require('../src/models/types');
+
+describe('Database Tests', () => {
+  let testDB; // test database
+  let node; // dht node
+
+  before(() => {
+    // Code to run before all tests in this test suite
+    // Create an empty test database
+    testDB = new Database('./tests/data/test_database.db');
+    DHT.setDb(testDB);
+  });
+
+  after(() => {
+    DHT.shutdown();
+
+    // Code to run after all tests in this test suite
+    // Close the database connection after each test
+    if (testDB) {
+      testDB.closeDatabaseConnection();
+    }
+
+    // Delete the test database file, if it exists
+    if (fs.existsSync('./tests/data/test_database.db')) {
+      fs.unlinkSync('./tests/data/test_database.db');
+    }
+  });
+
+  beforeEach(() => {
+  });
+
+  afterEach(() => {
+  });
+
+  it('should create a new database', () => {
+    expect(testDB).to.be.an.instanceof(Database);
+
+    // some other checks?
+  });
+
+  it('should set up a dht node', () => {
+    node = DHT.initDHTNode();
+
+    expect(node).to.exist;
+  });
+
+  it('should fail a query for non exising document', async function () {
+    this.timeout(10000);
+    const doc = generateRandomDocument();
+
+    const response = await DHT.queryDHT(doc.key);
+    expect(response).to.be.null;
+  });
+
+  it('should put a document in the dht', async function () {
+    this.timeout(10000);
+    const doc = generateRandomDocument();
+
+    const response = await DHT.storeDHT(doc.key, doc);
+    expect(response).to.exist;
+    expect(response.key).to.equal(doc.key);
+  });
+
+  it('should query for an existing document', async function () {
+    this.timeout(10000);
+    const doc = generateRandomDocument();
+    const put = await DHT.storeDHT(doc.key, doc);
+    expect(put).to.exist;
+    expect(put.key).to.equal(doc.key);
+
+    const value = await DHT.queryDHT(put.key);
+    expect(value).to.exist;
+    expect(value).to.deep.equal(doc);
+  });
+});
