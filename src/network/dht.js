@@ -97,7 +97,7 @@ function initDHTNode() {
     // database.put(itemValue);
     const resp = database.put(itemValue);
     debug('DHT putItem response:', resp);
-    console.log('-DHT Storing', key, '-->', itemValue);
+    // console.log('-DHT Storing', key, '-->', itemValue);
   }
 
   function getItem(key, type) {
@@ -121,16 +121,12 @@ async function queryDHT(key, type) {
         const item = JSON.parse(data.value);
         if (item.key !== key) {
           debug('Item found but key does not match:', key, '-->', item.key);
-          // break;
         } else {
           debug('Item found:', key, '-->', item);
         }
-        // return item;
         return new Response(ResponseTypes.Success, item);
-        // break;
       }
     }
-    // return null;
   } catch (e) {
     if (e.message === 'Too few nodes responded') {
       debug('Too few nodes responded, item not found in DHT.');
@@ -140,7 +136,7 @@ async function queryDHT(key, type) {
   }
 
   debug('Query finished, returning null.');
-  return null;
+  return new Response(ResponseTypes.Error, 'Item not found in DHT.');
 }
 
 async function storeDHT(key, value) {

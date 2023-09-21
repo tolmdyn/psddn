@@ -237,7 +237,6 @@ async function handshakePeer(ip, port) {
     });
 
     ws.on('error', (error) => {
-      // console.log('handshakePeer error:', error.message);
       reject(error);
     });
   });

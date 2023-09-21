@@ -10,8 +10,9 @@ const DHT = require('../src/network/dht');
 const { Database } = require('../src/database/database');
 const { generateRandomDocument, generateRandomUser } = require('./scripts/generate');
 const { Types } = require('../src/models/types');
+const { ResponseTypes } = require('../src/models/response');
 
-describe('Database Tests', () => {
+describe('DHT Tests', () => {
   let testDB; // test database
   let node; // dht node
 
@@ -61,7 +62,9 @@ describe('Database Tests', () => {
     const doc = generateRandomDocument();
 
     const response = await DHT.queryDHT(doc.key);
-    expect(response).to.be.null;
+    expect(response).to.exist;
+    expect(response.responseType).to.equal(ResponseTypes.Error);
+    expect(response.responseData).to.equal('Item not found in DHT.');
   });
 
   it('should put a document in the dht', async function () {
@@ -80,33 +83,34 @@ describe('Database Tests', () => {
     expect(put).to.exist;
     expect(put.key).to.equal(doc.key);
 
-    const value = await DHT.queryDHT(put.key);
-    expect(value).to.exist;
-    expect(value).to.deep.equal(doc);
+    const response = await DHT.queryDHT(put.key);
+    expect(response).to.exist;
+    expect(response.responseType).to.equal(ResponseTypes.Success);
+    expect(response.responseData).to.deep.equal(doc);
   });
 
-  // it('should put a lot of documents in the dht', async function () {
-  //   this.timeout(10000);
-  //   const amount = 20;
-  //   // generate documents
-  //   const docs = [];
-  //   for (let i = 0; i < amount; i += 1) {
-  //     docs.push(generateRandomDocument());
-  //   }
+  it('should put a lot of documents in the dht', async function () {
+    this.timeout(10000);
+    const amount = 20;
+    // generate documents
+    const docs = [];
+    for (let i = 0; i < amount; i += 1) {
+      docs.push(generateRandomDocument());
+    }
 
-  //   // create 100 promises
-  //   const promises = [];
-  //   docs.forEach((doc) => {
-  //     promises.push(DHT.storeDHT(doc.key, doc));
-  //   });
+    // create 100 promises
+    const promises = [];
+    docs.forEach((doc) => {
+      promises.push(DHT.storeDHT(doc.key, doc));
+    });
 
-  //   // wait for all promises to resolve
-  //   const responses = await Promise.all(promises);
+    // wait for all promises to resolve
+    const responses = await Promise.all(promises);
 
-  //   // check that all responses are valid
-  //   responses.forEach((response) => {
-  //     expect(response).to.exist;
-  //     expect(response.key).to.exist;
-  //   });
-  // });
+    // check that all responses are valid
+    responses.forEach((response) => {
+      expect(response).to.exist;
+      expect(response.key).to.exist;
+    });
+  });
 });
