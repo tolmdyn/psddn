@@ -1,5 +1,6 @@
 const debug = require('debug')('client');
 
+const { pubItem } = require('./putPub');
 // const { Database } = require('./clientDb');
 // const Database = global.dbInstance;
 
@@ -15,7 +16,7 @@ const {
   // getUserSessionFollowing,
 } = require('../auth/auth');
 
-const { sendItemToProviders } = require('../network/providers');
+// const { sendItemToProviders } = require('../network/providers');
 const { generateKey } = require('../utils/utils');
 
 const { saveUserProfile } = require('./userProfile');
@@ -91,24 +92,27 @@ function updateUserFeed(document) {
   const signature = signItem(newFeed);
   newFeed.signature = signature;
 
-  // update local db with the feed item
-  Database.put(newFeed);
-
   // delete old feed
   if (lastFeed) {
     Database.delete(lastFeed.key, 'feed');
   }
+
+  // update local db with the feed item
+  // Database.put(newFeed);
+
   // update usersession and profile feed
   // update user profile and database
   setUserSessionFeed(newFeed);
   saveUserProfile(); // hmm
 
   // // send feed to providers
-  sendItemToProviders(newFeed);
+  // sendItemToProviders(newFeed);
+  pubItem(newFeed);
   debug('Updated user feed.', newFeed);
 
   // // send updated user to providers
-  sendItemToProviders(user);
+  // sendItemToProviders(user);
+  pubItem(user);
   debug('Updated user.', user);
 }
 

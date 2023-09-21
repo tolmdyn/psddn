@@ -5,6 +5,8 @@ const createDatabaseInstance = require('../src/database/dbInstance');
 
 const client = require('../src/client');
 const cache = require('../src/network/cache');
+const dht = require('../src/network/dht');
+
 const server = require('../src/server/server');
 const ui = require('../src/ui');
 require('../src/utils/shutdown');
@@ -20,6 +22,7 @@ async function initialise(options) {
   const dbInstance = createDatabaseInstance(options.dbname);
   client.initClient(dbInstance);
   server.initServer(dbInstance);
+  dht.initDHT(dbInstance);
 
   // UI and Session
   await ui.startUI(options.interface || 'none', options.user, options.secret);

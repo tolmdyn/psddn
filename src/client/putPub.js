@@ -5,6 +5,7 @@ const { isValidItemType } = require('../models/types');
 const { isValidKeyForItem } = require('../utils/utils');
 const { validateItem } = require('../models/validation');
 const { sendItemToProviders } = require('../network/providers');
+const { storeDHT } = require('../network/dht');
 
 let Database = null;
 
@@ -63,27 +64,29 @@ function putItem(item) {
  * @param {*} item The item to be published.
  * @returns {Response} A response object containing the result of the request.
  */
-function pubItem(item) {
+async function pubItem(item) {
   // validate item
   const parameterError = validatePutParameters(item);
   if (parameterError) {
     return parameterError;
   }
 
+  const results = [];
   // sign / verify item here before adding to db
   // if not in local db then add to local db
   try {
     debug(`Putting item into local database:\n${JSON.stringify(item)}`);
-    const result = Database.put(item);
+    const result = await Database.put(item);
+
     if (!result) {
-      return new Response(ResponseTypes.Error, 'Unknown error putting item into database.');
+      result.push(new Response(ResponseTypes.Error, 'Unable to insert item into database.'));
     }
-    // return new Response(ResponseTypes.Success, `Item ${result.key} inserted into database.`);
+    results.push(new Response(ResponseTypes.Success, `Item ${result.key} inserted into database.`));
     debug('Item added to local database.');
   } catch (error) {
     if (error.message !== 'Key already exists in database.') {
       debug('Error putting item into local database:', error);
-      return new Response(ResponseTypes.Error, error.message);
+      results.push(new Response(ResponseTypes.Error, error.message));
     }
     debug('Item not added to local database, already exists. Continuing...');
   }
@@ -91,16 +94,33 @@ function pubItem(item) {
   // send to peers / dht
   try {
     debug(`Sending ${item.key} to providers...`);
-    const result = sendItemToProviders(item);
+    const result = await sendItemToProviders(item);
     if (!result) {
-      return new Response(ResponseTypes.Error, 'Error sending item to providers.');
+      results.push(new Response(ResponseTypes.Error, 'Error sending item to providers.'));
     }
-    return result;
+    // add result;
+    results.push(result);
+    debug('Item sent to providers, result:', result);
     // return new Response(ResponseTypes.Success, 'Item sent to providers.');
   } catch (error) {
     debug('Error sending item to providers:', error);
-    return new Response(ResponseTypes.Error, error.message);
+    results.push(new Response(ResponseTypes.Error, error.message));
   }
+
+  // Put item into DHT
+  try {
+    const result = await storeDHT(item.key, item);
+    if (result) {
+      results.push(new Response(ResponseTypes.Success, `Item ${result.key} inserted into dht.`));
+      debug('DHT result:', result);
+    }
+  } catch (error) {
+    debug('Error retrieving item from DHT:', error);
+    results.push(new Response(ResponseTypes.Error, error.message));
+  }
+
+  return results;
+  // new Response(ResponseTypes.Success, `Item published, results: ${JSON.stringify(results)}`);
 }
 
 module.exports = {

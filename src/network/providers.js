@@ -11,6 +11,7 @@ const { Request, RequestTypes } = require('../models/request');
 const { Response, ResponseTypes } = require('../models/response');
 
 const cache = require('./cache');
+// const { queryDHT, storeDHT } = require('./dht');
 // const Address = require('../models/address');
 
 async function getProviders(key, type) {
@@ -26,6 +27,7 @@ async function getProviders(key, type) {
   const providers = cache.getProviders(key, type);
 
   // DHT PROVIDERS
+  // If the dht had an index of provider addresses for that item it would append them here.
 
   // return dummy providers
   return providers;
@@ -132,6 +134,7 @@ async function sendItemToProviders(item) {
   // if no successful responses, return error
   return new Response(ResponseTypes.Error, 'No provider recieved the item.');
 }
+
 module.exports = {
   getProviders,
   sendItemToProviders,

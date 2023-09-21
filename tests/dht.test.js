@@ -18,7 +18,8 @@ describe('Database Tests', () => {
   before(() => {
     // Code to run before all tests in this test suite
     // Create an empty test database
-    testDB = new Database('./tests/data/test_database.db');
+    // testDB = new Database('./tests/data/test_database.db');
+    testDB = new Database(':memory:');
     DHT.setDb(testDB);
   });
 
@@ -83,4 +84,29 @@ describe('Database Tests', () => {
     expect(value).to.exist;
     expect(value).to.deep.equal(doc);
   });
+
+  // it('should put a lot of documents in the dht', async function () {
+  //   this.timeout(10000);
+  //   const amount = 20;
+  //   // generate documents
+  //   const docs = [];
+  //   for (let i = 0; i < amount; i += 1) {
+  //     docs.push(generateRandomDocument());
+  //   }
+
+  //   // create 100 promises
+  //   const promises = [];
+  //   docs.forEach((doc) => {
+  //     promises.push(DHT.storeDHT(doc.key, doc));
+  //   });
+
+  //   // wait for all promises to resolve
+  //   const responses = await Promise.all(promises);
+
+  //   // check that all responses are valid
+  //   responses.forEach((response) => {
+  //     expect(response).to.exist;
+  //     expect(response.key).to.exist;
+  //   });
+  // });
 });

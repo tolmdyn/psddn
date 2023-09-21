@@ -24,7 +24,7 @@ function initDHTNode() {
   });
 
   node.on('request', (req) => {
-    console.log('DHT node request:', req);
+    // console.log('DHT node request:', req);
     if (req.command === PUT) {
       console.log('DHT node PUT request');
       if (req.token) {
@@ -73,7 +73,21 @@ async function init() {
   const swarm = Array.from({ length: 100 }, () => initDHTNode());
 }
 
-init();
+// command line args
+const args = process.argv.slice(2);
+console.log('args:', args);
 
+if (args[0] === '-h') {
+  console.log('Create a bootstrap node and 100 dummy nodes.');
+  console.log('Usage: testDHTnet.js [-b]');
+  console.log('  -b: Create a bootstrap node only');
+  process.exit(0);
+}
+
+if (args[0] === '-b') {
+  createBootstrapNode();
+} else {
+  init();
+}
 // createBootstrapNode();
 // const swarm = Array.from({ length: 100 }, () => initDHTNode());

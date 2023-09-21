@@ -31,6 +31,8 @@
 const debug = require('debug')('dht');
 const DHT = require('dht-rpc');
 
+const { Response, ResponseTypes } = require('../models/response');
+
 const bootstrap = '127.0.0.1:10001';
 
 let node;
@@ -47,7 +49,7 @@ function setDb(dbInstance) {
 function initDHTNode() {
   debug(`Initialising DHT node with bootstrap: ${bootstrap}`);
 
-  const values = new Map(); // Temporary in-memory storage
+  // const values = new Map(); // Temporary in-memory storage
 
   node = new DHT({
     ephemeral: true,
@@ -74,7 +76,7 @@ function initDHTNode() {
 
     if (req.command === GET) {
       debug('DHT node GET request');
-      const value = getItem(req.target);
+      const value = getItem(req.target, req.type);
       if (value) {
         debug('Value found:', value);
         return req.reply(value);
@@ -89,20 +91,28 @@ function initDHTNode() {
     // const key = key.toString('base64');
     // assert key is proper length & format etc
     // assert item is valid etc
-    values.set(key, itemValue);
+    // values.set(key, itemValue);
+
+    // Store in database
+    // database.put(itemValue);
+    const resp = database.put(itemValue);
+    debug('DHT putItem response:', resp);
     console.log('-DHT Storing', key, '-->', itemValue);
   }
 
-  function getItem(key) {
+  function getItem(key, type) {
     // const key = key.toString('base64');
-    return values.get(key);
+    // return values.get(key);
+    const item = database.get(key, type);
+    debug('DHT getItem response:', item);
+    return item;
   }
 
   return node;
 }
 
-async function queryDHT(key) {
-  const q = node.query({ target: Buffer.from(key, 'base64'), command: GET }, { commit: true });
+async function queryDHT(key, type) {
+  const q = node.query({ target: Buffer.from(key, 'base64'), command: GET, type }, { commit: true });
 
   try {
     // eslint-disable-next-line no-restricted-syntax
@@ -115,7 +125,8 @@ async function queryDHT(key) {
         } else {
           debug('Item found:', key, '-->', item);
         }
-        return item;
+        // return item;
+        return new Response(ResponseTypes.Success, item);
         // break;
       }
     }
@@ -146,9 +157,15 @@ function shutdown() {
   node.destroy();
 }
 
+function initDHT(dbInstance) {
+  setDb(dbInstance);
+  initDHTNode();
+}
+
 module.exports = {
   setDb,
   initDHTNode,
+  initDHT,
   queryDHT,
   storeDHT,
   shutdown,

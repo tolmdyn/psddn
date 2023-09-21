@@ -4,7 +4,7 @@
 
 const { expect } = require('chai');
 
-const client = require('../src/client/client');
+const client = require('../src/client');
 
 describe('Client Tests', () => {
   it('should create a new client instance', () => {

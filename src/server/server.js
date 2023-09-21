@@ -205,4 +205,4 @@ function shutdownServer() {
   debug('Server stopped by process.');
 }
 
-module.exports = { initServer, startServer, shutdownServer };
+module.exports = { initServer, startServer, shutdownServer, handleGet, handlePut };

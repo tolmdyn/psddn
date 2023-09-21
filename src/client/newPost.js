@@ -10,7 +10,7 @@ const { generateKey } = require('../utils/utils');
 const { pubItem } = require('./putPub');
 const { updateUserFeed } = require('./feed');
 
-function createNewPost(title, content, tags) {
+async function createNewPost(title, content, tags) {
   // create new document
   const document = {
     type: 'document',
@@ -39,16 +39,18 @@ function createNewPost(title, content, tags) {
   let res;
 
   // publish item
-  pubItem(document)
-    .then((response) => {
-      console.log('Pub result:', response);
-      res = response;
-    });
+  // pubItem(document)
+  //   .then((response) => {
+  //     console.log('Pub result:', response);
+  //     res = response;
+  //   });
+  const response = await pubItem(document);
+  // console.log('Pub result:', response);
 
   // update user feed
   updateUserFeed(document);
 
-  return res;
+  return response;
 }
 
 module.exports = {

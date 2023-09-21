@@ -1,6 +1,6 @@
 #!/bin/bash
 
-debug_cmd="DEBUG=routing,server,client,database,cache"
+debug_cmd="DEBUG=routing,server,client,database,cache,dht"
 
 debug_flag=true
 param=""
