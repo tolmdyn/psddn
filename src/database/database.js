@@ -186,12 +186,22 @@ class Database {
 
   /**
    * @description: Get all users from the database
-   * @return {object} All users from database
+   * @return {object} Array of users
    */
   getAllUsers() {
     const query = this.#db.prepare('SELECT * FROM user;');
     const users = query.all();
     return users.map((user) => JSON.parse(user.json_data));
+  }
+
+  /**
+   * @description: Get all documents from the database
+   * @return {object} Array of documents
+   */
+  getAllDocuments() {
+    const query = this.#db.prepare('SELECT * FROM document;');
+    const documents = query.all();
+    return documents.map((document) => JSON.parse(document.json_data));
   }
 
   /**

@@ -167,8 +167,38 @@ async function getItemFromProviders(key, type) {
   return new Response(ResponseTypes.Error, 'No provider has the item.');
 }
 
+/**
+ * Get all documents from local database
+ * @returns {Array} Array of documents
+ */
+function getLocalDocuments() {
+  try {
+    const documents = Database.getAllDocuments();
+    return documents;
+  } catch (error) {
+    debug('Error getting documents from local database:', error);
+    return [];
+  }
+}
+
+/**
+ * Get all users from local database
+ * @returns {Array} Array of users
+ */
+function getLocalUsers() {
+  try {
+    const users = Database.getAllUsers();
+    return users;
+  } catch (error) {
+    debug('Error getting users from local database:', error);
+    return [];
+  }
+}
+
 module.exports = {
   setDb,
   getItem,
   getLatestUser,
+  getLocalDocuments,
+  getLocalUsers,
 };

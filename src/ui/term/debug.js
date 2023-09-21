@@ -3,9 +3,9 @@ const { ResponseTypes } = require('../../models/response');
 
 const debugCommands = {
   profile: () => client.getProfile(),
-  // user: () => client.getUser(),
+  users: () => client.getAllUserKeys(),
   // feed: () => client.getFeed(),
-  // posts: () => client.getPosts(),
+  documents: () => client.getAllDocumentKeys(),
   cache: () => client.getCache(),
   hand: handleHandshake,
   ping: handlePing,
