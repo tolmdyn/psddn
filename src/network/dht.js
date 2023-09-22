@@ -67,7 +67,7 @@ function initDHTNode() {
     if (req.command === PUT) {
       debug('DHT node PUT request');
       if (req.token) {
-        putItem(req.target, req.value);
+        putItem(req.value);
         return req.reply(null); // { success: true } ?
       }
       const value = getItem(req.target);
@@ -87,7 +87,7 @@ function initDHTNode() {
     return null; // No error message?
   });
 
-  function putItem(key, itemValue) {
+  function putItem(item) {
     // const key = key.toString('base64');
     // assert key is proper length & format etc
     // assert item is valid etc
@@ -95,7 +95,7 @@ function initDHTNode() {
 
     // Store in database
     // database.put(itemValue);
-    const resp = database.put(itemValue);
+    const resp = database.put(item);
     debug('DHT putItem response:', resp);
     // console.log('-DHT Storing', key, '-->', itemValue);
   }
