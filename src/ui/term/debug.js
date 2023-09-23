@@ -1,3 +1,9 @@
+/**
+ * @description Debugging commands for the interactive terminal interface.
+ * Commands are executed by typing "debug <command>" in the terminal.
+ * Functions are self-descriptive.
+ */
+
 const client = require('../../client');
 const { ResponseTypes } = require('../../models/response');
 
@@ -53,13 +59,12 @@ async function handleHandshake(args) {
 
 async function handlePing(args) {
   const [ip, port] = args;
-  // console.log('handlePing', ip, port);
+
   if (ip && port) {
     try {
       const response = await client.pingPeer(ip, port);
       if (response) {
         if (response.responseType === ResponseTypes.Success) { // ?
-          // return 'Ping Success.';
           console.log('Ping Success.');
         } else {
           if (response.responseData === 'Not at this address') {
@@ -67,18 +72,15 @@ async function handlePing(args) {
           }
           console.log('Ping Failed', response.responseData);
         }
+        // A response could be returned rather than printed to console.
         return;
-        // return response;
-        // console.log('pingPeer response:', response);
       }
     } catch (error) {
       console.log('pingPeer error:', error);
       return;
     }
   }
-
   console.log('Invalid ping command. Usage: ping <ip> <port>');
-  // return null;
 }
 
 module.exports = {

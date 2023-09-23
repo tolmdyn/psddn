@@ -1,3 +1,7 @@
+/**
+ * @description Command handlers for the terminal UI. New commands should be added here.
+ * */
+
 const chalk = require('chalk');
 
 const client = require('../../client');
@@ -41,12 +45,12 @@ async function handlePub(args) {
 }
 
 async function handleNewPost() {
-  // const { title, content } = parseItem(args.join(' '));// FIX THIS!!
   const title = await askQuestion('Post title: ');
   const content = await askQuestion('Post content: ');
   if (title && content) {
     const response = await client.createNewPost(title, content);
 
+    // TODO: a function to format the three separate responses
     const result = response.map((res) => {
       if (res.responseType === ResponseTypes.Success) {
         return `Success: ${res.responseData}`;

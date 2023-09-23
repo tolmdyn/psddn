@@ -1,7 +1,19 @@
+/**
+ * @description The terminal interface module. As basic as creating a readline instance
+ * and handling the commands. All input and output is from the console / stdio.
+ *
+ * TODO: In a future iteration, we could use a library like blessed to create a more
+ * interactive terminal UI, with windowing.
+ */
+
 const readline = require('readline');
 
 const { handleCommand } = require('./command');
 
+/**
+ * @description Create the readline interface and callback handler for commands.
+ * @returns The readline instance
+ */
 async function createInterface() {
   const rl = readline.createInterface({
     input: process.stdin,

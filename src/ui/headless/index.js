@@ -3,7 +3,6 @@ const debug = require('debug')('ui:headless');
 const client = require('../../client');
 // const { shutdown } = require('../../utils/shutdown');
 
-// console.log('web interface loaded');
 async function start() {
   debug('starting headless...');
 
