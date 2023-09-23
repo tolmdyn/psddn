@@ -1,5 +1,5 @@
 /**
- * @description Tests for the auth module
+ * @description Tests for the terminal module
  */
 
 const { expect } = require('chai');

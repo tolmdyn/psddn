@@ -59,7 +59,7 @@ const { saveUserProfile } = require('./userProfile');
 const { getUserFeed, getFeed } = require('./feed');
 const { followUser, unfollowUser } = require('./follow');
 const { loginUser, loginNewUser } = require('./login');
-const { getItem } = require('./get');
+const { getItem, getUserDocuments } = require('./get');
 const { putItem, pubItem } = require('./putPub');
 const { createNewPost } = require('./newPost');
 const { getFollowedFeeds, getFollowedUsers, getFollowedDocuments } = require('./follow');
@@ -93,6 +93,7 @@ module.exports = {
   getProfile,
   getAllDocumentKeys,
   getAllUserKeys,
+  getUserDocuments,
 
   shutdownClient: () => { saveUserProfile(); },
 };

@@ -25,7 +25,6 @@
  *
  * -Get item from DHT
  * -Put item in DHT
- *
  */
 
 const debug = require('debug')('dht');
@@ -37,7 +36,8 @@ const bootstrap = '127.0.0.1:10001';
 
 let node;
 
-const PUT = 0; // define a command enum
+// Custom DHT commands
+const PUT = 0;
 const GET = 1;
 
 let database = null;
@@ -49,8 +49,6 @@ function setDb(dbInstance) {
 function initDHTNode() {
   debug(`Initialising DHT node with bootstrap: ${bootstrap}`);
 
-  // const values = new Map(); // Temporary in-memory storage
-
   node = new DHT({
     ephemeral: true,
     bootstrap: [
@@ -59,7 +57,7 @@ function initDHTNode() {
   });
 
   node.on('ready', () => {
-    debug('DHT node ready');
+    // debug('DHT node ready');
   });
 
   node.on('request', (req) => {
@@ -88,21 +86,14 @@ function initDHTNode() {
   });
 
   function putItem(item) {
-    // const key = key.toString('base64');
-    // assert key is proper length & format etc
-    // assert item is valid etc
-    // values.set(key, itemValue);
-
-    // Store in database
-    // database.put(itemValue);
+    // TODO: assert key is proper length & format etc
+    // TODO: assert item is valid etc
     const resp = database.put(item);
     debug('DHT putItem response:', resp);
-    // console.log('-DHT Storing', key, '-->', itemValue);
   }
 
   function getItem(key, type) {
-    // const key = key.toString('base64');
-    // return values.get(key);
+    // TODO: assert key is proper length & format etc
     const item = database.get(key, type);
     debug('DHT getItem response:', item);
     return item;
@@ -122,7 +113,8 @@ async function queryDHT(key, type) {
         if (item.key !== key) {
           debug('Item found but key does not match:', key, '-->', item.key);
         } else {
-          debug('Item found:', key, '-->', item);
+          // debug('Item found:', key, '-->', item);
+          debug('Item found:', key);
         }
         return new Response(ResponseTypes.Success, item);
       }

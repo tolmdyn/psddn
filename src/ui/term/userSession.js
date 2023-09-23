@@ -1,5 +1,6 @@
 const { askQuestion, setReadline } = require('./termUtils');
 const client = require('../../client');
+const { shutdown } = require('../../utils/shutdown');
 
 async function initUserSession(rl, user, secret) {
   setReadline(rl);
@@ -32,6 +33,10 @@ async function initUserSession(rl, user, secret) {
 }
 
 async function handleChoice(choice) {
+  if (choice === 'exit') {
+    shutdown('Shutting down...');
+  }
+
   if (choice === 'create') {
     const nickname = await askQuestion('Enter a nickname: ');
     const password = await askQuestion('Enter a password: ');

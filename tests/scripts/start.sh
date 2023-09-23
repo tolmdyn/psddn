@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This script can be used to generate the correct parameters in order to start psddn
+
 debug_cmd="DEBUG=routing,server,client,database,cache,dht"
 
 debug_flag=true
@@ -55,5 +57,5 @@ fi
 port=$((8080 + param))
 dbfile="test${param}.db"
 
-command="$debug_cmd node bin/testApp.js -p $port -db ./data/$dbfile -i term $username $password"
+command="$debug_cmd node bin/psddn.js -p $port -b ./tests/scripts/bootstrap.json -db ./data/$dbfile -i term $username $password"
 eval $command

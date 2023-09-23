@@ -225,10 +225,77 @@ function getLocalUsers() {
   }
 }
 
+/**
+ * @description Gets the latest findable documents from the current user's followed feeds.
+ * @returns An array of document objects or an empty array.
+ */
+async function getUserDocuments(key) {
+  // get user object
+  const user = await getLatestUser(key);
+
+  if (!user || user.responseType === ResponseTypes.Error) {
+    return new Response(ResponseTypes.Error, 'Error getting user.');
+  }
+
+  if (!user.responseData.lastFeed) {
+    return new Response(ResponseTypes.Error, 'User has no feed.');
+  }
+
+  // get feed object
+  const feed = await getItem(user.responseData.lastFeed, Types.Feed);
+
+  if (!feed || feed.responseType === ResponseTypes.Error) {
+    return new Response(ResponseTypes.Error, 'Error getting feed.');
+  }
+
+  // get documents from feed
+  const docKeys = feed.responseData.items;
+
+  // assemble promises
+  const docPromises = docKeys.map(async (documentKey) => {
+    try {
+      const response = await getItem(documentKey, Types.Document);
+      if (response.responseType === ResponseTypes.Success) {
+        const document = response.responseData;
+        return document;
+      }
+    } catch (error) {
+      debug('Error getting document:', error);
+    }
+    return null;
+  });
+
+  // get documents
+  let documents = null;
+
+  try {
+    const postResults = await Promise.all(docPromises);
+    documents = postResults.filter((document) => document !== null);
+  } catch (error) {
+    debug('Error getting documents:', error);
+  }
+
+  // put posts into local db
+  // if (documents) {
+  //   try {
+  //     documents.forEach((document) => {
+  //       putItem(document);
+  //     });
+  //   } catch (error) {
+  //     debug('Error putting new documents into local database:', error.message);
+  //   }
+  // }
+
+  documents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+  return documents;
+}
+
 module.exports = {
   setDb,
   getItem,
   getLatestUser,
   getLocalDocuments,
   getLocalUsers,
+  getUserDocuments,
 };

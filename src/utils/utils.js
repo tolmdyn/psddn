@@ -3,6 +3,7 @@
  * @module Utils
  */
 
+/* ------------------------ Hashing Functions ------------------------ */
 const objecthash = require('object-hash');
 
 /**
@@ -45,6 +46,8 @@ function isValidKeyFormat(key) {
   const keyRegex = /^[A-Za-z0-9+/]{43,}(={0,2})$/;
   return keyRegex.test(key);
 }
+
+/* ------------------------ Exports ------------------------ */
 
 module.exports = {
   generateKey,

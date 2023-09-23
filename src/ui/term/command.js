@@ -23,6 +23,7 @@ const commandHandlers = {
   getFollowedFeeds: handlers.handleGetFollowedFeeds,
   getFollowedUsers: handlers.handleGetFollowedUsers,
   getFollowedDocuments: handlers.handleGetFollowedDocuments,
+  getUserDocuments: handlers.handleGetUserDocuments,
   debug: debug.handleDebug,
   help: () => `Available commands: ${Object.keys(commandHandlers).join(', ')}`,
   exit: () => shutdown(`Shutting down ${getUserSessionKey()} session...`),

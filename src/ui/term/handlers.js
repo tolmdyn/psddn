@@ -7,6 +7,7 @@ const chalk = require('chalk');
 const client = require('../../client');
 const { askQuestion, parseItem } = require('./termUtils');
 const { ResponseTypes } = require('../../models/response');
+const { formatDocuments } = require('./termUtils');
 
 async function handleGet(args) {
   const [key, type] = args;
@@ -104,25 +105,36 @@ async function handleGetFollowedUsers() {
 async function handleGetFollowedDocuments() {
   const response = await client.getFollowedDocuments();
 
-  let result = '';
+  let result = 'No documents found.';
 
   if (response) {
-  // Format and print the documents, add colours
-    response.forEach((document, index) => {
-      const formattedTimestamp = new Date(document.timestamp);
-      result += ('-----------------------------------\n');
-      result += `Document ${index + 1}:\n`;
-      result += `  Owner: ${chalk.green(`${document.owner}\n`)}`;
-      result += `  Title: ${chalk.green(`${document.title}`)}`;
-      result += ` Timestamp: ${chalk.green(`${formattedTimestamp.toLocaleDateString()} ${formattedTimestamp.toLocaleTimeString()}\n`)}`;
-      result += `  Content: ${chalk.green(`${document.content}\n`)}`;
-      // Add more properties as needed
-      result += ('-----------------------------------\n');
-    });
+    result = formatDocuments(response);
   }
 
-  result = result || 'No documents found.';
   return result;
+}
+
+async function handleGetUserDocuments(args) {
+  const key = args[0];
+
+  if (key) {
+    const response = await client.getUserDocuments(key);
+
+    if (response.responseType === ResponseTypes.Error) {
+      return response.responseData;
+    }
+
+    let result = 'No documents found.';
+
+    if (response) {
+      result = formatDocuments(response);
+    }
+
+    return result;
+  }
+
+  console.log('Invalid getUserDocuments command. Usage: getUserDocuments <user key>');
+  return null;
 }
 
 module.exports = {
@@ -135,4 +147,5 @@ module.exports = {
   handleGetFollowedFeeds,
   handleGetFollowedUsers,
   handleGetFollowedDocuments,
+  handleGetUserDocuments,
 };
