@@ -1,11 +1,18 @@
-#! /usr/bin/env node
+#!/usr/bin/env node
+
+/**
+ * Main entry point for the application.
+ */
 
 const { program } = require('commander');
 
+// consider importing these in a separate file.
 const createDatabaseInstance = require('../src/database/dbInstance');
 
 const client = require('../src/client');
 const cache = require('../src/network/cache');
+const dht = require('../src/network/dht');
+
 const server = require('../src/server/server');
 const ui = require('../src/ui');
 require('../src/utils/shutdown');
@@ -14,12 +21,14 @@ require('../src/utils/shutdown');
 const commandOptions = parseOptions();
 
 // Start UI, then Server, then Cache, to prevent null session
+// initialise(options.interface, options.dbname, options.port, options.bootstrap);
 initialise(commandOptions);
 
 async function initialise(options) {
   const dbInstance = createDatabaseInstance(options.dbname);
   client.initClient(dbInstance);
   server.initServer(dbInstance);
+  dht.initDHT(dbInstance);
 
   // UI and Session
   await ui.startUI(options.interface || 'none', options.user, options.secret);
