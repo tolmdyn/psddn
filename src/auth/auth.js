@@ -115,20 +115,24 @@ function setUserSession(userProfile, secretKey) {
   userSession = { userProfile, secretKey };
 }
 
+function isUserSession() {
+  return userSession !== null;
+}
+
 function getUserSessionProfile() {
-  return userSession.userProfile;
+  return userSession.userProfile || null;
 }
 
 function getUserSessionKey() {
-  return userSession.userProfile.key;
+  return userSession.userProfile.key || null;
 }
 
 function getUserSessionUser() {
-  return userSession.userProfile.userObject;
+  return userSession.userProfile.userObject || null;
 }
 
 function getUserSessionAddress() {
-  return userSession.userProfile.userObject.lastAddress;
+  return userSession.userProfile.userObject.lastAddress || null;
 }
 
 // Used by Server Handshake, unfortunately
@@ -410,6 +414,7 @@ module.exports = {
   // setUserSession,
   createNewUser,
 
+  isUserSession,
   getUserSessionKey,
   getUserSessionUser,
   getUserSessionProfile,
