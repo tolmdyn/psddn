@@ -30,6 +30,8 @@ class Database {
     if (!customPath) {
       Database.createDatabaseFolder();
       this.#openDatabaseConnection(databasePath);
+    } else if (customPath === ':memory:') {
+      this.#openDatabaseConnection(customPath);
     } else {
       this.#openDatabaseConnection(customPath);
     }

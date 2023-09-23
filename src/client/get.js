@@ -6,6 +6,7 @@ const { sendRequestToProvider } = require('../network/providers');
 const { Types, isValidItemType } = require('../models/types');
 const { Request, RequestTypes } = require('../models/request');
 const { Response, ResponseTypes } = require('../models/response');
+const { queryDHT } = require('../network/dht');
 
 let Database = null;
 
@@ -50,59 +51,87 @@ async function getItem(key, type) {
   try {
     const result = await getItemFromProviders(key, type);
     debug('Result from providers:', result);
-    return result;
+    if (result) {
+      if (result.responseType === ResponseTypes.Success) {
+        return result;
+      }
+    }
   } catch (err) {
     debug('Error getting item from providers:', err);
-    return new Response(ResponseTypes.Error, 'Error getting item from providers.');
+    // return new Response(ResponseTypes.Error, 'Error getting item from providers.');
   }
+
+  // Get item from DHT
+  try {
+    const dhtResult = await queryDHT(key, type);
+    debug('DHT result:', dhtResult);
+    if (dhtResult) {
+      return dhtResult;
+    }
+  } catch (err) {
+    debug('Error retrieving item from DHT:', err);
+  }
+
+  return new Response(ResponseTypes.Error, 'Item not found.');
 }
 
 // get the item from local db (if available) and from remote providers (if available)
 // if we have both, return the 'newest' one (by timestamp)
 // THIS ONLY WORKS WITH USERS BECAUSE OF TIMESTAMP/LASTSEEN
 async function getLatestUser(key) {
+  const results = [];
+
   // get item from local database
-  let localResult = null;
   try {
-    localResult = await getItemFromLocal(key, Types.User);
+    const localResult = await getItemFromLocal(key, Types.User);
+    results.push(localResult);
   } catch (error) {
     debug('Error getting item from local database:', error);
   }
 
   // get item from providers
-  let providerResult = null;
   try {
-    providerResult = await getItemFromProviders(key, Types.User);
-    debug('Result from providers:', providerResult);
+    const providerResult = await getItemFromProviders(key, Types.User);
+    // debug('Result from providers:', providerResult);
+    results.push(providerResult);
   } catch (err) {
     debug('Error getting item from providers:', err);
     return new Response(ResponseTypes.Error, 'Error getting item from providers.');
   }
 
-  if (localResult && providerResult) {
-    // compare timestamps
-    const localTimestamp = new Date(localResult.responseData.lastSeen); // !
-    const providerTimestamp = new Date(providerResult.responseData.lastSeen); // !
-
-    if (localTimestamp > providerTimestamp) {
-      return localResult;
+  // get item from DHT
+  try {
+    const dhtResult = await queryDHT(key, Types.User);
+    debug('DHT result:', dhtResult);
+    if (dhtResult) {
+      results.push(dhtResult);
     }
+  } catch (err) {
+    debug('Error retrieving item from DHT:', err);
+  }
+
+  let newestResult = null;
+  // console.log('RESULTS', results);
+  // find the newest result
+  results.forEach((result) => {
+    if (result && result.responseType === ResponseTypes.Success) {
+      if (!newestResult
+        || new Date(result.responseData.lastSeen) > new Date(newestResult.responseData.lastSeen)) {
+        newestResult = result;
+      }
+    }
+  });
+
+  if (newestResult) {
     // update the local database with the provider result
     try {
       // Database.update(providerResult.responseData);
-      Database.updateUser(providerResult.responseData);
+      // console.log("HERE", newestResult.responseData);
+      Database.updateUser(newestResult.responseData);
     } catch (error) {
       debug('Error updating item in local database:', error);
     }
-    return providerResult;
-  }
-
-  if (localResult) {
-    return localResult;
-  }
-
-  if (providerResult) {
-    return providerResult;
+    return newestResult;
   }
 
   return new Response(ResponseTypes.Error, 'Item not found.');

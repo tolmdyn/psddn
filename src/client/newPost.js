@@ -10,7 +10,7 @@ const { generateKey } = require('../utils/utils');
 const { pubItem } = require('./putPub');
 const { updateUserFeed } = require('./feed');
 
-function createNewPost(title, content, tags) {
+async function createNewPost(title, content, tags) {
   // create new document
   const document = {
     type: 'document',
@@ -35,20 +35,13 @@ function createNewPost(title, content, tags) {
     debug('Error verifying item.');
     throw new Error('Error unable to verify item.');
   }
-
-  let res;
-
   // publish item
-  pubItem(document)
-    .then((response) => {
-      debug('Pub result:', response);
-      res = response;
-    });
+  const response = await pubItem(document);
 
   // update user feed
   updateUserFeed(document);
 
-  return res;
+  return response;
 }
 
 module.exports = {

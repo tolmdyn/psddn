@@ -63,6 +63,13 @@ describe('Database Tests', () => {
     expect(testDB.databaseHasTables()).to.be.equal(true);
   });
 
+  it('should create database in memory if requested', () => {
+    const memoryDB = new Database(':memory:');
+    expect(testDB).to.be.an.instanceof(Database);
+    expect(testDB.databaseHasTables()).to.be.equal(true);
+    memoryDB.closeDatabaseConnection();
+  });
+
   /* -------- PUT -------- */
   it('should insert a document into the database without errors', () => {
     const testDocument = generateRandomDocument();

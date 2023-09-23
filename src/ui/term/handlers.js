@@ -2,6 +2,7 @@ const chalk = require('chalk');
 
 const client = require('../../client');
 const { askQuestion, parseItem } = require('./termUtils');
+const { ResponseTypes } = require('../../models/response');
 
 async function handleGet(args) {
   const [key, type] = args;
@@ -45,7 +46,15 @@ async function handleNewPost() {
   const content = await askQuestion('Post content: ');
   if (title && content) {
     const response = await client.createNewPost(title, content);
-    return response;
+
+    const result = response.map((res) => {
+      if (res.responseType === ResponseTypes.Success) {
+        return `Success: ${res.responseData}`;
+      }
+      return `Error: ${res.responseData}`;
+    });
+
+    return result.join('\n');
   }
 
   console.log('Invalid newPost command. Usage: newPost <title> <content>');
