@@ -12,14 +12,16 @@ function followUser(user) {
   addUserToFollowing(user);
   saveUserProfile();
 
-  return Object.fromEntries(getUserSessionFollowing());
+  // return Object.fromEntries(getUserSessionFollowing());
+  return getUserSessionFollowing();
 }
 
 function unfollowUser(user) {
   removeUserFromFollowing(user);
   saveUserProfile();
 
-  return Object.fromEntries(getUserSessionFollowing());
+  // return Object.fromEntries(getUserSessionFollowing());
+  return getUserSessionFollowing();
 }
 
 /**

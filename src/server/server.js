@@ -198,9 +198,14 @@ function startServer(port) {
 }
 
 function shutdownServer() {
+  if (!server) {
+    return;
+  }
   server.close();
   // Do other things..?
   debug('Server stopped by process.');
 }
 
-module.exports = { initServer, startServer, shutdownServer, handleGet, handlePut };
+module.exports = {
+  initServer, startServer, shutdownServer, handleGet, handlePut,
+};

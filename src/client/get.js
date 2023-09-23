@@ -64,8 +64,9 @@ async function getItem(key, type) {
   // Get item from DHT
   try {
     const dhtResult = await queryDHT(key, type);
-    debug('DHT result:', dhtResult);
+    debug('Trying DHT');
     if (dhtResult) {
+      debug('DHT result:', dhtResult.responseType);
       return dhtResult;
     }
   } catch (err) {

@@ -1,4 +1,6 @@
-const { getUserSessionProfile, updateUserSessionLastSeen } = require('../auth/auth');
+const debug = require('debug')('client');
+
+const { isUserSession, getUserSessionProfile, updateUserSessionLastSeen } = require('../auth/auth');
 
 let Database = null;
 
@@ -13,6 +15,10 @@ function updateUserProfile(userProfile) {
 }
 
 function saveUserProfile() {
+  if (!isUserSession()) {
+    debug('No user session profile to save.');
+    return;
+  }
   updateUserSessionLastSeen();
   const userProfile = getUserSessionProfile();
   Database.updateUserProfile(userProfile);
