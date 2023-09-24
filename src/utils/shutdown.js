@@ -1,6 +1,7 @@
 const { shutdownCache } = require('../network/cache');
 const { shutdownServer } = require('../server/server');
 const { shutdownClient } = require('../client');
+const { shutdownDHT } = require('../network/dht');
 // const server = require('./server/server');
 // const client = require('./client/client');
 
@@ -14,6 +15,8 @@ function shutdown(message) {
   shutdownCache();
   shutdownServer();
   shutdownClient();
+  shutdownDHT();
+
   process.exit(0);
 }
 

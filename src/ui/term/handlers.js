@@ -2,8 +2,6 @@
  * @description Command handlers for the terminal UI. New commands should be added here.
  * */
 
-const chalk = require('chalk');
-
 const client = require('../../client');
 const { askQuestion, parseItem } = require('./termUtils');
 const { ResponseTypes } = require('../../models/response');

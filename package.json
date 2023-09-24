@@ -9,6 +9,7 @@
     "debug:t": "DEBUG=dht,server,client,database,cache,auth node bin/psddn.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json -i term",
     "debug:d": "DEBUG=dht,server,client,database,cache,auth node bin/psddn.js -p 8080 -db ./data/test.db -b ./tests/scripts/bootstrap.json -i term -u UcUQlVK13+qCwd2boEKjVpOgLUm+QBzFvpy/BEYgPjY= -s password",
     "test": "mocha tests/**/*.test.js",
+    "test:app": "mocha tests/app.test.js",
     "test:auth": "mocha tests/auth.test.js",
     "test:database": "mocha tests/database.test.js",
     "test:dht": "DEBUG=database,dht mocha tests/dht.test.js",

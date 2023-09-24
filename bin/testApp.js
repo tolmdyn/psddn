@@ -18,17 +18,41 @@ const ui = require('../src/ui');
 require('../src/utils/shutdown');
 
 /* parse command line args */
-const commandOptions = parseOptions();
+// const commandOptions = parseOptions();
 
 // Start UI, then Server, then Cache, to prevent null session
 // initialise(options.interface, options.dbname, options.port, options.bootstrap);
-initialise(commandOptions);
+// initialise(commandOptions);
+
+// const options = {
+//   port: 8090, interface: 'term', dbname: ':memory:', bootstrap: '.tests/scripts/bootstrap.json',
+// };
+
+// initialise(options);
+
+/*
+
+  let options = { port:8090, interface:'term', dbname:':memory:'}
+
+  Options:
+
+  options.port
+  options.dbname
+  options.bootstrap
+  options.interface
+  options.user
+  options.secret
+*/
 
 async function initialise(options) {
+  // if (!options) {
+  //   options = { port: 8090, interface: 'none', dbname: ':memory:' };
+  // }
+
   const dbInstance = createDatabaseInstance(options.dbname);
   client.initClient(dbInstance);
   server.initServer(dbInstance);
-  dht.initDHT(dbInstance);
+  await dht.initDHT(dbInstance);
 
   // UI and Session
   await ui.startUI(options.interface || 'none', options.user, options.secret);
@@ -56,3 +80,5 @@ function parseOptions() {
   program.parse(process.argv);
   return program.opts();
 }
+
+module.exports = { initialise, client };

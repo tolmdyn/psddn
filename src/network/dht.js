@@ -46,7 +46,7 @@ function setDb(dbInstance) {
   database = dbInstance;
 }
 
-function initDHTNode() {
+async function initDHTNode() {
   debug(`Initialising DHT node with bootstrap: ${bootstrap}`);
 
   node = new DHT({
@@ -141,7 +141,7 @@ async function storeDHT(key, value) {
   return value; // success?
 }
 
-function shutdown() {
+function shutdownDHT() {
   node.destroy();
 }
 
@@ -156,5 +156,5 @@ module.exports = {
   initDHT,
   queryDHT,
   storeDHT,
-  shutdown,
+  shutdownDHT,
 };

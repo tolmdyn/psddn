@@ -3,7 +3,6 @@ const fs = require('fs');
 
 function loadBootstrapAddresses(filepath) {
   const bootstrapPeers = JSON.parse(fs.readFileSync(filepath, 'utf8'));
-
   return bootstrapPeers;
 }
 
