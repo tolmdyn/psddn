@@ -1,3 +1,4 @@
+/* eslint-disable prefer-arrow-callback */
 /* eslint-disable func-names */
 /**
  * @description Tests for the main application

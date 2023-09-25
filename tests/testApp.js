@@ -19,7 +19,7 @@ const dht = require('../src/network/dht');
 
 const server = require('../src/server/server');
 const ui = require('../src/ui');
-const shutdown = require('../src/utils/shutdown');
+// const shutdown = require('../src/utils/shutdown');
 
 class TestApp {
   constructor() {
