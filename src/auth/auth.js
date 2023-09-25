@@ -111,8 +111,8 @@ const { encryptWithPassword, decryptWithPassword } = require('./encrypt');
 /* User Session */
 let userSession = null;
 
-function setUserSession(userProfile, secretKey) {
-  userSession = { userProfile, secretKey };
+function setUserSession(session) {
+  userSession = session; // { userProfile, secretKey };
 }
 
 function isUserSession() {
@@ -192,7 +192,7 @@ function authNewUser(nickname, password) {
   debug('New secret key:', secretKey);
 
   const userProfile = createNewUserProfile(user, password, secretKey);
-  setUserSession(userProfile, secretKey);
+  setUserSession({ userProfile, secretKey });
 
   return { userProfile, secretKey };
 }
@@ -212,7 +212,7 @@ function authUserWithKey(key, secretKey, userProfile) {
   // const userProfile = loadUserProfile(key);
 
   // Set user session
-  setUserSession(userProfile, secretKey);
+  setUserSession({ userProfile, secretKey });
   updateUserSessionLastSeen();
 
   // return something
@@ -239,7 +239,7 @@ function authUserWithPassword(key, password, userProfile) {
   }
 
   // Set user session
-  setUserSession(userProfile, secretKey);
+  setUserSession({ userProfile, secretKey });
   updateUserSessionLastSeen();
 
   // return something
@@ -411,7 +411,7 @@ module.exports = {
   authUserWithPassword,
 
   // authenticateUser,
-  // setUserSession,
+  setUserSession,
   createNewUser,
 
   isUserSession,

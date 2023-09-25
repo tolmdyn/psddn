@@ -1,7 +1,7 @@
 const debug = require('debug')('client');
 
 const { loadUserProfile, saveUserProfile } = require('./userProfile');
-const { authUserWithPassword, authNewUser } = require('../auth/auth');
+const { authUserWithPassword, authNewUser, setUserSession } = require('../auth/auth');
 const { pubItem } = require('./putPub');
 
 function loginUser(key, password) {
@@ -42,7 +42,12 @@ function loginNewUser(nickname, password) {
   // return null;
 }
 
+function logoutUser() {
+  setUserSession(null);
+}
+
 module.exports = {
   loginUser,
   loginNewUser,
+  logoutUser,
 };

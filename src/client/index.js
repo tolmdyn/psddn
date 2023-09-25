@@ -64,6 +64,7 @@ const { putItem, pubItem } = require('./putPub');
 const { createNewPost } = require('./newPost');
 const { getFollowedFeeds, getFollowedUsers, getFollowedDocuments } = require('./follow');
 const { pingPeer, handshakePeer, getCache, getProfile, getAllDocumentKeys, getAllUserKeys } = require('./debug');
+const { shutdownClient } = require('./shutdown');
 
 /* -------------------------------- Module Exports ---------------------------------- */
 
@@ -95,5 +96,5 @@ module.exports = {
   getAllUserKeys,
   getUserDocuments,
 
-  shutdownClient: () => { saveUserProfile(); },
+  shutdownClient,
 };
