@@ -21,30 +21,6 @@ const server = require('../src/server/server');
 const ui = require('../src/ui');
 const shutdown = require('../src/utils/shutdown');
 
-// Start UI, then Server, then Cache, to prevent null session
-// initialise(options.interface, options.dbname, options.port, options.bootstrap);
-// initialise(commandOptions);
-
-// const options = {
-//   port: 8090, interface: 'term', dbname: ':memory:', bootstrap: '.tests/scripts/bootstrap.json',
-// };
-
-// initialise(options);
-
-/*
-
-  let options = { port:8090, interface:'term', dbname:':memory:'}
-
-  Options:
-
-  options.port
-  options.dbname
-  options.bootstrap
-  options.interface
-  options.user
-  options.secret
-*/
-
 class TestApp {
   constructor() {
     this.client = client;
@@ -52,23 +28,9 @@ class TestApp {
     this.server = server;
     this.dht = dht;
     this.ui = ui;
-
-    process.on('message', (msg) => {
-      // console.log('Message from parent:', msg);
-      process.send('Message received');
-      if (msg.function === 'init') {
-        process.send('Initialising...');
-        this.init(msg.parameters);
-      }
-      if (msg.function === 'shutdown') {
-        process.send('Shutting down');
-        shutdown();
-      }
-    });
   }
 
   init(options) {
-    // process.send('Initialising');
     this.name = options.name;
 
     const dbInstance = createDatabaseInstance(options.dbname);
@@ -85,14 +47,9 @@ class TestApp {
     // Cache
     this.cache.initCache(dbInstance);
     this.cache.startCache(options.bootstrap, options.port || 8080);
-
-    // this.client.handshakePeer('127.0.0.1', '9090');
-    console.log(`${this.name} Initialised`);
   }
 
   shutdown() {
-    console.log(`${this.name} Shutting Down`);
-    // cache.announceDisconnect();
     this.cache.shutdownCache();
     this.server.shutdownServer();
     this.client.shutdownClient();
@@ -101,6 +58,18 @@ class TestApp {
   }
 }
 
-const app = new TestApp();
+let app;
+
+process.on('message', (msg) => {
+  if (msg.function === 'init') {
+    process.send('Initialising...');
+    app = new TestApp();
+    app.init(msg.parameters);
+  }
+  if (msg.function === 'shutdown') {
+    process.send('Shutting down');
+    app.shutdown();
+  }
+});
 
 module.exports = { TestApp };
