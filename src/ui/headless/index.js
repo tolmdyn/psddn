@@ -1,20 +1,22 @@
-const debug = require('debug')('ui:headless');
-
 const client = require('../../client');
 // const { shutdown } = require('../../utils/shutdown');
 
-async function start() {
-  debug('starting headless...');
-
-  const userSession = await initUserSession();
-  debug('userSession', userSession);
+function start(user, secret) {
+  const userSession = initUserSession(user, secret);
+  return userSession;
 }
 
-async function initUserSession() {
+function initUserSession(user, secret) {
   // create a headless user session
   // on shutdown this is still saved in the database so a check could be made
   // to prevent pollution of headless clients...
-  const userSession = await client.loginNewUser(null, 'headless');
+  if (user && secret) {
+    const userSession = client.loginUser(user, secret);
+
+    return userSession;
+  }
+
+  const userSession = client.loginNewUser('Anonymous', '');
   return userSession;
 }
 

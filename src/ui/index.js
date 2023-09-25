@@ -7,7 +7,6 @@
  * - web: web UI (not yet implemented)
  * - term: interactive terminal UI
  */
-
 // const webUI = require('./web/index');
 const termUI = require('./term/index');
 const headless = require('./headless/index');
@@ -39,11 +38,11 @@ function selectUI(UIType) {
  * @param {string} secret The user password to login with (optional)
  * @returns The chosen UI instance to the calling function
  */
-async function startUI(UIType, user, secret) {
+function startUI(UIType, user, secret) {
   UI = selectUI(UIType);
 
   if (UI) {
-    await UI.start(user, secret);
+    UI.start(user, secret);
   }
 
   return UI;
