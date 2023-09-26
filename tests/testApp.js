@@ -46,7 +46,8 @@ class TestApp {
    * @param {number} options.port The port of the server (optional, default is 8080)
    * @returns {void}
    */
-  init(options) {
+
+  async init(options) {
     this.name = options.name;
 
     const dbInstance = createDatabaseInstance(options.dbname || ':memory:');
@@ -55,14 +56,16 @@ class TestApp {
     this.dht.initDHT(dbInstance);
 
     // UI and Session
-    this.ui.startUI(options.interface || 'none', options.user, options.secret);
+    await this.ui.startUI(options.interface || 'none', options.user, options.secret);
 
     // Server
     this.server.startServer(options.port || 8080);
 
     // Cache
     this.cache.initCache(dbInstance);
-    this.cache.startCache(options.bootstrap, options.port || 8080);
+    await this.cache.startCache(options.bootstrap, options.port || 8080);
+
+    return this;
   }
 
   /**
@@ -80,18 +83,18 @@ class TestApp {
 }
 
 // Default for bootstrap instance
-let app;
+// let app;
 
-process.on('message', (msg) => {
-  if (msg.function === 'init') {
-    process.send('Initialising...');
-    app = new TestApp();
-    app.init(msg.parameters);
-  }
-  if (msg.function === 'shutdown') {
-    process.send('Shutting down');
-    app.shutdown();
-  }
-});
+// process.on('message', (msg) => {
+//   if (msg.function === 'init') {
+//     process.send('Initialising...');
+//     app = new TestApp();
+//     app.init(msg.parameters);
+//   }
+//   if (msg.function === 'shutdown') {
+//     process.send('Shutting down');
+//     app.shutdown();
+//   }
+// });
 
 module.exports = { TestApp };

@@ -14,7 +14,7 @@ const { handleCommand } = require('./command');
  * @description Create the readline interface and callback handler for commands.
  * @returns The readline instance
  */
-async function createInterface() {
+function createInterface() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -29,6 +29,7 @@ async function createInterface() {
     if (result) {
       console.log(result);
     }
+    rl.prompt();
   });
 
   return rl;

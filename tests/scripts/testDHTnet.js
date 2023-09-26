@@ -1,12 +1,26 @@
 #!/usr/bin/env node
 
-// const dht = require('../../src/network/dht');
+/**
+ * This creates a 'dummy' network of DHT nodes for testing purposes.
+ * It creates a bootstrap node and 100 dummy nodes.
+ *
+ * TODO: Add command line parameters to set number of nodes, address, etc.
+ * TODO: Refactor so that it uses database functions rather than a Map to
+ * more closely mimic the application.
+ */
+
+const fs = require('fs');
+const { program } = require('commander');
 const DHT = require('dht-rpc');
 
+// We should use the DHT implementation rather than raw library
+// const dht = require('../../src/network/dht');
+
 // const bootstrap = ['127.0.0.1:10001'];
+let swarm;
 
 function initDHTNode() {
-  console.log('Initialising testDHT node with bootstrap');
+  // console.log('Initialising testDHT node with bootstrap');
 
   const values = new Map(); // Temporary in-memory storage
   const PUT = 0; // define a command enum
@@ -20,7 +34,7 @@ function initDHTNode() {
   });
 
   node.on('ready', () => {
-    console.log('DHT node ready');
+    // console.log('DHT node ready');
   });
 
   node.on('request', (req) => {
@@ -40,7 +54,7 @@ function initDHTNode() {
       // console.log('req.target:', req.target);
       const value = getItem(req.target);
       if (value) {
-        console.log('Value found:', req.target.toString('base64'));
+        console.log(`Value found: ${req.target.toString('base64')}`);
         return req.reply(value);
       }
       console.log('Value not found');
@@ -51,7 +65,7 @@ function initDHTNode() {
   function putItem(itemKey, itemValue) {
     const key = itemKey.toString('base64');
     values.set(key, itemValue);
-    console.log('Storing', key, '-->', itemValue.toString());
+    console.log(`Storing ${key} --> ${itemValue.toString()}`);
   }
 
   function getItem(itemKey) {
@@ -65,29 +79,44 @@ function initDHTNode() {
 async function createBootstrapNode() {
   const bootstrap = DHT.bootstrapper(10001, '127.0.0.1');
   await bootstrap.ready();
-  console.log('Bootstrap node online.', bootstrap.address());
+  console.log(`Bootstrap node online: ${bootstrap.address()}`);
 }
 
-async function init() {
+async function init(number) {
   await createBootstrapNode();
-  const swarm = Array.from({ length: 100 }, () => initDHTNode());
+  swarm = Array.from({ length: number }, () => initDHTNode());
 }
 
-// command line args
-const args = process.argv.slice(2);
-console.log('args:', args);
+program
+  .option('-b, --bootstrap', 'Create a bootstrap node only')
+  .option('-s, --silent', 'Silent mode, no console output')
+  .option('-l, --log <file>', 'Logging mode, redirect output to file')
+  .option('-n, --nodes <nodes>', 'Specify the number of nodes to create', parseInt)
+  .option('-p, --port <port>', 'Specify the port of the server', parseInt)
+  .parse();
 
-if (args[0] === '-h') {
-  console.log('Create a bootstrap node and 100 dummy nodes.');
-  console.log('Usage: testDHTnet.js [-b]');
-  console.log('  -b: Create a bootstrap node only');
-  process.exit(0);
+const options = program.opts();
+// console.log('options:', options);
+
+function redirectLog(file) {
+  const logFile = fs.createWriteStream(file, { flags: 'w' });
+  console.log(`(Redirecting DHT network output to ${file})`);
+  console.log = (...d) => logFile.write(`${d}\n`);
+  console.error = (...d) => logFile.write(`${d}\n`);
 }
 
-if (args[0] === '-b') {
+if (options.log) {
+  redirectLog(options.log);
+}
+
+if (options.silent) {
+  // console.log('Silent mode');
+  console.log = () => {};
+  console.error = () => {};
+}
+
+if (options.bootstrap) {
   createBootstrapNode();
 } else {
-  init();
+  init(program.nodes || 100);
 }
-// createBootstrapNode();
-// const swarm = Array.from({ length: 100 }, () => initDHTNode());

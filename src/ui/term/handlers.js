@@ -1,18 +1,26 @@
 /**
  * @description Command handlers for the terminal UI. New commands should be added here.
  * */
+const chalk = require('chalk');
 
 const client = require('../../client');
 const { askQuestion, parseItem } = require('./termUtils');
 const { ResponseTypes } = require('../../models/response');
 const { formatDocuments } = require('./termUtils');
 
+function formatResponse(response) {
+  if (response.responseType === ResponseTypes.Success) {
+    return response.responseData;
+    // return `${chalk.green('Success')}: ${response.responseData}`;
+  }
+  return `${chalk.red('Error')}: ${response.responseData}`;
+}
 async function handleGet(args) {
   const [key, type] = args;
 
   if (key && type) {
     const response = await client.getItem(key, type);
-    return response;
+    return formatResponse(response);
   }
 
   console.log('Invalid get command. Usage: get <key> <type>');
@@ -52,9 +60,9 @@ async function handleNewPost() {
     // TODO: a function to format the three separate responses
     const result = response.map((res) => {
       if (res.responseType === ResponseTypes.Success) {
-        return `Success: ${res.responseData}`;
+        return `${chalk.green('Success')}: ${res.responseData}`;
       }
-      return `Error: ${res.responseData}`;
+      return `${chalk.red('Error')}: ${res.responseData}`;
     });
 
     return result.join('\n');
@@ -103,7 +111,7 @@ async function handleGetFollowedUsers() {
 async function handleGetFollowedDocuments() {
   const response = await client.getFollowedDocuments();
 
-  let result = 'No documents found.';
+  let result = chalk.red('No documents found.');
 
   if (response) {
     result = formatDocuments(response);
@@ -122,7 +130,7 @@ async function handleGetUserDocuments(args) {
       return response.responseData;
     }
 
-    let result = 'No documents found.';
+    let result = chalk.red('No documents found.');
 
     if (response) {
       result = formatDocuments(response);

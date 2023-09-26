@@ -67,13 +67,15 @@ async function getItem(key, type) {
     debug('Trying DHT');
     if (dhtResult) {
       debug('DHT result:', dhtResult.responseType);
-      return dhtResult;
+      if (dhtResult.responseType === ResponseTypes.Success) {
+        return dhtResult;
+      }
     }
   } catch (err) {
     debug('Error retrieving item from DHT:', err);
   }
 
-  return new Response(ResponseTypes.Error, 'Item not found.');
+  return new Response(ResponseTypes.Error, 'Item not found in database, cache or DHT.');
 }
 
 // get the item from local db (if available) and from remote providers (if available)

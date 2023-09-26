@@ -23,6 +23,7 @@ async function start(user, secret) {
 
   console.log('Login successful.');
   console.log('Enter a command:');
+  rl.prompt();
 }
 
 module.exports = {

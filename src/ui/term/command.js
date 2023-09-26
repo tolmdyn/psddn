@@ -8,6 +8,8 @@
  * Could be refactored to dynamically set the correct handlers without the Map object.
  */
 
+const chalk = require('chalk');
+
 const handlers = require('./handlers');
 const { shutdown } = require('../../utils/shutdown');
 const debug = require('./debug');
@@ -25,8 +27,8 @@ const commandHandlers = {
   getFollowedDocuments: handlers.handleGetFollowedDocuments,
   getUserDocuments: handlers.handleGetUserDocuments,
   debug: debug.handleDebug,
-  help: () => `Available commands: ${Object.keys(commandHandlers).join(', ')}`,
-  exit: () => shutdown(`Shutting down ${getUserSessionKey()} session...`),
+  help: () => `Available commands: ${chalk.cyan(Object.keys(commandHandlers).join(', '))}`,
+  exit: () => shutdown(`Shutting down ${chalk.green(getUserSessionKey())} session...`),
 };
 
 async function handleCommand(command) {

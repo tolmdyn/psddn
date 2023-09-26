@@ -1,3 +1,5 @@
+const chalk = require('chalk');
+
 const { askQuestion, setReadline } = require('./termUtils');
 const client = require('../../client');
 const { shutdown } = require('../../utils/shutdown');
@@ -12,12 +14,13 @@ async function initUserSession(rl, user, secret) {
         return userSession;
       }
     } catch (err) {
-      console.log('Invalid user key or password.');
+      console.log(chalk.red('Invalid user key or password.'));
     }
   }
 
   console.log('Would you like to CREATE a new user session or LOGIN to an existing one?');
-  const choice = await askQuestion('Please enter "create" or "login": ');
+  rl.prompt();
+  const choice = await askQuestion(`Please enter ${chalk.greenBright('\'create\'')} or ${chalk.greenBright('\'login\'')}: `);
 
   try {
     const userSession = await handleChoice(choice, rl);
@@ -25,7 +28,7 @@ async function initUserSession(rl, user, secret) {
       return userSession;
     }
   } catch (err) {
-    console.log('Invalid user key or password.');
+    console.log(chalk.red('Invalid user key or password.'));
   }
 
   // loop until valid choice, could replace with while loop
@@ -49,7 +52,7 @@ async function handleChoice(choice) {
     return client.loginUser(key, password);
   }
 
-  console.log('Invalid choice.');
+  console.log(chalk.red('Invalid choice.'));
   return null;
 }
 

@@ -91,7 +91,7 @@ async function pubItem(item) {
     debug('Item not added to local database, already exists. Continuing...');
   }
 
-  // send to peers / dht
+  // send to peers
   try {
     debug(`Sending ${item.key} to providers...`);
     const result = await sendItemToProviders(item);
@@ -115,8 +115,8 @@ async function pubItem(item) {
       debug('DHT result:', result);
     }
   } catch (error) {
-    debug('Error retrieving item from DHT:', error);
-    results.push(new Response(ResponseTypes.Error, error.message));
+    debug(`Error sending item to DHT:${error.message}`);
+    results.push(new Response(ResponseTypes.Error, `Error sending item to DHT: ${error.message}`));
   }
 
   return results;

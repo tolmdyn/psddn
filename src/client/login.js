@@ -16,10 +16,10 @@ function loginUser(key, password) {
     return authResult;
   } catch (error) {
     debug('Error creating new user session.', error.message);
+    // console.log('Error creating new user session.');
     // process.exit(1);
     throw new Error('Error creating new user session.');
   }
-  // return null;
 }
 
 /**
@@ -27,7 +27,7 @@ function loginUser(key, password) {
  * @param {} nickname Optional nickname to use for the user, not neccessarily unique.
  * @returns A new user object. (maybe with the secret key also ?)
  */
-function loginNewUser(nickname, password) {
+async function loginNewUser(nickname, password) {
   try {
     const { userProfile, secretKey } = authNewUser(nickname, password);
     const newUser = userProfile.userObject;

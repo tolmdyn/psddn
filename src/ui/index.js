@@ -38,11 +38,11 @@ function selectUI(UIType) {
  * @param {string} secret The user password to login with (optional)
  * @returns The chosen UI instance to the calling function
  */
-function startUI(UIType, user, secret) {
+async function startUI(UIType, user, secret) {
   UI = selectUI(UIType);
 
   if (UI) {
-    UI.start(user, secret);
+    await UI.start(user, secret);
   }
 
   return UI;
