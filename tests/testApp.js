@@ -4,13 +4,10 @@
  * Main entry point for application testing
  *
  * TODO:!!
- *
- * Refactor so that it optionally accept command line params so we can set up a bootstrap node
- * without needing to send a ipc message. If no command line params are given, then it should
- * do nothing until an instance is created.
+ * Works fine but should refactor so that it optionally accept command line params so we can
+ * set up a bootstrap node without needing to send a ipc message.
  */
 
-// consider importing these in a separate file.
 const createDatabaseInstance = require('../src/database/dbInstance');
 
 const client = require('../src/client');
@@ -21,7 +18,14 @@ const server = require('../src/server/server');
 const ui = require('../src/ui');
 // const shutdown = require('../src/utils/shutdown');
 
+/**
+ * @description TestApp class, used to initialise an application instance for testing.
+ * @class TestApp
+ * @property {string} name The name of the application instance
+ */
 class TestApp {
+  name;
+
   constructor() {
     this.client = client;
     this.cache = cache;
@@ -30,10 +34,22 @@ class TestApp {
     this.ui = ui;
   }
 
+  /**
+   * @description Initialise the application instance.
+   * @param {object} options The options to initialise the application with
+   * @param {string} options.name The name of the application instance (optional)
+   * @param {string} options.dbname The database path (optional, default is :memory:)
+   * @param {string} options.bootstrap The bootstrap peers file (./path/to/bootstrap.json)
+   * @param {string} options.interface The user interface to use (none, web, terminal)
+   * @param {string} options.user The user key to login with (optional)
+   * @param {string} options.secret The user password to login with (optional)
+   * @param {number} options.port The port of the server (optional, default is 8080)
+   * @returns {void}
+   */
   init(options) {
     this.name = options.name;
 
-    const dbInstance = createDatabaseInstance(options.dbname);
+    const dbInstance = createDatabaseInstance(options.dbname || ':memory:');
     this.client.initClient(dbInstance);
     this.server.initServer(dbInstance);
     this.dht.initDHT(dbInstance);
@@ -49,6 +65,11 @@ class TestApp {
     this.cache.startCache(options.bootstrap, options.port || 8080);
   }
 
+  /**
+   * @description Shutdown the application instance "cleanly".
+   * Doesn't exit the process as this is handled by the test runner.
+   * @returns {void}
+   */
   shutdown() {
     this.cache.shutdownCache();
     this.server.shutdownServer();
@@ -58,6 +79,7 @@ class TestApp {
   }
 }
 
+// Default for bootstrap instance
 let app;
 
 process.on('message', (msg) => {
