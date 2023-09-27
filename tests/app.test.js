@@ -640,7 +640,147 @@ describe('Client Follow/Unfollow Tests', () => {
   });
 });
 
-// describe('Client Get Followed Items Tests', () => {
+describe('Client Get Followed Items Tests', () => {
+  const keys = [];
+
+  before(async () => {
+    // create a new user profile
+    const options = [];
+
+    // A user which saves documents to the database only
+    options.push({
+      port: 9101,
+      interface: 'none',
+      dbname: 'tests/data/app_test_database.db',
+      bootstrap: './tests/scripts/bootstrapTesting.json',
+      name: 'Get Followed Items Test Node 1',
+      noDHT: true, // not yet implemented
+    });
+
+    // A user which sends to cache only
+    options.push({
+      port: 9102,
+      interface: 'none',
+      dbname: ':memory:',
+      bootstrap: './tests/scripts/bootstrapTesting.json',
+      name: 'Get Followed Items Test Node 2',
+      noDHT: true, // not yet implemented
+    });
+
+    // A user which only sends to dht
+    options.push({
+      port: 9103,
+      interface: 'none',
+      dbname: ':memory:',
+      name: 'Get Followed Items Test Node 3',
+    });
+
+    let app = new TestApp();
+    app.init(options[0]);
+    app.client.createNewPost('Post One', 'Content One', ['test', 'content']);
+    await app.client.createNewPost('Post Two', 'Content Two', ['test', 'content']);
+    keys.push(app.client.getProfile().userObject.key);
+    app.shutdown();
+
+    app = new TestApp();
+    app.init(options[1]);
+    await app.client.createNewPost('Post Three', 'Content Three', ['test', 'content']);
+    await app.client.createNewPost('Post Four', 'Content Four', ['test', 'content']);
+    keys.push(app.client.getProfile().userObject.key);
+    app.shutdown();
+
+    app = new TestApp();
+    app.init(options[2]);
+    await app.client.createNewPost('Post Five', 'Content Five', ['test', 'content']);
+    await app.client.createNewPost('Post Six', 'Content Six', ['test', 'content']);
+    keys.push(app.client.getProfile().userObject.key);
+    app.shutdown();
+  });
+
+  it('should get followed items from the database', async function () {
+    this.timeout(5000);
+
+    const followOptions = {
+      port: 9104,
+      interface: 'none',
+      dbname: './tests/data/app_test_database.db',
+      bootstrap: './tests/scripts/bootstrapTesting.json',
+      name: 'Get Followed Items Test Node 4',
+    };
+
+    const testApp = new TestApp();
+    testApp.init(followOptions);
+
+    keys.forEach((key) => {
+      testApp.client.followUser(key);
+    });
+
+    // console.log('testApp:', testApp);
+
+    const profile = await testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(3);
+
+    const response = await testApp.client.getFollowedDocuments();
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(6);
+
+    response.forEach((item) => {
+      expect(item).to.be.an('object');
+      expect(item.type).to.equal(Types.Document);
+    });
+
+    testApp.shutdown();
+  });
+
+  it('should get followed items from the cache', async function () {
+    const followOptions = {
+      port: 9105,
+      interface: 'none',
+      dbname: ':memory:',
+      bootstrap: './tests/scripts/bootstrapTesting.json',
+      name: 'Get Followed Items Test Node 5',
+    };
+
+    const testApp = new TestApp();
+    testApp.init(followOptions);
+
+    keys.forEach((key) => {
+      testApp.client.followUser(key);
+    });
+
+    const response = await testApp.client.getFollowedDocuments();
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(6);
+
+    testApp.shutdown();
+  });
+
+  it('should get followed items from the dht', async function () {
+    const followOptions = {
+      port: 9106,
+      interface: 'none',
+      dbname: ':memory:',
+      name: 'Get Followed Items Test Node 6',
+    };
+
+    const testApp = new TestApp();
+    testApp.init(followOptions);
+
+    keys.forEach((key) => {
+      testApp.client.followUser(key);
+    });
+
+    const response = await testApp.client.getFollowedDocuments();
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(6);
+
+    testApp.shutdown();
+  });
+
+  after(() => {
+  });
+});
 
 /* ------------------------ helper functions ------------------------ */
 

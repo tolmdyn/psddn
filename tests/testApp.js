@@ -78,23 +78,7 @@ class TestApp {
     this.server.shutdownServer();
     this.client.shutdownClient();
     this.dht.shutdownDHT();
-    // process.exit(0);
   }
 }
-
-// Default for bootstrap instance
-// let app;
-
-// process.on('message', (msg) => {
-//   if (msg.function === 'init') {
-//     process.send('Initialising...');
-//     app = new TestApp();
-//     app.init(msg.parameters);
-//   }
-//   if (msg.function === 'shutdown') {
-//     process.send('Shutting down');
-//     app.shutdown();
-//   }
-// });
 
 module.exports = { TestApp };
