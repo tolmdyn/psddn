@@ -58,4 +58,5 @@ port=$((8080 + param))
 dbfile="test${param}.db"
 
 command="$debug_cmd node bin/psddn.js -p $port -b ./tests/scripts/bootstrap.json -db ./data/$dbfile -i term $username $password"
+clear
 eval $command

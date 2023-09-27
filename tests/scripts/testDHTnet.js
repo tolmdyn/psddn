@@ -40,7 +40,7 @@ function initDHTNode() {
   node.on('request', (req) => {
     // console.log('DHT node request:', req);
     if (req.command === PUT) {
-      console.log('DHT node PUT request');
+      // console.log('DHT node PUT request');
       if (req.token) {
         putItem(req.target, req.value);
         return req.reply(null); // { success: true } ?
@@ -50,7 +50,7 @@ function initDHTNode() {
     }
 
     if (req.command === GET) {
-      console.log('DHT node GET request');
+      // console.log('DHT node GET request');
       // console.log('req.target:', req.target);
       const value = getItem(req.target);
       if (value) {
@@ -79,7 +79,7 @@ function initDHTNode() {
 async function createBootstrapNode() {
   const bootstrap = DHT.bootstrapper(10001, '127.0.0.1');
   await bootstrap.ready();
-  console.log(`Bootstrap node online: ${bootstrap.address()}`);
+  console.log(`Bootstrap node online: ${JSON.stringify(bootstrap.address())}`);
 }
 
 async function init(number) {

@@ -16,7 +16,7 @@ function setDb(dbInstance) {
 
 function validateGetParameters(key, type) {
   if (!key || !type) {
-    return 'Invalid request, missing parameters';
+    return new Response(ResponseTypes.Error, 'Invalid request, missing parameters.');
   }
 
   if (!isValidItemType(type)) {

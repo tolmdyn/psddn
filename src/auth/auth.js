@@ -95,6 +95,7 @@ const nacl = require('tweetnacl');
 nacl.util = require('tweetnacl-util');
 
 const { encryptWithPassword, decryptWithPassword } = require('./encrypt');
+const { isValidKeyFormat } = require('../utils/utils');
 
 // const Database = require('../database/dbInstance');
 
@@ -161,18 +162,22 @@ function getUserSessionFollowing() {
 }
 
 function addUserToFollowing(userKey) {
-  const { following } = userSession.userProfile;
+  if (isValidKeyFormat(userKey)) {
+    const { following } = userSession.userProfile;
 
-  if (!following.includes(userKey)) {
-    following.push(userKey);
+    if (!following.includes(userKey)) {
+      following.push(userKey);
+    }
   }
 }
 
 function removeUserFromFollowing(userKey) {
-  const { following } = userSession.userProfile;
+  if (isValidKeyFormat(userKey)) {
+    const { following } = userSession.userProfile;
 
-  if (following.includes(userKey)) {
-    following.splice(following.indexOf(userKey), 1);
+    if (following.includes(userKey)) {
+      following.splice(following.indexOf(userKey), 1);
+    }
   }
 }
 

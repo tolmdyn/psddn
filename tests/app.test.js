@@ -9,7 +9,7 @@ const { expect } = require('chai');
 
 // Testing imports
 const { TestApp } = require('./testApp');
-const { generateRandomDocument } = require('./scripts/generate');
+const { generateRandomDocument, generateRandomUser } = require('./scripts/generate');
 
 // Application imports
 const { Database } = require('../src/database/database');
@@ -47,7 +47,7 @@ after(() => {
     console.log('No test database to delete');
   }
   // It's not great but some of the tests can hang...
-  process.exit();
+  // process.exit();
 });
 
 beforeEach(() => {
@@ -393,23 +393,252 @@ describe('Client Get Item Tests', () => {
 
     // const response = await testApp.client.getItem(keys[0], Types.Document);
     // console.log('response1 :', response);
+    const promises = keys.map((key) => testApp.client.getItem(key, Types.Document));
 
-    // refactor to promise all \/\/
-    for (let i = 0; i < keys.length; i += 1) {
-      // console.log('key:', keys[i]);
-      const getItemResponse = await testApp.client.getItem(keys[i], Types.Document);
-      // console.log('getItemResponse:', getItemResponse);
+    const responses = await Promise.all(promises);
 
-      expect(getItemResponse).to.be.an('object');
-      expect(getItemResponse.responseType).to.equal(ResponseTypes.Success);
-      expect(getItemResponse.responseData).to.be.an('object');
-      expect(getItemResponse.responseData.key).to.equal(keys[i]);
-    }
+    responses.forEach((response) => {
+      expect(response).to.be.an('object');
+      expect(response.responseType).to.equal(ResponseTypes.Success);
+      expect(response.responseData).to.be.an('object');
+      expect(keys).to.contain(response.responseData.key);
+      keys.splice(keys.indexOf(response.responseData.key), 1);
+    });
+
+    expect(keys.length).to.equal(0);
+    testApp.shutdown();
+  });
+
+  it('should fail to get an invalid request', async function () {
+    // this.timeout(5000);
+
+    const keys = await publishTestItems();
+    expect(keys).to.be.an('array');
+    expect(keys.length).to.equal(3);
+    // console.log('keys:', keys);
+
+    const options = {
+      port: 9103,
+      interface: 'none',
+      dbname: ':memory:',
+      bootstrap: './tests/scripts/bootstrapTesting.json',
+      name: 'Get Test Node 3',
+    };
+
+    const testApp = new TestApp();
+    testApp.init(options);
+
+    expect(testApp).to.be.an('object');
+    const profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+
+    // Invalid Key
+    let response = await testApp.client.getItem('Invalid Key', Types.Document);
+    expect(response).to.be.an('object');
+    expect(response.responseType).to.equal(ResponseTypes.Error);
+    expect(response.responseData).to.equal('Invalid key format.');
+
+    // Invalid Type
+    response = await testApp.client.getItem('WY5WipcOJZAc8GBNnSgg4sf9Ps4rHkaGZ2IT/gV9V/4=', 'Invalid Type');
+    expect(response).to.be.an('object');
+    expect(response.responseType).to.equal(ResponseTypes.Error);
+    expect(response.responseData).to.equal('Invalid item type.');
+
+    // Missing Key
+    response = await testApp.client.getItem(null, Types.Document);
+    expect(response).to.be.an('object');
+    expect(response.responseType).to.equal(ResponseTypes.Error);
+    expect(response.responseData).to.equal('Invalid request, missing parameters.');
+
+    // Missing Type
+    response = await testApp.client.getItem('WY5WipcOJZAc8GBNnSgg4sf9Ps4rHkaGZ2IT/gV9V/4=');
+    expect(response).to.be.an('object');
+    expect(response.responseType).to.equal(ResponseTypes.Error);
+    expect(response.responseData).to.equal('Invalid request, missing parameters.');
+
+    testApp.shutdown();
+  });
+
+  it('should fail to get a document not on the network', async function () {
+    this.timeout(5000);
+
+    const options = {
+      port: 9104,
+      interface: 'none',
+      dbname: ':memory:',
+      bootstrap: './tests/scripts/bootstrapTesting.json',
+      name: 'Get Test Node 4',
+    };
+
+    const testApp = new TestApp();
+    testApp.init(options);
+
+    expect(testApp).to.be.an('object');
+    const profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+
+    const document = generateRandomDocument();
+
+    const response = await testApp.client.getItem(document.key, Types.Document);
+    expect(response).to.be.an('object');
+    expect(response.responseType).to.equal(ResponseTypes.Error);
+    expect(response.responseData).to.equal('Item not found in database, cache or DHT.');
 
     testApp.shutdown();
   });
 });
-// describe('Client Follow/Unfollow Tests', () => {
+
+describe('Client Follow/Unfollow Tests', () => {
+  let testApp;
+
+  before(() => {
+    const options = {
+      port: 9105,
+      interface: 'none',
+      dbname: ':memory:',
+      bootstrap: './tests/scripts/bootstrapTesting.json',
+      name: 'Follow Test Node 1',
+    };
+
+    testApp = new TestApp();
+    testApp.init(options);
+  });
+
+  it('should allow following a user', function () {
+    let profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(0);
+
+    const newUser = generateRandomUser();
+    const { key } = newUser;
+
+    const response = testApp.client.followUser(key);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(1);
+
+    profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+  });
+
+  it('should allow unfollowing a user', function () {
+    let profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+
+    const key = profile.following[0];
+    const response = testApp.client.unfollowUser(key);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(0);
+    profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(0);
+  });
+
+  it('should not allow following a user twice', function () {
+    let profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(0);
+
+    const newUser = generateRandomUser();
+    const { key } = newUser;
+
+    let response = testApp.client.followUser(key);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(1);
+
+    profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+
+    response = testApp.client.followUser(key);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(1);
+
+    profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+  });
+
+  it('should not allow following an invalid user key', function () {
+    let profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+
+    const key = 'Invalid Key';
+    const response = testApp.client.followUser(key);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(1);
+
+    profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+  });
+
+  it('should not allow unfollowing an invalid user key', function () {
+    let profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+
+    const key = 'Invalid Key';
+    const response = testApp.client.unfollowUser(key);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(1);
+
+    profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+  });
+
+  it('should not error unfollowing a valid but non-followed user', function () {
+    let profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+
+    const newUser = generateRandomUser();
+    const { key } = newUser;
+
+    const response = testApp.client.unfollowUser(key);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(1);
+
+    profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+  });
+
+  it('should not allow following a null user key', function () {
+    let profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+
+    const response = testApp.client.followUser(null);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(1);
+
+    profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+  });
+
+  it('should not allow unfollowing a null user key', function () {
+    let profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+
+    const response = testApp.client.unfollowUser(null);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(1);
+
+    profile = testApp.client.getProfile();
+    expect(profile).to.be.an('object');
+    expect(profile.following.length).to.equal(1);
+  });
+
+  after(() => {
+    testApp.shutdown();
+  });
+});
 
 // describe('Client Get Followed Items Tests', () => {
 
@@ -437,7 +666,7 @@ function destroyBootstrapApp() {
 }
 
 function createDHTBootstrap() {
-  const commandOptions = ['-ltests/data/dhtlog']; // '-ltests/data/dhtlog'
+  const commandOptions = ['-ltests/data/dht.log']; // '-ltests/data/dhtlog'
   dhtApp = fork('./tests/scripts/testDHTnet.js', commandOptions);
   // TODO
 }
