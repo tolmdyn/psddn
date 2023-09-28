@@ -26,6 +26,7 @@ process.once('SIGINT', () => shutdown('SIGINT received.'));
 
 // process.on('SIGTERM', () => shutdown('SIGTERM received.'));
 
+// I can't remember why I added this
 process.on('uncaughtException', (err) => {
   console.error('Uncaught exception', err);
   // Do not save the cache, as it may be corrupted anyway

@@ -78,6 +78,7 @@ function initDHTNode() {
 
 async function createBootstrapNode() {
   const bootstrap = DHT.bootstrapper(10001, '127.0.0.1');
+
   await bootstrap.ready();
   console.log(`Bootstrap node online: ${JSON.stringify(bootstrap.address())}`);
 }
@@ -111,8 +112,8 @@ if (options.log) {
 
 if (options.silent) {
   // console.log('Silent mode');
-  console.log = () => {};
-  console.error = () => {};
+  console.log = () => { };
+  console.error = () => { };
 }
 
 if (options.bootstrap) {

@@ -734,6 +734,8 @@ describe('Client Get Followed Items Tests', () => {
   });
 
   it('should get followed items from the cache', async function () {
+    this.timeout(4000);
+
     const followOptions = {
       port: 9105,
       interface: 'none',
@@ -757,6 +759,8 @@ describe('Client Get Followed Items Tests', () => {
   });
 
   it('should get followed items from the dht', async function () {
+    this.timeout(5000);
+
     const followOptions = {
       port: 9106,
       interface: 'none',

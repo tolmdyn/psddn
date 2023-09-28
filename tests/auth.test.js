@@ -96,7 +96,7 @@ describe('Sign/Verify Tests', () => {
     const { userProfile, secretKey } = auth.authNewUser('testUser', 'testPassword');
 
     const testDocument = generateRandomDocument();
-    console.log(testDocument);
+    // console.log(testDocument);
 
     // unpack the item and stringify
     const { signature: sig, ...itemContent } = testDocument;

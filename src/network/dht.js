@@ -31,6 +31,8 @@ const debug = require('debug')('dht');
 const DHT = require('dht-rpc');
 
 const { Response, ResponseTypes } = require('../models/response');
+const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils');
+const { isValidItemType } = require('../models/types');
 
 const bootstrap = '127.0.0.1:10001';
 
@@ -103,6 +105,18 @@ async function initDHTNode() {
 }
 
 async function queryDHT(key, type) {
+  // check key and type are valid
+  if (!key || !isValidKeyFormat(key)) {
+    debug('Invalid key.');
+    // console.log('Invalid key.: ', key, isValidKeyFormat(key), type);
+    return new Response(ResponseTypes.Error, 'Invalid key.');
+  }
+
+  if (!type || !isValidItemType(type)) {
+    debug('Invalid type.');
+    return new Response(ResponseTypes.Error, 'Invalid type.');
+  }
+
   const q = node.query({ target: Buffer.from(key, 'base64'), command: GET, type }, { commit: true });
 
   try {
@@ -132,6 +146,18 @@ async function queryDHT(key, type) {
 }
 
 async function storeDHT(key, value) {
+  if (!key || !isValidKeyFormat(key) || !isValidKeyForItem(key, value)) {
+    debug('Invalid key.');
+    return new Response(ResponseTypes.Error, 'Invalid key.');
+  }
+
+  const { type } = value;
+
+  if (!type || !isValidItemType(type)) {
+    debug('Invalid type.');
+    return new Response(ResponseTypes.Error, 'Invalid type.');
+  }
+
   const val = Buffer.from(JSON.stringify(value));
   const q = node.query({ target: Buffer.from(key, 'base64'), command: PUT, value: val }, { commit: true });
 

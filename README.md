@@ -36,7 +36,7 @@ A decentralised peer-to-peer text document sharing application. Built in JavaScr
 
 Run the application: `npm start` or `./app/psddn.js --help`.  
 
-Run the tests: `npm test` or `./tests/run_tests.sh`.
+Run the tests: `npm test` or `npm run test:<name of module to test>`.
 
 ### CLI options:
 ```
