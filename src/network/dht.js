@@ -48,6 +48,10 @@ function setDb(dbInstance) {
   database = dbInstance;
 }
 
+/**
+ * @description Initialise a new DHT node.
+ * @returns {Promise<DHT>} The initialised DHT node
+ */
 async function initDHTNode() {
   debug(`Initialising DHT node with bootstrap: ${bootstrap}`);
 
@@ -104,6 +108,12 @@ async function initDHTNode() {
   return node;
 }
 
+/**
+ * @description Query the DHT for an item with the given key and type.
+ * @param {*} key The key of the item to query for
+ * @param {*} type The type of the item to query for (Feed, Document, User)
+ * @returns {Promise<Response>} A response object of the item if succesful or an error.
+ */
 async function queryDHT(key, type) {
   // check key and type are valid
   if (!key || !isValidKeyFormat(key)) {
@@ -145,6 +155,12 @@ async function queryDHT(key, type) {
   return new Response(ResponseTypes.Error, 'Item not found in DHT.');
 }
 
+/**
+ * @description Store an item in the DHT.
+ * @param {*} key The key of the item to store
+ * @param {*} value The value of the item to store
+ * @returns {Promise<Response>} A response object of the item if succesfully inserted or an error.
+ */
 async function storeDHT(key, value) {
   if (!key || !isValidKeyFormat(key) || !isValidKeyForItem(key, value)) {
     debug('Invalid key.');
@@ -162,15 +178,21 @@ async function storeDHT(key, value) {
   const q = node.query({ target: Buffer.from(key, 'base64'), command: PUT, value: val }, { commit: true });
 
   await q.finished();
-  // console.log('Inserted item into DHT', key, '-->', value);
   debug('Inserted item into DHT', key, '-->', value);
-  return value; // success?
+  return value; // TODO: This should actually be a success response!
 }
 
+/**
+ * @description Shutdown the DHT node.
+ */
 function shutdownDHT() {
   node.destroy();
 }
 
+/**
+ * @description Initialise the DHT.
+ * @param {*} dbInstance The database instance to use
+ */
 function initDHT(dbInstance) {
   setDb(dbInstance);
   initDHTNode();

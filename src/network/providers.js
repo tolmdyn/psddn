@@ -14,6 +14,15 @@ const cache = require('./cache');
 // const { queryDHT, storeDHT } = require('./dht');
 // const Address = require('../models/address');
 
+/**
+ * @description Gets the providers of a specific item. This function doesn't do
+ * much at the minute, but could be expanded as described in cache module comments.
+ * Much of the functionality is currently handled in the client module.
+ * @param {string} key The key of the item.
+ * @param {string} type The type of the item.
+ * @returns {Promise<Address[]>} An array of addresses of providers of the item.
+ * If no providers were found, returns an empty array.
+ */
 async function getProviders(key, type) {
   debug(`Getting providers for key: ${key} and type: ${type}`);
   // TODO:
@@ -105,6 +114,11 @@ async function sendRequestToProvider(request, provider) {
   }
 }
 
+/**
+ * @description Sends an item to providers. The key and type parameters are extracted from the item.
+ * @param {*} item The item to send to providers.
+ * @returns {Promise<Response>} A success or error response object.
+ */
 async function sendItemToProviders(item) {
   const providers = await getProviders(item.key, item.type);
 

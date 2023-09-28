@@ -54,7 +54,7 @@ const { Request, RequestTypes } = require('../models/request');
 const { ResponseTypes } = require('../models/response');
 const { loadBootstrapAddresses } = require('./bootstrap');
 
-// Could this be passed in at init?? (YES_)
+// TODO: These values could be passed in as a parameter to initCache, rather than imported
 const { getUserSessionKey, getUserSessionAddress } = require('../auth/auth');
 
 // The refresh interval in seconds
@@ -99,16 +99,14 @@ async function startCache(bootstrapFilepath, port) {
         const bootstrapPromises = bootstrapPeers.map((address) => requestPeerInfo(address));
 
         const results = await Promise.all(bootstrapPromises);
+        debug('Bootstrap results:', JSON.stringify(results));
 
         // for each resolved promise, if peer info, then add it to the cache
-        debug('Bootstrap results:', JSON.stringify(results));
         results.forEach((result) => {
           if (isSuccessResponse(result)) {
             // Validate then add the peer to the cache
             const peer = result.responseData;
-            // peer.lastSeen = Date.now();
             peer.lastSeen = new Date().toISOString();
-            // debug(`Adding bootstrap peer: ${JSON.stringify(peer)}`);
             // should we use add remote peer instead, as it ensures a two way handshake??
             addPeer(peer);
           }
@@ -179,11 +177,6 @@ async function requestPeerInfo(address) {
         const response = JSON.parse(message);
         debug(`Response: ${JSON.stringify(response)}`);
         resolve(response);
-        // if (response.responseType === ResponseTypes.Success) {
-        //   resolve(response);
-        // } else {
-        //   resolve(null);
-        // }
         ws.close();
       });
 
@@ -221,8 +214,6 @@ async function handshakePeer(ip, port) {
 
   return new Promise((resolve, reject) => {
     ws.on('open', () => {
-      // const request = new Request(RequestTypes.Handshake, { originPeer: getUserSessionKey() });
-
       const request = new Request(RequestTypes.Handshake, {
         originKey: getUserSessionKey(), address: { ip, port }, originPort: localPort,
       });
@@ -482,9 +473,6 @@ function saveCache() {
 
   debug(`Saving cache of ${cache.size} peers to database`);
   cache.forEach((peer) => {
-    // For each peer
-    // If in database, then update the last seen timestamp and address
-    // If not in database, then add the peer to the database
     try {
       const dbPeer = Database.getUser(peer.key);
 
