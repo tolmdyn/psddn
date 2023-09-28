@@ -41,6 +41,7 @@ function isValidKeyForItem(_key, item) {
 /**
  * @description: Check if the key is a valid format.
  * @param {*} key The key to check
+ * @returns True if the key is a valid format, false otherwise
  */
 function isValidKeyFormat(key) {
   const keyRegex = /^[A-Za-z0-9+/]{43,}(={0,2})$/;
