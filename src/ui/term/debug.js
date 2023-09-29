@@ -33,7 +33,7 @@ async function handleDebug(args) {
 
 async function handleHandshake(args) {
   const [ip, port] = args;
-  // console.log('handleHandshake', ip, port);
+
   if (ip && port) {
     try {
       const response = await client.handshakePeer(ip, port);
@@ -44,7 +44,6 @@ async function handleHandshake(args) {
           console.log('Handshake Failed', response.responseData);
         }
         return response;
-        // console.log('handshakePeer response:', response);
       }
     } catch (error) {
       console.log('Handshake Error:', error.message);
@@ -72,7 +71,7 @@ async function handlePing(args) {
           }
           console.log('Ping Failed', response.responseData);
         }
-        // A response could be returned rather than printed to console.
+        // A response should be returned rather than printed to console.
         return;
       }
     } catch (error) {

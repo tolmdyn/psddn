@@ -10,6 +10,11 @@ function setReadline(readline) {
   rl = readline;
 }
 
+/**
+ * @description Parses a JSON string into an object.
+ * @param {string} item The JSON string to parse.
+ * @returns {object} The parsed object.
+ */
 function parseItem(item) {
   try {
     return JSON.parse(item);
@@ -19,6 +24,12 @@ function parseItem(item) {
   }
 }
 
+/**
+ * @description Promisified readline.question function.
+ * This seems a bit convoluted and could be refactored.
+ * @param {*} question The question to ask
+ * @returns {Promise<string>} The user's answer
+ */
 function askQuestion(question) {
   return new Promise((resolve) => {
     rl.question(question, (answer) => {
@@ -27,6 +38,11 @@ function askQuestion(question) {
   });
 }
 
+/**
+ * @description Formats an array of documents into a "nice" printable string.
+ * @param {array} documents The array of documents to format.
+ * @returns {string} The formatted string.
+ */
 function formatDocuments(documents) {
   let result = ('-----------------------------------\n');
 

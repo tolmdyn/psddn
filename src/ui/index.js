@@ -7,7 +7,8 @@
  * - web: web UI (not yet implemented)
  * - term: interactive terminal UI
  */
-// const webUI = require('./web/index');
+
+// const webUI = require('./web/index'); // not yet implemented
 const termUI = require('./term/index');
 const headless = require('./headless/index');
 
