@@ -1,8 +1,5 @@
 /**
- * @file Joi validation schemas for different objects. Used to validate items.
- * @module JoiSchemas
- * @requires joi
- * @todo Split into separate files, Add regex validations for strings
+ * @description  Generic validation function for different items.
  */
 
 const { userSchema } = require('./user');

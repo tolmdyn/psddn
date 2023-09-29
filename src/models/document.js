@@ -1,6 +1,5 @@
 /**
- * DOCUMENT SCHEMA
- * Document schema to validate document objects.
+ * @description Document schema to validate document objects.
  * @usage const { error } = documentSchema.validate(document);
  */
 

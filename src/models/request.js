@@ -1,6 +1,5 @@
 /**
- * @fileoverview This file defines the Request class and the RequestTypes enum
- * for usage by the server and client modules.
+ * @description The Request class and the RequestTypes enum.
  */
 
 /**

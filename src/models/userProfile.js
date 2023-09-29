@@ -5,8 +5,7 @@
  */
 
 /**
- * userProfile SCHEMA
- * User schema to validate user objects.
+ * @description User schema to validate user objects.
  * @usage const { error } = userSchema.validate(user);
  */
 

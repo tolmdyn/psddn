@@ -1,6 +1,5 @@
 /**
- * @fileoverview This file defines the Response class and the ResponseTypes enum
- * for usage by the server and client modules.
+ * @description The Response class and the ResponseTypes enum.
  */
 
 /**

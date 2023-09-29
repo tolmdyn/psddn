@@ -1,6 +1,7 @@
 /**
-* @description: Represents the type of an item in the database.
+* @description: Defines Type to represent the type of an item in the database.
 */
+
 const Types = {
   Feed: 'feed',
   User: 'user',
@@ -16,7 +17,5 @@ const Types = {
 function isValidItemType(type) {
   return Object.values(Types).includes(type);
 }
-
-// const { Feed, User, Document } = Types;
 
 module.exports = { Types, isValidItemType };
