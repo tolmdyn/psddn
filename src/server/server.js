@@ -1,5 +1,4 @@
 /**
- * @fileoverview Server entry point
  * @description The server module is solely responsible for handling remote requests from
  * incoming websocket connections. The server does not handle any requests from the local
  * user/interface as that is the job of the client modules.
@@ -7,11 +6,7 @@
 
 const WebSocket = require('ws');
 const debug = require('debug')('server');
-// const path = require('path');
 
-// const Database = require('../database/dbInstance');
-
-// const { documentSchema } = require('../models/validation');
 const { isValidItemType } = require('../models/types');
 const { isValidKeyFormat, isValidKeyForItem } = require('../utils/utils');
 const { RequestTypes } = require('../models/request');
@@ -20,13 +15,18 @@ const { getUserSessionKey, getUserSessionUser, setUserSessionAddress } = require
 const { addRemotePeer } = require('../network/cache');
 
 let Database;
-
 let server;
 
 function initServer(dbInstance) {
   Database = dbInstance;
 }
 
+/**
+ * @description Handles incoming requests from remote peers
+ * @param {*} message The incoming message containing Request Object
+ * @param {*} address The address of the remote peer
+ * @returns {Response} The response to the request
+ */
 function handleRequest(message, address) {
   const request = JSON.parse(message);
 
@@ -57,11 +57,16 @@ function handleRequest(message, address) {
   return 'Invalid request type';
 }
 
+/**
+ * @description Handles a GET item request
+ * @param {*} request The request object
+ * @returns {Response} The response (success/error) to the request
+ */
 function handleGet(request) {
   const { key, type } = request;
 
   if (!key || !type) {
-    return 'Invalid request, missing parameters';
+    return new Response(ResponseTypes.Error, 'Invalid request, missing parameters.');
   }
 
   if (!isValidItemType(type)) {
@@ -81,14 +86,16 @@ function handleGet(request) {
     debug('Item not found in database.');
     return new Response(ResponseTypes.Error, 'Item not found in database.');
   } catch (error) {
-    // Possibly massage the error message to make it more readable for users
     return new Response(ResponseTypes.Error, error.message);
   }
 }
 
-// This is modified so that it just accepts an item, which has embedded a key and type.
+/**
+ * @description Handles a PUT item request to store an item in the database
+ * @param {*} request The request object (item)
+ * @returns {Response} The response (success/error) to the request
+ */
 function handlePut(request) {
-  // const { key, type, data } = request;
   const { item } = request;
   const { key, type } = item;
 
@@ -119,8 +126,14 @@ function handlePut(request) {
   }
 }
 
+/**
+ * @description Handles a ping request. If the target peer is the current user, then
+ * a pong response is sent. Otherwise, an error response is sent (which still counts
+ * as a valid response to the calling peer).
+ * @param {*} request The request object, containing the intended target peer
+ * @returns {Response} The response (success/error) to the request
+ */
 function handlePing(request) {
-  // debug('Handling ping.', request);
   if (!request) {
     debug('No data.');
     return new Response(ResponseTypes.Error, 'No data / targetpeer.');
@@ -138,6 +151,13 @@ function handlePing(request) {
   return new Response(ResponseTypes.Error, 'Not at this address.');
 }
 
+/**
+ * @description Handles a message request. Currently just logs the message to the console.
+ * Could be extended to only log messages from peers that the user has added as friends, or
+ * only if the intended target peer is the current user.
+ * @param {*} request The request object, containing the message
+ * @returns {Response} The response (success/error) to the request (doesn't fail)
+ */
 function handleMessage(request) {
   debug('Handling message.');
   const { message } = request;
@@ -145,14 +165,24 @@ function handleMessage(request) {
   return new Response(ResponseTypes.Success, 'Message received.');
 }
 
+/**
+ * @description Handles a handshake request. This is the first request sent by a remote
+ * peer when a websocket connection is established. The request contains the origin key
+ * and port of the remote peer. The current user's key and address are added to the
+ * remote peer's cache. The current user's information is returned within the response in order
+ * to update the remote peer's local cache.
+ * As we might not know our external IP address, we can use the target address of the request.
+ * @param {*} request The request object, containing the origin key and port
+ * @param {*} originAddress The address of the remote peer
+ * @returns {Response} The response (success/error) to the request
+ */
 function handleHandshake(request, originAddress) {
   const { originKey, originPort, address } = request;
   debug(`Handling handshake on ${JSON.stringify(address)} from ${originKey}.`);
 
   // get current user info
   const user = getUserSessionUser();
-  // debug('User:', user);
-  // hack - we don't know our own external address before handshaking
+
   if (user.lastAddress === null
     || user.lastAddress.ip !== address.ip
     || user.lastAddress.port !== address.port) {
@@ -160,7 +190,6 @@ function handleHandshake(request, originAddress) {
     user.lastAddress = address;
   }
 
-  // debug('Adding Remote:', originAddress, ':', originPort);
   try {
     addRemotePeer(originKey, { ip: originAddress.replace(/^.*:/, ''), port: originPort });
   } catch (error) {
@@ -170,6 +199,11 @@ function handleHandshake(request, originAddress) {
   return new Response(ResponseTypes.Success, user);
 }
 
+/**
+ * @description Starts the server on the specified port
+ * @param {*} port The port to start the server on
+ * @returns {WebSocket.Server} The server instance
+ */
 function startServer(port) {
   server = new WebSocket.Server({ port });
 
@@ -197,6 +231,9 @@ function startServer(port) {
   return server;
 }
 
+/**
+ * @description Stops the server
+ */
 function shutdownServer() {
   if (!server) {
     return;
