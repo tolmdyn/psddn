@@ -1,21 +1,21 @@
 # Peer-to-Peer Structured Data Distribution Network
 
 ## Overview
-A decentralised peer-to-peer text document sharing application. Built in JavaScript using Node.js, websocket and sqlite3.
+A decentralised peer-to-peer text document sharing application.
+Built in JavaScript using Node.js.
 
 ## Table of Contents
 - [Overview](#overview)
 - [Features](#features)
 - [Getting Started](#getting-started)
 - [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
 - [License](#license)
-
+<!-- - [Project Structure](#project-structure)
+- [Contributing](#contributing) -->
 
 ## Features
 - **Peer-to-Peer:** Peers can connect to each other and share items via a cache of peers and a global distributed hash table.
-- **Decentralised:** No central server is required to run the application, with a dynamic bootstrapping procedure.
+- **Decentralised:** No central server is required to run the application, as long as bootstrappable nodes are online.
 - **Persistent Storage:** Items are stored locally in a SQLite database. 
 - **Feeds:** New items are published to a feed, which can be subscribed to by other peers.
 - **Profiles:** Users have a persistent profile, which contains a list of their feeds and a list of users they follow.
@@ -25,7 +25,7 @@ A decentralised peer-to-peer text document sharing application. Built in JavaScr
 ### Prerequisites
 - Node.js and npm installed on your system.
 - To access the network, you will need to know the IP address of at least one peer on the network, and add to the bootstrap file.
-- To allow external peers to access your local server, you will probably need to port forward and add a firewall rules, as hole punching is not yet implemented.
+- To allow external peers to access your local server, you will probably need to port forward and add firewall rules, as holepunching is not yet implemented.
 
 ### Installation
 1. Clone this repository.
@@ -36,7 +36,7 @@ A decentralised peer-to-peer text document sharing application. Built in JavaScr
 
 Run the application: `npm start` or `./app/psddn.js --help`.  
 
-Run the tests: `npm test` or `npm run test:<name of module to test>`.
+Run the tests: `npm test` or `npm run test:<name of module>`.
 
 ### CLI options:
 ```
@@ -58,30 +58,31 @@ Options:
 
 Available commands:
 
-`get`  
-`put`  
-`publish`   
-`newPost`  
-`followUser`  
-`unfollowUser`    
-`getFollowedFeeds`   
-`getFollowedUsers`  
-`getFollowedDocuments`    
-`debug`  
-`help`  
+`get` 
+`put` 
+`publish` 
+`newPost` 
+`followUser` 
+`unfollowUser` 
+`getFollowedFeeds` 
+`getFollowedUsers` 
+`getFollowedDocuments` 
+`getUserDocuments`
+`debug` 
+`help` 
 `exit` 
 
 Debug commands:
 
-`profile`  
-`users`  
-`documents`  
-`cache`  
-`hand`   
+`profile` 
+`users` 
+`documents` 
+`cache` 
+`hand` 
 `ping` 
 `help`  
 
-## Project Structure
+<!-- ## Project Structure
 
 - **bin**/: executable files
     - **app.js**: main executable
@@ -94,7 +95,7 @@ Debug commands:
     - **network**/: network related source code
     - **utils**/: shared utility / helper functions
 - **tests**/: testing code (mocha)
-    - **scripts**/: test scripts
+    - **scripts**/: test scripts -->
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
