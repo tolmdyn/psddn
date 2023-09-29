@@ -83,12 +83,6 @@ class Database {
     }
 
     return true;
-    // // result must have the three table names in it
-    // if (result.length === Types.length) {
-    //   return true;
-    // }
-    // debug('Database does not have the right tables.', result);
-    // return false;
   }
 
   /**
@@ -208,14 +202,9 @@ class Database {
 
   /**
    * @description: Put item into database
-   * @param {string} key - Key (hash/id) of item to put
-   * @param {string} type - Type of item to put
-   * @param {object} data - Item to put into database
+   * @param {object} item - Item to put into database
    * @return {object} Result of database query
-   * @throws {Error} Error putting item into database (not yet)
-   *
-   * TODO: Call getHash() on data rather than accept a parameter
-   * TODO: Improve error handling
+   * @throws {Error} Error putting item into database
    */
   put(item) {
     const { key, type } = item;
@@ -281,6 +270,12 @@ class Database {
     return item;
   }
 
+  /**
+   * @description: Delete user from database helper method for more abstraction.
+   * @param {*} key User publicKey
+   * @returns The deleted user object
+   * @throws {Error} Error deleting user from database
+   */
   deleteUser(publicKey) {
     return this.delete(publicKey, Types.User);
   }
@@ -310,8 +305,6 @@ class Database {
         .run(JSON.stringify(item), key);
     }
 
-    // const result = query.run(JSON.stringify(item), key);
-
     if (result.changes !== 1) {
       throw new Error('Error updating item in database.');
     }
@@ -338,20 +331,16 @@ class Database {
   }
 
   putUserProfile(userProfile) {
-    // debug('putUserProfile:', userProfile, userProfile.key, userProfile.type);
     return this.put(userProfile);
   }
 
   updateUserProfile(userProfile) {
-    // debug('updateUserProfile:', userProfile, userProfile.key, userProfile.type);
     return this.update(userProfile);
   }
 
   getUserProfile(key) {
-    // debug('getUserProfile:', key);
     return this.get(key, Types.UserProfile);
   }
 }
 
-// module.exports = new Database(databasePath);
 module.exports = { Database };
