@@ -1,3 +1,7 @@
+/**
+ * @description User Session Functions (Not yet used)
+ */
+
 // let userSession = null;
 
 // function setUserSession(userProfile, secretKey) {

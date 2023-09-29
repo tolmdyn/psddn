@@ -2,11 +2,7 @@
  * @fileoverview This file contains the user authentication logic.
  * @module auth
  *
- * TODO: Split off signing and session into separate modules.
  *
- * TODO: Add a function to fetch the user object from the database?
- * TODO: Add a function to fetch the user object from the network?
- * TODO: WRITE TESTS
  *
  *  This module doesn't interact with the database, only user profile/session.
  *
@@ -19,10 +15,9 @@
  *  last seen address and time.
  *
  * UserSession: This is an object which contains the
- *  user's public key, secret key, and user object.
- *  It is used to make and sign transactions. And used by the
- *  application to determine the current user. The object
- *  is created on program start and destroyed on program exit.
+ *  user's public key, secret key, user object and followed users.
+ *  It is used to make and sign transactions and used by the
+ *  application to determine the current user.
  *
  * UserProfile: A user profile is an object which contains:
  *   - A user 'item' object.
@@ -33,60 +28,10 @@
  *  shareable over the network to allow presistent profiles
  *  across multiple devices.
  *
- *  The encrypted secret key is used for authentication rather than a
- *  password hash because the secret key is used to verify/sign transactions but
- *  shouldn't be stored in plain text.
+ *  The secret key is used to verify/sign transactions but
+ *  shouldn't be stored in plain text so is encrypted with
+ *  a password.
  *
- * Authentication processes:
- *
- * - Login or Create new User.
- * - Load or Create User Profile.
- * - Update User Session
- *
- * Auth Functions:
- *
- * - Create a new User. (public)
- *  - Create a new keypair.
- *  - Create a new user object.
- *  - Create a new user profile object.
- *
- * - Login with a User. (public)
- *  - Authenticate the user with password (key, password).
- *  - Authenticate the user with private key (key, privateKey).
- *  - Retrieve the user profile from the database.
- *
- * - Create a new UserSession. (private)
- * - Create a new UserProfile. (private)
- * - Store the UserProfile. (private)
- * - Set the UserSession. (private)
- * - Get the UserSession. (private)
- *
- * - Get the UserSession key. (public)
- * - Get the UserSession user. (public)
- *
- * - Getters / Setters:
- * - Set the UserSession address. (public)
- * - Get the UserSession address. (public)
- * - Set the UserSession last seen. (public)
- * - Get the UserSession last seen. (public)
- * - Set the UserSession last feed. (public)
- * - Get the UserSession last feed. (public)
- *
- * - Add Followed Peer. (public)
- * - Remove Followed Peer. (public)
- * - Get All Followed Peers. (public)
- *
- * - Sign a message / item. (public)
- * - Verify a message / item. (public)
- *
- * - Shutdown.
- *
- * How to map the nickname to the public key?
- * - Store the nickname in the user object.
- * - Store the user object in the user profile.
- * - Store the user profile in the database.
- * OR
- * - Store the nickname:key in a persistent map.
  */
 
 const debug = require('debug')('auth');
@@ -96,18 +41,6 @@ nacl.util = require('tweetnacl-util');
 
 const { encryptWithPassword, decryptWithPassword } = require('./encrypt');
 const { isValidKeyFormat } = require('../utils/utils');
-
-// const Database = require('../database/dbInstance');
-
-// let userSession = null;
-// let Database = null;
-
-// function initAuth(dbInstance) {
-//   Database = dbInstance;
-
-//   // createNewUserSession('testuser');
-//   // debug('User session created.', getUserSession());
-// }
 
 /* User Session */
 let userSession = null;
@@ -214,13 +147,9 @@ function authUserWithKey(key, secretKey, userProfile) {
     throw new Error('Invalid key or secret');
   }
 
-  // const userProfile = loadUserProfile(key);
-
-  // Set user session
   setUserSession({ userProfile, secretKey });
   updateUserSessionLastSeen();
 
-  // return something
   return userProfile;
 }
 
@@ -232,22 +161,15 @@ function authUserWithKey(key, secretKey, userProfile) {
  * @throws {Error} If the user cannot be authenticated
  */
 function authUserWithPassword(key, password, userProfile) {
-  // The user profile is retrieved from the database.
-  // const userProfile = loadUserProfile(key);
-
-  // The secret key is decrypted with the password.
   const secretKey = decryptWithPassword(password, userProfile.secretKey);
 
-  // The user is authenticated with the public key & secret key.
   if (!authenticateKeyPair(key, secretKey)) {
     throw new Error('Invalid key or secret');
   }
 
-  // Set user session
   setUserSession({ userProfile, secretKey });
   updateUserSessionLastSeen();
 
-  // return something
   return userProfile;
 }
 
@@ -343,8 +265,6 @@ function authenticateKeyPair(publicKey, secretKey) {
  */
 function signItem(item) {
   const { secretKey } = userSession;
-
-  // unpack the item and stringify
   const { signature, ...itemContent } = item;
   const itemString = JSON.stringify(itemContent);
 
@@ -389,8 +309,6 @@ function verifyItem(item) {
  * @throws {Error} If the data is not verified
  */
 function verifyStringSignature(data, signature, publicKey) {
-  // let verified = false;
-
   try {
     const signatureBuffer = nacl.util.decodeBase64(signature);
     const publicKeyBuffer = nacl.util.decodeBase64(publicKey);
@@ -405,17 +323,13 @@ function verifyStringSignature(data, signature, publicKey) {
     }
   }
   return false;
-  // return verified;
 }
 
 module.exports = {
-  // initAuth,
-
   authNewUser,
   authUserWithKey,
   authUserWithPassword,
 
-  // authenticateUser,
   setUserSession,
   createNewUser,
 
@@ -428,12 +342,9 @@ module.exports = {
   getUserSessionFollowing,
 
   setUserSessionAddress,
-  // setUserSessionProfile,
   setUserSessionFeed,
 
   updateUserSessionLastSeen,
-  // signMessage: signItem,
-  // signMessageWithKey: signStringWithKey,
 
   verifyItem,
   signItem,
