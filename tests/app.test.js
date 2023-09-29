@@ -784,6 +784,38 @@ describe('Client Get Followed Items Tests', () => {
 
   after(() => {
   });
+
+  it('should get a slice of followed items', async function () {
+    this.timeout(6000);
+
+    const followOptions = {
+      port: 9107,
+      interface: 'none',
+      dbname: ':memory:',
+      name: 'Get Followed Items Test Node 7',
+    };
+
+    const testApp = new TestApp();
+    testApp.init(followOptions);
+
+    keys.forEach((key) => {
+      testApp.client.followUser(key);
+    });
+
+    let response = await testApp.client.getSomeFollowedDocuments(0, 2);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(2);
+
+    response = await testApp.client.getSomeFollowedDocuments(5, 2);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(1);
+
+    response = await testApp.client.getSomeFollowedDocuments(6, 2);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(0);
+
+    testApp.shutdown();
+  });
 });
 
 /* ------------------------ helper functions ------------------------ */
