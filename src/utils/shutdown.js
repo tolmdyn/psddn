@@ -2,8 +2,6 @@ const { shutdownCache } = require('../network/cache');
 const { shutdownServer } = require('../server/server');
 const { shutdownClient } = require('../client');
 const { shutdownDHT } = require('../network/dht');
-// const server = require('./server/server');
-// const client = require('./client/client');
 
 /**
  * @description Function to safely shutdown the application, and save any cache changes.

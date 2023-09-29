@@ -1,6 +1,6 @@
 /**
  * @description: Utility functions for the application.
- * @module Utils
+ * As only contains hashing functions could be moved elsewhere.
  */
 
 /* ------------------------ Hashing Functions ------------------------ */
@@ -11,7 +11,7 @@ const objecthash = require('object-hash');
  * For this example we can use shorter hashes to aid testing but IRL
  * we would use the full hash.
  * @param {*} input The object to be hashed
- * @returns A consistent hash of the input
+ * @returns A "consistent" hash of the input
  */
 function generateKey(input) {
   return objecthash(input, { algorithm: 'sha256', encoding: 'base64' });
