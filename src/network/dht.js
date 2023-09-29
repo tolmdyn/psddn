@@ -22,7 +22,6 @@
  *
  * -Initialise DHT
  * -Set up node, connect to bootstrap address
- *
  * -Get item from DHT
  * -Put item in DHT
  */

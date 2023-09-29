@@ -22,7 +22,7 @@
  *
  * At program exit all (active) cached peers are saved to the database.
  *
- *  -----------------------------------------------------------------------------------
+ * ------------------------------------------------------------------------------------
  * TODO:
  *
  * To prevent the cache from growing too large as new users are discovered, a Least Recently Used

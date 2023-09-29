@@ -1,7 +1,6 @@
 /**
- * @fileoverview Providers module.
- * @description This module is responsible for finding the address of a provider of specific items
- * Either on the local cached peers or on the DHT network.
+ * @description Providers is responsible for finding the address of a provider of specific items
+ * Either on the local cached peers or on the DHT network. This is not yet fully implemented.
  */
 
 const WebSocket = require('ws');

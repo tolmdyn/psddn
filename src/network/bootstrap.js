@@ -1,5 +1,10 @@
+/**
+ * @description Bootstrap module for the network
+ * At the moment only contains a function to load bootstrap addresses from a file.
+ * Ideally would be used to bootstrap DHT and cache.
+ */
+
 const fs = require('fs');
-// const debug = require('debug')('bootstrap');
 
 function loadBootstrapAddresses(filepath) {
   const bootstrapPeers = JSON.parse(fs.readFileSync(filepath, 'utf8'));
