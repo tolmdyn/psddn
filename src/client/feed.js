@@ -1,39 +1,28 @@
 const debug = require('debug')('client');
 
 const { pubItem } = require('./putPub');
-// const { Database } = require('./clientDb');
-// const Database = global.dbInstance;
-
+const { generateKey } = require('../utils/utils');
+const { saveUserProfile } = require('./userProfile');
 const {
-  // authNewUser,
-  // authUserWithKey,
-  // authUserWithPassword,
-  // getUserSessionKey,
   signItem,
   getUserSessionUser,
   getUserSessionFeed,
   setUserSessionFeed,
-  // getUserSessionFollowing,
 } = require('../auth/auth');
 
-// const { sendItemToProviders } = require('../network/providers');
-const { generateKey } = require('../utils/utils');
-
-const { saveUserProfile } = require('./userProfile');
-
 let Database = null;
-
-// const { RequestTypes, Request } = require('../models/request');
-// const { ResponseTypes, Response } = require('../models/response');
-// const { isValidItemType } = require('../models/types');
-// const { validateItem } = require('../models/validation');
 
 function setDb(dbInstance) {
   Database = dbInstance;
 }
 
+/**
+ * @description Creates a new empty feed object for a user, without
+ * signature or key.
+ * @param {*} user The user object for which to create a feed.
+ * @returns {Object} The new feed object.
+ */
 function createNewFeed(user) {
-  // create new feed
   const feed = {
     // signature: null,
     // key: null,
@@ -43,12 +32,16 @@ function createNewFeed(user) {
     items: [],
   };
 
-  // feed.key = generateKey(feed);
   debug('Created new feed.', feed);
   return feed;
 }
 
-// could client/get() be used here instead? - remove db dependency
+/**
+ * @description Gets the feed of a user, given a user object.
+ * @param {*} user The user object for which to get the feed.
+ * @returns {Object} The latest feed object.
+ * TODO: could client/get() be used here instead? - remove db dependency
+ */
 function getUserFeed(user) {
   const lastFeedId = user.lastFeed;
   debug('getUserFeed', lastFeedId);
@@ -83,35 +76,24 @@ function updateUserFeed(document) {
     newFeed.items = [...lastFeed.items];
   }
 
-  // append new items
   newFeed.items.push(document.key);
   newFeed.key = generateKey(newFeed);
-  // debug('lastFeed', lastFeed, 'newFeed', newFeed);
 
-  // sign the new feed
   const signature = signItem(newFeed);
   newFeed.signature = signature;
 
-  // delete old feed
   if (lastFeed) {
     Database.delete(lastFeed.key, 'feed');
   }
 
-  // update local db with the feed item
-  // Database.put(newFeed);
-
-  // update usersession and profile feed
-  // update user profile and database
   setUserSessionFeed(newFeed);
-  saveUserProfile(); // hmm
+  saveUserProfile();
 
   // // send feed to providers
-  // sendItemToProviders(newFeed);
   pubItem(newFeed);
   debug('Updated user feed.', newFeed);
 
   // // send updated user to providers
-  // sendItemToProviders(user);
   pubItem(user);
   debug('Updated user.', user);
 }
@@ -120,7 +102,6 @@ module.exports = {
   setDb,
   createNewFeed,
   updateUserFeed,
-  // getFollowedFeeds,
   getUserFeed,
   getFeed,
 };

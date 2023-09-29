@@ -8,19 +8,27 @@ const { addUserToFollowing, removeUserFromFollowing, getUserSessionFollowing } =
 const { Types } = require('../models/types');
 const { ResponseTypes } = require('../models/response');
 
+/**
+ * @description Adds a user to the current user's following list.
+ * @param {*} user The user object to follow.
+ * @returns The current user's following list. (Not a response object)
+ */
 function followUser(user) {
   addUserToFollowing(user);
   saveUserProfile();
 
-  // return Object.fromEntries(getUserSessionFollowing());
   return getUserSessionFollowing();
 }
 
+/**
+ * @description Removes a user from the current user's following list.
+ * @param {*} user The user object to unfollow.
+ * @returns The current user's following list. (Not a response object)
+ */
 function unfollowUser(user) {
   removeUserFromFollowing(user);
   saveUserProfile();
 
-  // return Object.fromEntries(getUserSessionFollowing());
   return getUserSessionFollowing();
 }
 
@@ -46,7 +54,6 @@ async function getFollowedUsers() {
 
   try {
     const users = await Promise.all(userPromises);
-    // debug('Users:', users);
     return users.filter((user) => user !== null);
   } catch (error) {
     debug('Error getting users:', error);
@@ -57,12 +64,11 @@ async function getFollowedUsers() {
 /**
  * @description Gets the latest findable feeds from the current user's followed users.
  * @returns An array of feed objects or an empty array.
+ * TODO: What should the return value be in case of error?
  */
 async function getFollowedFeeds() {
   const followedPeers = getUserSessionFollowing();
-  // debug('Followed peers:', followedPeers);
 
-  // get the latest feed keys for each followed user
   const feedKeysPromises = followedPeers.map(async (userKey) => {
     try {
       const response = await getLatestUser(userKey);
@@ -78,11 +84,9 @@ async function getFollowedFeeds() {
 
   const feedKeys = await Promise.all(feedKeysPromises);
 
-  // get the feeds from the keys
   const feedPromises = feedKeys.map(async (key) => {
     try {
       const response = await getItem(key, Types.Feed);
-      // debug('Response:', response);
       if (response.responseType === ResponseTypes.Success) {
         const feed = response.responseData;
         return feed;
@@ -97,9 +101,7 @@ async function getFollowedFeeds() {
 
   try {
     const feedResults = await Promise.all(feedPromises);
-    // debug('Feeds:', feeds);
     feeds = feedResults.filter((feed) => feed !== null);
-    // debug('Filtered feeds:', filteredFeeds);
   } catch (error) {
     debug('Error getting feeds:', error);
     // return [];
@@ -169,10 +171,27 @@ async function getFollowedDocuments() {
   return documents;
 }
 
+/**
+ * @description Gets a selection of the latest findable documents from the current user's
+ * followed feeds.
+ * @param {*} start The index of the first document to return.
+ * @param {*} max The maximum number of documents to return.
+ */
+async function getSomeFollowedDocuments(start, max) {
+  const documents = await getFollowedDocuments();
+
+  if (documents.length === 0 || start >= documents.length) {
+    return [];
+  }
+
+  return documents.slice(start, Math.min((start + max), documents.length));
+}
+
 module.exports = {
   followUser,
   unfollowUser,
   getFollowedUsers,
   getFollowedFeeds,
   getFollowedDocuments,
+  getSomeFollowedDocuments,
 };

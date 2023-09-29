@@ -13,6 +13,11 @@ function setDb(dbInstance) {
   Database = dbInstance;
 }
 
+/**
+ * @description Validates the parameters for a put request.
+ * @param {Object} item The item to be added to the database.
+ * @returns A response object if there is an error, otherwise null.
+ */
 function validatePutParameters(item) {
   if (!item) {
     return new Response(ResponseTypes.Error, 'Invalid request, missing item.');
@@ -59,21 +64,19 @@ function putItem(item) {
 }
 
 /**
- * @description Publishes item to relevant providers, and adds to local database if not present.
- * Key and type are generated from the item.
+ * @description Publishes item. Adding it to the local database, sending to the cache network
+ * and to the DHT. Key and type fields are extracted from the item.
  * @param {*} item The item to be published.
- * @returns {Response} A response object containing the result of the request.
+ * @returns An array of response objects. Indicating Success with the item or Error and reason.
  */
 async function pubItem(item) {
-  // validate item
   const parameterError = validatePutParameters(item);
   if (parameterError) {
     return parameterError;
   }
 
   const results = [];
-  // sign / verify item here before adding to db
-  // if not in local db then add to local db
+
   try {
     debug(`Putting item into local database:\n${JSON.stringify(item)}`);
     const result = await Database.put(item);
@@ -91,23 +94,19 @@ async function pubItem(item) {
     debug('Item not added to local database, already exists. Continuing...');
   }
 
-  // send to peers
   try {
     debug(`Sending ${item.key} to providers...`);
     const result = await sendItemToProviders(item);
     if (!result) {
       results.push(new Response(ResponseTypes.Error, 'Error sending item to providers.'));
     }
-    // add result;
     results.push(result);
     debug('Item sent to providers, result:', result);
-    // return new Response(ResponseTypes.Success, 'Item sent to providers.');
   } catch (error) {
     debug('Error sending item to providers:', error);
     results.push(new Response(ResponseTypes.Error, error.message));
   }
 
-  // Put item into DHT
   try {
     const result = await storeDHT(item.key, item);
     if (result) {
@@ -120,7 +119,6 @@ async function pubItem(item) {
   }
 
   return results;
-  // new Response(ResponseTypes.Success, `Item published, results: ${JSON.stringify(results)}`);
 }
 
 module.exports = {

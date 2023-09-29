@@ -14,6 +14,12 @@ function setDb(dbInstance) {
   Database = dbInstance;
 }
 
+/**
+ * @description Validates the parameters for a get request.
+ * @param {string} key The key of the item to get.
+ * @param {string} type The type of the item to get.
+ * @returns A response object if there is an error, otherwise null.
+ */
 function validateGetParameters(key, type) {
   if (!key || !type) {
     return new Response(ResponseTypes.Error, 'Invalid request, missing parameters.');
@@ -30,14 +36,18 @@ function validateGetParameters(key, type) {
   return null;
 }
 
+/**
+ * @description Gets an item. Checks the local database, remote providers and then DHT.
+ * @param {string} key The key of the item to get.
+ * @param {string} type The type of the item to get.
+ * @returns A response object. Success with the item or Error and reason.
+ */
 async function getItem(key, type) {
-  // check the parameters are valid // should this be a seperate function?
   const parameterError = validateGetParameters(key, type);
   if (parameterError) {
     return parameterError;
   }
 
-  // check local db // should this be a seperate function?
   const localResult = await getItemFromLocal(key, type);
 
   if (localResult) {
@@ -58,7 +68,6 @@ async function getItem(key, type) {
     }
   } catch (err) {
     debug('Error getting item from providers:', err);
-    // return new Response(ResponseTypes.Error, 'Error getting item from providers.');
   }
 
   // Get item from DHT
@@ -81,10 +90,17 @@ async function getItem(key, type) {
 // get the item from local db (if available) and from remote providers (if available)
 // if we have both, return the 'newest' one (by timestamp)
 // THIS ONLY WORKS WITH USERS BECAUSE OF TIMESTAMP/LASTSEEN
+/**
+ * @description Gets the latest user item. Because the user object might not be the
+ * most recent, checks all sources and then returns the newest. This usually means
+ * the DHT result, therefore the function can take longer than desired. The most recent
+ * result is stored locally.
+ * @param {*} key The key of the user to get.
+ * @returns A response object. Success with the user or Error and reason.
+ */
 async function getLatestUser(key) {
   const results = [];
 
-  // get item from local database
   try {
     const localResult = await getItemFromLocal(key, Types.User);
     results.push(localResult);
@@ -92,20 +108,16 @@ async function getLatestUser(key) {
     debug('Error getting item from local database:', error);
   }
 
-  // get item from providers
   try {
     const providerResult = await getItemFromProviders(key, Types.User);
-    // debug('Result from providers:', providerResult);
     results.push(providerResult);
   } catch (err) {
     debug('Error getting item from providers:', err);
     return new Response(ResponseTypes.Error, 'Error getting item from providers.');
   }
 
-  // get item from DHT
   try {
     const dhtResult = await queryDHT(key, Types.User);
-    debug('DHT result:', dhtResult);
     if (dhtResult) {
       results.push(dhtResult);
     }
@@ -113,23 +125,18 @@ async function getLatestUser(key) {
     debug('Error retrieving item from DHT:', err);
   }
 
-  let newestResult = null;
-  // console.log('RESULTS', results);
-  // find the newest result
-  results.forEach((result) => {
+  const newestResult = results.reduce((newest, result) => {
     if (result && result.responseType === ResponseTypes.Success) {
-      if (!newestResult
-        || new Date(result.responseData.lastSeen) > new Date(newestResult.responseData.lastSeen)) {
-        newestResult = result;
+      if (!newest
+        || new Date(result.responseData.lastSeen) > new Date(newest.responseData.lastSeen)) {
+        return result;
       }
     }
-  });
+    return newest;
+  }, null);
 
   if (newestResult) {
-    // update the local database with the provider result
     try {
-      // Database.update(providerResult.responseData);
-      // console.log("HERE", newestResult.responseData);
       Database.updateUser(newestResult.responseData);
     } catch (error) {
       debug('Error updating item in local database:', error);
@@ -137,9 +144,16 @@ async function getLatestUser(key) {
     return newestResult;
   }
 
+  // Default action: if no item recieved, return error
   return new Response(ResponseTypes.Error, 'Item not found.');
 }
 
+/**
+ * @description Gets an item from the local database.
+ * @param {string} key The key of the item to get.
+ * @param {string} type The type of the item to get.
+ * @returns A response object. Success with the item or Error and reason.
+ */
 async function getItemFromLocal(key, type) {
   try {
     debug(`Getting item from local database\nKey: ${key}\nType: ${type}`);
@@ -150,12 +164,19 @@ async function getItemFromLocal(key, type) {
     }
     debug('Item not found in local database.');
   } catch (error) {
-    // Possibly massage the error message to make it more readable for users
     return new Response(ResponseTypes.Error, error.message);
   }
   return null;
 }
 
+/**
+ * @description Gets an item from the remote providers. (cache only)
+ * @param {string} key The key of the item to get.
+ * @param {string} type The type of the item to get.
+ * @returns A response object. Success with the item or Error and reason.
+ * TODO: Integrate DHT to find providers for the item, and also select
+ * only relevant providers from cache.
+ */
 async function getItemFromProviders(key, type) {
   const providers = await getProviders(key, type);
   debug('Providers:', providers);
@@ -165,20 +186,15 @@ async function getItemFromProviders(key, type) {
   }
 
   const request = new Request(RequestTypes.Get, { key, type });
-
-  // map the array of providers to an array of promises
   const promises = providers.map((provider) => sendRequestToProvider(request, provider));
 
-  // wait for all promises to resolve
   const results = await Promise.all(promises);
   debug('Results from providers:', results);
 
-  // find successful responses
   const successfulResult = results.filter((result) => result !== null)
     .find((result) => result.responseType === ResponseTypes.Success);
 
   if (successfulResult) {
-    // add item to local db
     const item = successfulResult.responseData;
     try {
       debug(`Putting item into local database:\n${JSON.stringify(item)}`);
@@ -200,7 +216,7 @@ async function getItemFromProviders(key, type) {
 }
 
 /**
- * Get all documents from local database
+ * @description Get all documents from local database
  * @returns {Array} Array of documents
  */
 function getLocalDocuments() {
@@ -214,7 +230,7 @@ function getLocalDocuments() {
 }
 
 /**
- * Get all users from local database
+ * @description Get all users from local database
  * @returns {Array} Array of users
  */
 function getLocalUsers() {
@@ -232,7 +248,6 @@ function getLocalUsers() {
  * @returns An array of document objects or an empty array.
  */
 async function getUserDocuments(key) {
-  // get user object
   const user = await getLatestUser(key);
 
   if (!user || user.responseType === ResponseTypes.Error) {
@@ -243,17 +258,14 @@ async function getUserDocuments(key) {
     return new Response(ResponseTypes.Error, 'User has no feed.');
   }
 
-  // get feed object
   const feed = await getItem(user.responseData.lastFeed, Types.Feed);
 
   if (!feed || feed.responseType === ResponseTypes.Error) {
     return new Response(ResponseTypes.Error, 'Error getting feed.');
   }
 
-  // get documents from feed
   const docKeys = feed.responseData.items;
 
-  // assemble promises
   const docPromises = docKeys.map(async (documentKey) => {
     try {
       const response = await getItem(documentKey, Types.Document);
@@ -267,7 +279,6 @@ async function getUserDocuments(key) {
     return null;
   });
 
-  // get documents
   let documents = null;
 
   try {
@@ -277,6 +288,7 @@ async function getUserDocuments(key) {
     debug('Error getting documents:', error);
   }
 
+  // TODO: put posts into local db? leaving for now
   // put posts into local db
   // if (documents) {
   //   try {

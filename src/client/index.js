@@ -55,14 +55,13 @@
 
 /* --------------------------------- Client Imports --------------------------------- */
 const { initDb } = require('./clientDb');
-const { saveUserProfile } = require('./userProfile');
 const { getUserFeed, getFeed } = require('./feed');
 const { followUser, unfollowUser } = require('./follow');
 const { loginUser, loginNewUser } = require('./login');
 const { getItem, getUserDocuments } = require('./get');
 const { putItem, pubItem } = require('./putPub');
 const { createNewPost } = require('./newPost');
-const { getFollowedFeeds, getFollowedUsers, getFollowedDocuments } = require('./follow');
+const { getFollowedFeeds, getFollowedUsers, getFollowedDocuments, getSomeFollowedDocuments } = require('./follow');
 const { pingPeer, handshakePeer, getCache, getProfile, getAllDocumentKeys, getAllUserKeys } = require('./debug');
 const { shutdownClient } = require('./shutdown');
 
@@ -84,6 +83,7 @@ module.exports = {
   getFollowedFeeds,
   getFollowedUsers,
   getFollowedDocuments,
+  getSomeFollowedDocuments,
 
   followUser,
   unfollowUser,

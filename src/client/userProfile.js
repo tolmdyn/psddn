@@ -8,12 +8,19 @@ function setDb(dbInstance) {
   Database = dbInstance;
 }
 
+/**
+ * @description Updates the user profile in the database.
+ * @param {Object} userProfile The user profile to update.
+ */
 function updateUserProfile(userProfile) {
   Database.updateUserProfile(userProfile);
   // update session
   // save profile to db
 }
 
+/**
+ * @description Saves the user session profile to the database, if there is one.
+ */
 function saveUserProfile() {
   if (!isUserSession()) {
     debug('No user session profile to save.');
@@ -24,33 +31,14 @@ function saveUserProfile() {
   Database.updateUserProfile(userProfile);
 }
 
+/**
+ * @description Loads the user profile from the database.
+ * @param {string} key The key of the user profile to load.
+ * @returns The user profile or null.
+ */
 function loadUserProfile(key) {
   return Database.getUserProfile(key);
 }
-
-// async function saveUserProfileFile(userProfile) {
-//   // return this.put(userProfile, Types.UserProfile);
-//   const profileString = JSON.stringify(userProfile);
-//   const { key } = userProfile;
-//   try {
-//     await fs.writeFileSync(`userProfile${key}.json`, profileString);
-//   } catch (error) {
-//     throw new Error('Error saving user profile');
-//   }
-//   debug('Saved user profile.');
-// }
-
-// function loadUserProfileFile(publicKey) {
-//   // return this.get(publicKey, Types.UserProfile);
-//   try {
-//     const profileString = fs.readFileSync(`userProfile${publicKey}.json`);
-//     const profile = JSON.parse(profileString);
-//     debug('Loaded user profile.');
-//     return profile;
-//   } catch (error) {
-//     throw new Error('Error loading user profile');
-//   }
-// }
 
 module.exports = {
   saveUserProfile,

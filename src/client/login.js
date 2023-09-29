@@ -5,8 +5,6 @@ const { authUserWithPassword, authNewUser, setUserSession } = require('../auth/a
 const { pubItem } = require('./putPub');
 
 function loginUser(key, password) {
-  // OR loginUser(key, password, secretKey) {
-  // if password, if secretkey
   try {
     const userProfile = loadUserProfile(key);
 
@@ -16,8 +14,6 @@ function loginUser(key, password) {
     return authResult;
   } catch (error) {
     debug('Error creating new user session.', error.message);
-    // console.log('Error creating new user session.');
-    // process.exit(1);
     throw new Error('Error creating new user session.');
   }
 }
@@ -39,9 +35,11 @@ async function loginNewUser(nickname, password) {
     debug('Error creating new user session.', error.message);
     throw new Error('Error creating new user session.');
   }
-  // return null;
 }
 
+/**
+ * @description Logout the user by setting the user session to null. Only used for testing.
+ */
 function logoutUser() {
   setUserSession(null);
 }
