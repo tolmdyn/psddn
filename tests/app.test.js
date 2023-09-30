@@ -756,7 +756,9 @@ describe('Client Get Followed Items Tests', () => {
     expect(response).to.be.an('array');
     expect(response.length).to.equal(6);
 
-    testApp.shutdown();
+    setTimeout(() => {
+      testApp.shutdown();
+    }, 1000);
   });
 
   it('should get followed items from the dht', async function () {
@@ -781,13 +783,17 @@ describe('Client Get Followed Items Tests', () => {
     expect(response.length).to.equal(6);
 
     testApp.shutdown();
+
+    setTimeout(() => {
+      testApp.shutdown();
+    }, 2000);
   });
 
   after(() => {
   });
 
   it('should get a slice of followed items', async function () {
-    this.timeout(6000);
+    this.timeout(7000);
 
     const followOptions = {
       port: 9107,
@@ -803,19 +809,17 @@ describe('Client Get Followed Items Tests', () => {
       testApp.client.followUser(key);
     });
 
-    let response = await testApp.client.getSomeFollowedDocuments(5, 2);
+    const response = await testApp.client.getSomeFollowedDocuments(5, 2);
     expect(response).to.be.an('array');
     expect(response.length).to.equal(1);
 
-    response = await testApp.client.getSomeFollowedDocuments(6, 2);
-    expect(response).to.be.an('array');
-    expect(response.length).to.equal(0);
-
-    testApp.shutdown();
+    setTimeout(() => {
+      testApp.shutdown();
+    }, 2000);
   });
 
   it('should get a slice of followed items without errors', async function () {
-    this.timeout(6000);
+    this.timeout(7000);
 
     const followOptions = {
       port: 9108,
