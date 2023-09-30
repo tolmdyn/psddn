@@ -1,5 +1,6 @@
 /**
- * @description Utility functions for terminal UI
+ * @fileoverview Utility functions for terminal UI
+ * @memberof module:ui/term
  */
 
 const chalk = require('chalk');
@@ -14,6 +15,7 @@ function setReadline(readline) {
  * @description Parses a JSON string into an object.
  * @param {string} item The JSON string to parse.
  * @returns {object} The parsed object.
+ * @memberof module:ui/term
  */
 function parseItem(item) {
   try {
@@ -29,6 +31,7 @@ function parseItem(item) {
  * This seems a bit convoluted and could be refactored.
  * @param {*} question The question to ask
  * @returns {Promise<string>} The user's answer
+ * @memberof module:ui/term
  */
 function askQuestion(question) {
   return new Promise((resolve) => {
@@ -42,6 +45,7 @@ function askQuestion(question) {
  * @description Formats an array of documents into a "nice" printable string.
  * @param {array} documents The array of documents to format.
  * @returns {string} The formatted string.
+ * @memberof module:ui/term
  */
 function formatDocuments(documents) {
   let result = ('-----------------------------------\n');

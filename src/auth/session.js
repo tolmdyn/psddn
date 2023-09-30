@@ -1,5 +1,6 @@
 /**
- * @description User Session Functions (Not yet used)
+ * @fileoverview User Session Functions (Not yet used)
+ * @memberof auth
  */
 
 // let userSession = null;

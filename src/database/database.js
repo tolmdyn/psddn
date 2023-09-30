@@ -1,9 +1,8 @@
 /**
 * @fileOverview This file provides the database wrapper class and functions for interaction
 * @module database
-*
-*  The database is now a singleton defined in this file and then accessed from other modules
 */
+
 const fs = require('fs');
 const path = require('path');
 const Sqlite = require('better-sqlite3');
@@ -16,40 +15,43 @@ const databaseFolderPath = path.join(__dirname, './../../data/');
 const databasePath = path.join(__dirname, './../../data/database.db');
 
 /**
- * @description: Database wrapper class
- * @class Database
+ * @description Database wrapper class
  * @param {string} dbPath - Path to database file
  */
 class Database {
-  #db;
+  db;
 
-  // If no path is provided, use default path, otherwise use provided path
+  /**
+   * @constructor
+   * @param {*} customPath
+   * @description Creates a new database instance.
+   */
   constructor(customPath) {
     debug('Custom path:', customPath);
     // Create folder if it doesn't exist
     if (!customPath) {
       Database.createDatabaseFolder();
-      this.#openDatabaseConnection(databasePath);
+      this.openDatabaseConnection(databasePath);
     } else if (customPath === ':memory:') {
-      this.#openDatabaseConnection(customPath);
+      this.openDatabaseConnection(customPath);
     } else {
-      this.#openDatabaseConnection(customPath);
+      this.openDatabaseConnection(customPath);
     }
     // Check if this.db doesnt have the right tables... create them
     if (!this.databaseHasTables()) {
-      this.#createTables();
+      this.createTables();
     }
   }
 
   /**
-  * @description: Open database connection, creates one if it doesn't exist
+  * @description Open database connection, creates one if it doesn't exist
   * @return {Database} Database connection
   * @throws {Error} Error opening database
   */
-  #openDatabaseConnection(dbPath) {
+  openDatabaseConnection(dbPath) {
     debug('PATH:', dbPath);
     try {
-      this.#db = new Sqlite(dbPath, { verbose: debug });
+      this.db = new Sqlite(dbPath, { verbose: debug });
       debug('Database opened successfully.');
     } catch (error) {
       console.error(error);
@@ -57,21 +59,21 @@ class Database {
   }
 
   /**
-   * @description: Close database connection
+   * @description Close database connection
    */
   closeDatabaseConnection() {
-    this.#db.close();
+    this.db.close();
   }
 
   /**
-   * @description: Checks if the database has the right tables
+   * @description Checks if the database has the right tables
    * @return {boolean} True if the database has the right tables, false otherwise
    */
   databaseHasTables() {
     const typeNames = Object.values(Types);
     const typesQuery = typeNames.map((typeName) => `'${typeName}'`).join(', ');
 
-    const result = this.#db.prepare(`SELECT name FROM sqlite_schema WHERE type='table' AND name IN (${typesQuery});`).all();
+    const result = this.db.prepare(`SELECT name FROM sqlite_schema WHERE type='table' AND name IN (${typesQuery});`).all();
 
     const existingTableNames = result.map((table) => table.name);
 
@@ -86,11 +88,11 @@ class Database {
   }
 
   /**
-   * @description: Creates the tables for the database
+   * @description Creates the tables for the database
    * @return {void}
    */
-  #createTables() {
-    this.#db.prepare(`
+  createTables() {
+    this.db.prepare(`
         CREATE TABLE "document" (
           "id" INTEGER UNIQUE,
           "key" TEXT NOT NULL UNIQUE,
@@ -99,7 +101,7 @@ class Database {
         );
       `).run();
 
-    this.#db.prepare(`
+    this.db.prepare(`
         CREATE TABLE "feed" (
          "id" INTEGER UNIQUE,
           "key" TEXT NOT NULL UNIQUE,
@@ -108,7 +110,7 @@ class Database {
         );
       `).run();
 
-    this.#db.prepare(`
+    this.db.prepare(`
         CREATE TABLE "user" (
          "id" INTEGER UNIQUE,
          "key" TEXT NOT NULL UNIQUE,
@@ -117,7 +119,7 @@ class Database {
         );
       `).run();
 
-    this.#db.prepare(`
+    this.db.prepare(`
         CREATE TABLE "userProfile" (
          "id" INTEGER UNIQUE,
          "key" TEXT NOT NULL UNIQUE,
@@ -126,7 +128,7 @@ class Database {
         );
       `).run();
 
-    this.#db.prepare(`
+    this.db.prepare(`
       PRAGMA journal_mode=WAL;
     `).run();
 
@@ -138,7 +140,7 @@ class Database {
   }
 
   /**
-   * @description: Create database folder if it doesn't exist
+   * @description Create database folder if it doesn't exist
    */
   static createDatabaseFolder() {
     if (!fs.existsSync(databaseFolderPath)) {
@@ -147,7 +149,7 @@ class Database {
   }
 
   /**
- * @description: Get item from database
+ * @description Get item from database
  * @param {string} key - Key (hash/id) of item to get
  * @param {string} type - Type of item to get ()
  * @return {object} Item from database or null if not found
@@ -162,7 +164,7 @@ class Database {
       throw new Error('Invalid key format.');
     }
 
-    const query = this.#db.prepare(`SELECT * FROM ${type} WHERE key = ? LIMIT 1;`);
+    const query = this.db.prepare(`SELECT * FROM ${type} WHERE key = ? LIMIT 1;`);
     const item = query.get(key);
 
     if (item) {
@@ -181,27 +183,27 @@ class Database {
   }
 
   /**
-   * @description: Get all users from the database
+   * @description Get all users from the database
    * @return {object} Array of users
    */
   getAllUsers() {
-    const query = this.#db.prepare('SELECT * FROM user;');
+    const query = this.db.prepare('SELECT * FROM user;');
     const users = query.all();
     return users.map((user) => JSON.parse(user.json_data));
   }
 
   /**
-   * @description: Get all documents from the database
+   * @description Get all documents from the database
    * @return {object} Array of documents
    */
   getAllDocuments() {
-    const query = this.#db.prepare('SELECT * FROM document;');
+    const query = this.db.prepare('SELECT * FROM document;');
     const documents = query.all();
     return documents.map((document) => JSON.parse(document.json_data));
   }
 
   /**
-   * @description: Put item into database
+   * @description Put item into database
    * @param {object} item - Item to put into database
    * @return {object} Result of database query
    * @throws {Error} Error putting item into database
@@ -218,7 +220,7 @@ class Database {
     }
 
     // Be sure to prevent sql injection in type
-    const query = this.#db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`);
+    const query = this.db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`);
 
     try {
       const result = query.run(key, JSON.stringify(item));
@@ -240,7 +242,7 @@ class Database {
   }
 
   /**
-   * @description: Delete item from database
+   * @description Delete item from database
    * @param {string} key - Key (hash/id) of item to delete
    * @param {string} type - Type of item to delete
    * @return {object} Result of database query
@@ -259,7 +261,7 @@ class Database {
       throw new Error('Item not found in database.');
     }
 
-    const query = this.#db.prepare(`DELETE FROM ${type} WHERE key = ?;`);
+    const query = this.db.prepare(`DELETE FROM ${type} WHERE key = ?;`);
     const result = query.run(key);
 
     if (result.changes !== 1) {
@@ -271,7 +273,7 @@ class Database {
   }
 
   /**
-   * @description: Delete user from database helper method for more abstraction.
+   * @description Delete user from database helper method for more abstraction.
    * @param {*} key User publicKey
    * @returns The deleted user object
    * @throws {Error} Error deleting user from database
@@ -281,7 +283,7 @@ class Database {
   }
 
   /**
-   * @description: Update item in database
+   * @description Update item in database
    * @param {object} item - Item to update in database
    * @return {object} Result of database action
    */
@@ -298,10 +300,10 @@ class Database {
     }
 
     if (!this.get(key, type)) {
-      result = this.#db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`)
+      result = this.db.prepare(`INSERT INTO ${type} (key, json_data) VALUES (?, ?);`)
         .run(key, JSON.stringify(item));
     } else {
-      result = this.#db.prepare(`UPDATE ${type} SET json_data = ? WHERE key = ?;`)
+      result = this.db.prepare(`UPDATE ${type} SET json_data = ? WHERE key = ?;`)
         .run(JSON.stringify(item), key);
     }
 
@@ -313,6 +315,11 @@ class Database {
     return item;
   }
 
+  /**
+   * @description Update user in database helper method for more abstraction.
+   * @param {*} user Updated user object
+   * @returns The updated user object
+   */
   updateUser(user) {
     try {
       const existingUser = this.getUser(user.key);
@@ -330,14 +337,29 @@ class Database {
     return this.put(user);
   }
 
+  /**
+   * @description Put user profile database accessor method.
+   * @param {*} user Updated user object
+   * @returns The updated user object
+   */
   putUserProfile(userProfile) {
     return this.put(userProfile);
   }
 
+  /**
+   * @description Update user profile database accessor method.
+   * @param {*} user Updated user object
+   * @returns The updated user object
+   */
   updateUserProfile(userProfile) {
     return this.update(userProfile);
   }
 
+  /**
+   * @description Get user profile database accessor method.
+   * @param {*} key User publicKey
+   * @returns The requested user object
+   */
   getUserProfile(key) {
     return this.get(key, Types.UserProfile);
   }

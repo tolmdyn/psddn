@@ -16,12 +16,14 @@
     "test:validation": "mocha tests/validation.*.test.js",
     "test:server": "mocha tests/server.test.js",
     "test:client": "mocha tests/client.test.js",
-    "test:utils": "mocha tests/utils.test.js"
+    "test:utils": "mocha tests/utils.test.js",
+    "generate-docs": "jsdoc --configure jsdoc.json --verbose"
   },
   "author": "tolmdyn",
   "license": "ISC",
   "devDependencies": {
     "chai": "^4.3.7",
+    "clean-jsdoc-theme": "^4.2.13",
     "eslint": "^8.48.0",
     "eslint-config-airbnb": "^19.0.4",
     "mocha": "^10.2.0"

@@ -1,9 +1,10 @@
 /* eslint-disable object-curly-newline */
 /**
  * @fileoverview Client functions for the application. To be used by the user interface.
+ * @module client
  */
 
-/**
+/* Description:
  * create a client that:
  * -handles requests from the user/interface via an API
  * -serves requests for items from the local database

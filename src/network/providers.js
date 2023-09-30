@@ -1,5 +1,5 @@
 /**
- * @description Providers is responsible for finding the address of a provider of specific items
+ * @fileoverview Providers is responsible for finding the address of a provider of specific items
  * Either on the local cached peers or on the DHT network. This is not yet fully implemented.
  */
 
@@ -10,8 +10,6 @@ const { Request, RequestTypes } = require('../models/request');
 const { Response, ResponseTypes } = require('../models/response');
 
 const cache = require('./cache');
-// const { queryDHT, storeDHT } = require('./dht');
-// const Address = require('../models/address');
 
 /**
  * @description Gets the providers of a specific item. This function doesn't do
@@ -24,20 +22,10 @@ const cache = require('./cache');
  */
 async function getProviders(key, type) {
   debug(`Getting providers for key: ${key} and type: ${type}`);
-  // TODO:
-  // - search local db for providers
-  // - if found return providers
-  // - else search dht for providers
-  // - if found return providers
-  // - else return null?
-
-  // CACHE PROVIDERS
   const providers = cache.getProviders(key, type);
 
-  // DHT PROVIDERS
   // If the dht had an index of provider addresses for that item it would append them here.
 
-  // return dummy providers
   return providers;
 }
 
@@ -56,13 +44,8 @@ async function sendRequestToProvider(request, provider) {
     return new Promise((resolve, reject) => {
       ws.on('error', (err) => {
         debug('Websocket error:', err);
-        // reject(err);
-        // Should it resolve with the error Response instead?
         resolve(null);
       });
-
-      // wait for connection to open before continuing
-      // await new Promise((resolve) => { ws.on('open', resolve); });
 
       ws.on('open', () => {
         ws.send(JSON.stringify(request));
@@ -81,8 +64,6 @@ async function sendRequestToProvider(request, provider) {
               resResolve(response);
             } else if (response.responseType === ResponseTypes.Error) {
               ws.close();
-
-              // Should it resolve with the error Response instead?
               resResolve(null);
             }
           });
@@ -101,7 +82,7 @@ async function sendRequestToProvider(request, provider) {
           responsePromise.finally(() => clearTimeout(timeoutId));
         });
 
-        // Use Promise.race to resolve with the first resolved promise
+        // Use race to resolve with the first resolved promise
         return Promise.race([responsePromise, timeoutPromise])
           .then((result) => { resolve(result); })
           .catch((err) => { reject(err); });
@@ -121,7 +102,6 @@ async function sendRequestToProvider(request, provider) {
 async function sendItemToProviders(item) {
   const providers = await getProviders(item.key, item.type);
 
-  // if no providers were given, return error
   if (!providers || providers.length === 0) {
     return new Response(ResponseTypes.Error, 'No providers found for item.');
   }
@@ -129,10 +109,8 @@ async function sendItemToProviders(item) {
 
   const request = new Request(RequestTypes.Put, { item });
 
-  // map the array of providers to an array of promises
   const promises = providers.map((provider) => sendRequestToProvider(request, provider));
 
-  // wait for all promises to resolve
   const results = await Promise.all(promises);
 
   const successfulResponsesCount = results
@@ -144,7 +122,6 @@ async function sendItemToProviders(item) {
     return new Response(ResponseTypes.Success, `Item sent to ${successfulResponsesCount} providers.`);
   }
 
-  // if no successful responses, return error
   return new Response(ResponseTypes.Error, 'No provider recieved the item.');
 }
 

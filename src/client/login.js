@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Login functions for the client.
+ * @memberof client
+ */
+
 const debug = require('debug')('client');
 
 const { loadUserProfile, saveUserProfile } = require('./userProfile');

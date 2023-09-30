@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Shutdown the client and save the user profile.
+ * @memberof client
+ */
+
 const { saveUserProfile } = require('./userProfile');
 const { logoutUser } = require('./login');
 

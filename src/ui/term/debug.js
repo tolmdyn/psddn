@@ -1,7 +1,8 @@
 /**
- * @description Debugging commands for the interactive terminal interface.
+ * @fileoverview Debugging commands for the interactive terminal interface.
  * Commands are executed by typing "debug <command>" in the terminal.
  * Functions are self-descriptive.
+ * @memberof module:ui/term
  */
 
 const client = require('../../client');

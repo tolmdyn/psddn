@@ -1,11 +1,12 @@
 /**
- * @description The main command function for the terminal UI. Dispatches the correct
+ * @fileoverview The main command function for the terminal UI. Dispatches the correct
  * handler for the command. New commands should be added here.
  * For example, to add a new command called "foo", add a new handler function
  * called "handleFoo" to the handlers.js file, and add a new entry to the commandHandlers
  * Map object below.
  *
  * Could be refactored to dynamically set the correct handlers without the Map object.
+ * @memberof module:ui/term
  */
 
 const chalk = require('chalk');

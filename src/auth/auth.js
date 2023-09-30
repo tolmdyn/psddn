@@ -1,9 +1,9 @@
 /**
  * @fileoverview This file contains the user authentication logic.
  * @module auth
- *
- *
- *
+ */
+
+/*
  *  This module doesn't interact with the database, only user profile/session.
  *
  * Definitions:
@@ -118,7 +118,8 @@ function removeUserFromFollowing(userKey) {
 
 /* User Functions */
 /**
- * @description: Authenticate a NEW user with a password.
+ * @function
+ * @description Authenticate a NEW user with a password.
  * @param {string} nickname The desired nickname (optional) of the user
  * @param {string} password The desired password of the user
  * @returns {object} An object containing the user profile and secret key
@@ -136,7 +137,8 @@ function authNewUser(nickname, password) {
 }
 
 /**
- * @description: Authenticate a user with a publicKey and secretKey.
+ * @function
+ * @description Authenticate a user with a publicKey and secretKey.
  * @param {*} key The public key of the user
  * @param {*} secretKey The secret key of the user
  * @returns {object} The user profile object
@@ -154,7 +156,8 @@ function authUserWithKey(key, secretKey, userProfile) {
 }
 
 /**
- * @description: Authenticate a user with a publicKey and password.
+ * @function
+ * @description Authenticate a user with a publicKey and password.
  * @param {*} key The public key of the user
  * @param {*} password The password of the user
  * @returns {object} The user profile object
@@ -174,7 +177,8 @@ function authUserWithPassword(key, password, userProfile) {
 }
 
 /**
- * @description: Create a new keypair object, encoded as base64 strings.
+ * @function
+ * @description Create a new keypair object, encoded as base64 strings.
  * @returns A new keypair object
  */
 function createNewKeypair() {
@@ -187,7 +191,8 @@ function createNewKeypair() {
 }
 
 /**
- * @description: Create a new user object with a new keypair.
+ * @function
+ * @description Create a new user object with a new keypair.
  * @param {*} _nickname An optional nickname to use for the user
  * @returns An object containting the new user object and the secret key
  */
@@ -207,6 +212,15 @@ function createNewUser(_nickname) {
   return { user, secretKey };
 }
 
+/**
+ * @function
+ * @description Create a new user profile object.
+ * @param {object} user The user object
+ * @param {string} password The password to encrypt the secret key with
+ * @param {string} secretKey The secret key to encrypt
+ * @returns A new user profile object
+ * @throws {Error} If the user key does not match the secret key
+ */
 function createNewUserProfile(user, password, secretKey) {
   // Validate the inputs
   // derive pubkey from secret key
@@ -230,7 +244,8 @@ function createNewUserProfile(user, password, secretKey) {
 }
 
 /**
- * @description: Authenticate a pair of public key and secret key.
+ * @function
+ * @description Authenticate a pair of public key and secret key.
  * @param {string} publicKey Public key of the user
  * @param {string} secretKey Secret key of the user
  * @returns {boolean}: True if the user is authenticated, false otherwise
@@ -259,7 +274,8 @@ function authenticateKeyPair(publicKey, secretKey) {
 /* Signing / Verifying Functions */
 
 /**
- * Helper function to obtain key and stringify item for use with signStringWithKey.
+ * @function
+ * @description Helper function to obtain key and stringify item for use with signStringWithKey.
  * @param {*} item The item to sign
  * @returns The signature of the item, to be stored within the item
  */
@@ -272,7 +288,8 @@ function signItem(item) {
 }
 
 /**
- * Signs a string of data with a provided secret key.
+ * @function
+ * @description Signs a string of data with a provided secret key.
  * @param {*} data The data to sign (a string)
  * @param {*} secretKey The secret key to sign the data with
  * @returns The signature of the data, to be stored by caller
@@ -287,7 +304,8 @@ function signStringWithKey(data, secretKey) {
 }
 
 /**
- * Verifies the signature of an item, public key is obtained from the item provided,
+ * @function
+ * @description Verifies the signature of an item.
  * @param {*} item The item to verify (feed, document)
  * @returns {Boolean} True if the item is verified, false otherwise
  * @throws {Error} If the item is not verified
@@ -301,7 +319,8 @@ function verifyItem(item) {
 }
 
 /**
- * Verifies the signature of a string of data.
+ * @function
+ * @description Verifies the signature of a string of data.
  * @param {*} data The data to verify (a string)
  * @param {*} signature The signature of the data
  * @param {*} publicKey The public key of the signer

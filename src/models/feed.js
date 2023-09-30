@@ -3,7 +3,7 @@ const joi = require('joi');
 const { keyRegex } = require('./match');
 
 /**
- * @description Feed schema to validate feed objects.
+ * @fileoverview Feed schema to validate feed objects.
  * @usage const { error } = feedSchema.validate(feed);
  */
 const feedSchema = joi.object({

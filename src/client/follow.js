@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Functions for following and unfollowing users. Also functions for getting
+ * the latest findable users, feeds, and documents from the current user's followed users.
+ * @memberof module:client
+ */
+
 const debug = require('debug')('client');
 
 const { getItem, getLatestUser } = require('./get');
@@ -9,6 +15,7 @@ const { Types } = require('../models/types');
 const { ResponseTypes } = require('../models/response');
 
 /**
+ * @memberof module:client
  * @description Adds a user to the current user's following list.
  * @param {*} user The user object to follow.
  * @returns The current user's following list. (Not a response object)
@@ -21,6 +28,7 @@ function followUser(user) {
 }
 
 /**
+ * @memberof module:client
  * @description Removes a user from the current user's following list.
  * @param {*} user The user object to unfollow.
  * @returns The current user's following list. (Not a response object)
@@ -33,6 +41,7 @@ function unfollowUser(user) {
 }
 
 /**
+ * @memberof module:client
  * @description Gets the latest findable users that the current user is following.
  * @returns An array of user objects or an empty array.
  */
@@ -62,6 +71,7 @@ async function getFollowedUsers() {
 }
 
 /**
+ * @memberof module:client
  * @description Gets the latest findable feeds from the current user's followed users.
  * @returns An array of feed objects or an empty array.
  * TODO: What should the return value be in case of error?
@@ -121,6 +131,7 @@ async function getFollowedFeeds() {
 }
 
 /**
+ * @memberof module:client
  * @description Gets the latest findable documents from the current user's followed feeds.
  * @returns An array of document objects or an empty array.
  */
@@ -172,6 +183,7 @@ async function getFollowedDocuments() {
 }
 
 /**
+ * @memberof module:client
  * @description Gets a selection of the latest findable documents from the current user's
  * followed feeds.
  * @param {*} start The index of the first document to return.

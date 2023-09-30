@@ -1,5 +1,5 @@
 /**
- * @description: Utility functions for the application.
+ * @fileoverview Utility functions for the application.
  * As only contains hashing functions could be moved elsewhere.
  */
 
@@ -18,7 +18,7 @@ function generateKey(input) {
 }
 
 /**
- * @description: Check if the key is valid for the item.
+ * @description Check if the key is valid for the item.
  * @param {*} key The key to check
  * @param {*} item The item to hash
  * @returns True if the key is a valid hash for the item, false otherwise
@@ -39,7 +39,7 @@ function isValidKeyForItem(_key, item) {
 }
 
 /**
- * @description: Check if the key is a valid format.
+ * @description Check if the key is a valid format.
  * @param {*} key The key to check
  * @returns True if the key is a valid format, false otherwise
  */

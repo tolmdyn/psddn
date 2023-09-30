@@ -1,5 +1,5 @@
 /**
- * @description: Module to maintain a map of cached peers which can be used to
+ * @fileoverview Module to maintain a map of cached peers which can be used to
  * request and receive items.
  *
  * The map is indexed by the public key of the peer and contains the following information:
@@ -72,7 +72,7 @@ let localServerPort;
 /* --------------------- Startup functions ---------------------------- */
 
 /**
- * @description: Initialise the cache module with the database instance from app.js.
+ * @description Initialise the cache module with the database instance from app.js.
  * @param {*} dbInstance The singleton database instance.
  */
 function initCache(dbInstance) {
@@ -80,7 +80,7 @@ function initCache(dbInstance) {
 }
 
 /**
- * @description: Start the cache module.
+ * @description Start the cache module.
  * @param {*} bootstrapFilepath The filepath of the bootstrap peers file.
  * @param {*} port The port of the local server (for handshaking as it isn't always 8080)
  * TODO: consider splitting bootstrapping requests out
@@ -125,7 +125,7 @@ async function startCache(bootstrapFilepath, port) {
 }
 
 /**
- * @description: "Cleanly" shutdown the cache module before program exit.
+ * @description "Cleanly" shutdown the cache module before program exit.
  */
 function shutdownCache() {
   debug('Shutting down cache');
@@ -136,7 +136,7 @@ function shutdownCache() {
 // --------------------- Cache functions ------------------------------
 
 /**
- * @description: Helper funtion to check if a response is successful.
+ * @description Helper funtion to check if a response is successful.
  * @param {*} response The response object.
  * @returns {Boolean} True if the response is a success response.
  * TODO: This is not always used when it should be, and it is not as robust as it could be.
@@ -147,7 +147,7 @@ function isSuccessResponse(response) {
 }
 
 /**
- * @description: Request peer user info from a bootstrap peer address.
+ * @description Request peer user info from a bootstrap peer address.
  * This is performed by sending a handshake request to the peer, using
  * our own user address as the origin.
  * @param {Object} address Object containing peer ip and port.
@@ -194,7 +194,7 @@ async function requestPeerInfo(address) {
 }
 
 /**
- * @description: Handshake with a peer to check if it is online. This exchanges peer info with a
+ * @description Handshake with a peer to check if it is online. This exchanges peer info with a
  * previously unknown peer and allows manual seeding of the cache by the user.
  * Used by server module only, but included here to decouple network implementation.
  * @param {*} ip The ip address of the peer
@@ -234,9 +234,9 @@ async function handshakePeer(ip, port) {
 }
 
 /**
- * @description: Ping a peer to check if it is online. Used by client module.
- * @param {*} ip
- * @param {*} port
+ * @description Ping a peer to check if it is online. Used by client module.
+ * @param {*} ip The ip address of the peer
+ * @param {*} port The port of the peer
  * @returns {Object} Response object.
  * @returns {null} If the peer is not online.
  * TODO: This has been left for compatibility with client but it should be combined with other
@@ -272,7 +272,7 @@ async function pingPeer(ip, port) {
 }
 
 /**
- * @description: Add a remote peer to the cache. This is called by the server module when a new
+ * @description Add a remote peer to the cache. This is called by the server module when a new
  * connection is made. The peer is added to the cache and a handshake request is sent to the peer
  * to request its user info.
  * @param {*} key The key of the peer
@@ -319,7 +319,7 @@ async function addRemotePeer(key, address) {
 // using the address of the new peer as the 'origin' address
 
 /**
- * @description: Get providers for a specific item (key and type). At the moment just return
+ * @description Get providers for a specific item (key and type). At the moment just return
  * all active peers in the cache. Later on this could be filtered by interest groups or
  * followed peers. Or the peers could be queried for the item asynchronously.
  * @param {*} key The key of the item
@@ -409,7 +409,7 @@ function isAddressSelf(address) {
 // }
 
 /**
- * @description: Update the last seen timestamp for a peer.
+ * @description Update the last seen timestamp for a peer.
  * @param {*} key The key of the peer
  */
 function updatePeerLastSeen(key) {
@@ -425,7 +425,7 @@ function updatePeerLastSeen(key) {
 }
 
 /**
- * @description: Update the last address for a peer.
+ * @description Update the last address for a peer.
  * @param {*} key The key of the peer
  * @param {*} address The address of the peer { ip, port }
  */
@@ -443,7 +443,7 @@ function updatePeerLastAddress(key, address) {
 // --------------------- Cache load/save functions --------------------------
 
 /**
- * @description: Load all cached peers from the database.
+ * @description Load all cached peers from the database.
  */
 function loadCache() {
   debug('Loading cache');
@@ -464,7 +464,7 @@ function loadCache() {
 }
 
 /**
- * @description: Save all cached peers to the database.
+ * @description Save all cached peers to the database.
  * TODO: This could be called periodically and on program exit.
  */
 function saveCache() {
@@ -494,7 +494,7 @@ function saveCache() {
 /* --------------------- Cache refresh/heartbeat functions -------------------------- */
 
 /**
- * @description: Refresh the cache by checking if each peer is still active.
+ * @description Refresh the cache by checking if each peer is still active.
  * If the peer is not active then remove it from the cache.
  */
 async function refreshCache() {
@@ -515,7 +515,7 @@ async function refreshCache() {
  * @description Refresh a single peer in the cache. This is done by opening a websocket
  * and sending a ping. If the peer responds then it is still active. Inactive peers are
  * removed from the cache.
- * @param {*} peer The peer to refresh ()
+ * @param {*} peer The peer to refresh (key, ip, port)
  */
 async function refreshPeer(peer) {
   // Check if the peer is still active
@@ -534,12 +534,12 @@ async function refreshPeer(peer) {
 }
 
 /**
- * @description: Check if a peer is still active by opening a websocket and sending a ping.
+ * @description Check if a peer is still active by opening a websocket and sending a ping.
  * @param {*} peer The peer to check (key, ip, port)
  * @returns {Boolean} True if the peer is active, false if not.
  * TODO: A  more realistic approach would be a '3 strikes and you're out' policy before removing
  * peers as sometimes connections might time out for random reasons but the peer is still online.
- * TODO: Consider refactoring with the public ping / handshake functions used by client.
+ * Consider refactoring with the public ping / handshake functions used by client.
  */
 async function checkPeerOnline(peer) {
   debug(`Checking if peer is online: ${peer.key} - ${peer.lastAddress.ip}:${peer.lastAddress.port}`);
@@ -584,7 +584,7 @@ async function checkPeerOnline(peer) {
 // --------------------- Refresh Scheduler functions --------------------------
 
 /**
- * @description: Class to manage the refresh scheduler.
+ * @description Class to manage the refresh scheduler.
  * This is a simple timer which periodically calls the refresh function, this
  * checks if each peer is still active and removes inactive peers from the cache.
  * @param {*} refreshFunction The function to call when the timer expires.
@@ -616,14 +616,14 @@ class RefeshScheduler {
 const refreshScheduler = new RefeshScheduler(refreshCache, refreshSeconds);
 
 /**
- * @description: Accessor function to externally start the refresh scheduler.
+ * @description Accessor function to externally start the refresh scheduler.
  */
 function startRefreshScheduler() {
   refreshScheduler.start();
 }
 
 /**
- * @description: Accessor function to externally stop the refresh scheduler.
+ * @description Accessor function to externally stop the refresh scheduler.
  */
 function stopRefreshScheduler() {
   refreshScheduler.stop();

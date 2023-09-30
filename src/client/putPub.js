@@ -1,3 +1,8 @@
+/**
+ * @fileoverview This module contains the functions for putting and publishing items.
+ * @memberof client
+ */
+
 const debug = require('debug')('client');
 
 const { Response, ResponseTypes } = require('../models/response');

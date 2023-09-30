@@ -1,7 +1,8 @@
 /**
- * @description The server module is solely responsible for handling remote requests from
+ * @fileoverview The server module is solely responsible for handling remote requests from
  * incoming websocket connections. The server does not handle any requests from the local
  * user/interface as that is the job of the client modules.
+ * @module server
  */
 
 const WebSocket = require('ws');
@@ -17,11 +18,17 @@ const { addRemotePeer } = require('../network/cache');
 let Database;
 let server;
 
+/**
+ * @description Initialises the server with the database instance
+ * @param {*} dbInstance The database instance object
+ * @function
+ */
 function initServer(dbInstance) {
   Database = dbInstance;
 }
 
 /**
+ * @function
  * @description Handles incoming requests from remote peers
  * @param {*} message The incoming message containing Request Object
  * @param {*} address The address of the remote peer
@@ -58,6 +65,7 @@ function handleRequest(message, address) {
 }
 
 /**
+ * @function
  * @description Handles a GET item request
  * @param {*} request The request object
  * @returns {Response} The response (success/error) to the request
@@ -91,6 +99,7 @@ function handleGet(request) {
 }
 
 /**
+ * @function
  * @description Handles a PUT item request to store an item in the database
  * @param {*} request The request object (item)
  * @returns {Response} The response (success/error) to the request
@@ -127,6 +136,7 @@ function handlePut(request) {
 }
 
 /**
+ * @function
  * @description Handles a ping request. If the target peer is the current user, then
  * a pong response is sent. Otherwise, an error response is sent (which still counts
  * as a valid response to the calling peer).
@@ -152,6 +162,7 @@ function handlePing(request) {
 }
 
 /**
+ * @function
  * @description Handles a message request. Currently just logs the message to the console.
  * Could be extended to only log messages from peers that the user has added as friends, or
  * only if the intended target peer is the current user.
@@ -166,6 +177,7 @@ function handleMessage(request) {
 }
 
 /**
+ * @function
  * @description Handles a handshake request. This is the first request sent by a remote
  * peer when a websocket connection is established. The request contains the origin key
  * and port of the remote peer. The current user's key and address are added to the
@@ -200,6 +212,7 @@ function handleHandshake(request, originAddress) {
 }
 
 /**
+ * @function
  * @description Starts the server on the specified port
  * @param {*} port The port to start the server on
  * @returns {WebSocket.Server} The server instance
@@ -232,6 +245,7 @@ function startServer(port) {
 }
 
 /**
+ * @function
  * @description Stops the server
  */
 function shutdownServer() {

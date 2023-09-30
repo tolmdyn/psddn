@@ -1,5 +1,5 @@
 /**
- * @description  Generic validation function for different items.
+ * @fileoverview  Generic validation function for different items.
  */
 
 const { userSchema } = require('./user');

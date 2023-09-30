@@ -1,5 +1,7 @@
 /**
- * @description Terminal UI main entry point.
+ * @fileoverview Terminal UI main entry point. An interactive terminal user interface.
+ * @module ui/term
+ * @memberof module:ui
  */
 
 const debug = require('debug')('ui:term');

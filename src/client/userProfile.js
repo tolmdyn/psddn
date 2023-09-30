@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Client side user profile management.
+ * @memberof client
+ */
+
 const debug = require('debug')('client');
 
 const { isUserSession, getUserSessionProfile, updateUserSessionLastSeen } = require('../auth/auth');

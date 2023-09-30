@@ -1,5 +1,5 @@
 /**
- * @description Debugging functions for the client.
+ * @fileoverview Debugging functions for the client.
  */
 
 const { getAllPeers, pingPeer, handshakePeer } = require('../network/cache');

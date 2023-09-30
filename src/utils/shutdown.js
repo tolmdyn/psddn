@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Shutdown utility functions.
+ */
+
 const { shutdownCache } = require('../network/cache');
 const { shutdownServer } = require('../server/server');
 const { shutdownClient } = require('../client');

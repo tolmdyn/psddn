@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Functions to handle user feeds.
+ */
+
 const debug = require('debug')('client');
 
 const { pubItem } = require('./putPub');

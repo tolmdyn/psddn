@@ -1,12 +1,14 @@
 /**
- * @description User schema to validate user objects.
+ * @fileoverview User schema to validate user objects.
  * @usage const { error } = userSchema.validate(user);
  */
 
 const joi = require('joi');
 const { keyRegex } = require('./match');
+
 /**
  * @description Address schema to validate IP address and port.
+ * @object
  */
 const addressSchema = joi.object({
   ip: joi.string()
@@ -20,6 +22,7 @@ const addressSchema = joi.object({
 /**
  * @description User schema to validate user objects.
  * @usage const { error } = userSchema.validate(user);
+ * @object
  */
 const userSchema = joi.object({
   type: joi.string()

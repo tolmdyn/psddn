@@ -5,6 +5,10 @@ logs
 # Dependency directories
 node_modules/
 
+# Generated Documentation
+doc/
+jsdoc.json
+
 # Built output
 dist/
 build/

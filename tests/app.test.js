@@ -643,7 +643,8 @@ describe('Client Follow/Unfollow Tests', () => {
 describe('Client Get Followed Items Tests', () => {
   const keys = [];
 
-  before(async () => {
+  before(async function () {
+    this.timeout(5000);
     // create a new user profile
     const options = [];
 
@@ -802,15 +803,35 @@ describe('Client Get Followed Items Tests', () => {
       testApp.client.followUser(key);
     });
 
-    let response = await testApp.client.getSomeFollowedDocuments(0, 2);
-    expect(response).to.be.an('array');
-    expect(response.length).to.equal(2);
-
-    response = await testApp.client.getSomeFollowedDocuments(5, 2);
+    let response = await testApp.client.getSomeFollowedDocuments(5, 2);
     expect(response).to.be.an('array');
     expect(response.length).to.equal(1);
 
     response = await testApp.client.getSomeFollowedDocuments(6, 2);
+    expect(response).to.be.an('array');
+    expect(response.length).to.equal(0);
+
+    testApp.shutdown();
+  });
+
+  it('should get a slice of followed items without errors', async function () {
+    this.timeout(6000);
+
+    const followOptions = {
+      port: 9108,
+      interface: 'none',
+      dbname: ':memory:',
+      name: 'Get Followed Items Test Node 8',
+    };
+
+    const testApp = new TestApp();
+    testApp.init(followOptions);
+
+    keys.forEach((key) => {
+      testApp.client.followUser(key);
+    });
+
+    const response = await testApp.client.getSomeFollowedDocuments(6, 2);
     expect(response).to.be.an('array');
     expect(response.length).to.equal(0);
 

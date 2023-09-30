@@ -3,7 +3,7 @@
  */
 
 /**
- * @description: Represents the type of a response
+ * @description Represents the type of a response
  * @enum {string}
  */
 const ResponseTypes = {
@@ -12,7 +12,7 @@ const ResponseTypes = {
 };
 
 /**
- * @description: Represents a response object
+ * @description Represents a response object
  * @class Response
  * @param {string} responseType - Type of response
  * @param {string} responseData - Response message/content

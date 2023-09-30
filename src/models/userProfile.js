@@ -5,7 +5,7 @@
  */
 
 /**
- * @description User schema to validate user objects.
+ * @fileoverview User schema to validate user objects.
  * @usage const { error } = userSchema.validate(user);
  */
 

@@ -1,5 +1,5 @@
 /**
-* @description: Defines Type to represent the type of an item in the database.
+* @description Defines Type to represent the type of an item in the database.
 */
 
 const Types = {
@@ -10,7 +10,7 @@ const Types = {
 };
 
 /**
- * @description: Checks if the given type is a valid item type
+ * @description Checks if the given type is a valid item type
  * @param {*} type - Type to check
  * @returns {boolean} True if the type is valid, false otherwise
  */

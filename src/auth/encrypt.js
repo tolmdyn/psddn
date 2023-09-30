@@ -1,5 +1,5 @@
 /**
- * @description This file contains the functions for encrypting and decrypting data using a
+ * @fileoverview This file contains the functions for encrypting and decrypting data using a
  * password. It is used to encrypt and decrypt the user's private key, so that it can be stored
  * in the database without being visible to anyone who has access to the database. These are to
  * demonstrate security for testing but are not suitable for production.
@@ -8,7 +8,7 @@
  * https://nodejs.org/api/crypto.html#crypto_crypto_pbkdf2sync_password_salt_iterations_keylen_digest
  * https://nodejs.org/api/crypto.html#crypto_class_cipher
  * https://nodejs.org/api/crypto.html#crypto_class_decipher
- *
+ * @memberof auth
  * @usage
  *  const plaintext = 'This is a secret phrase. It isnt very long.';
  *  const password = 'password';
@@ -19,6 +19,8 @@
 const crypto = require('crypto');
 
 /**
+ * @function encryptWithPassword
+ * @description Encrypts a data object using a password
  * @param {string} password The password from the user to encrypt with
  * @param {string} data The data to encrypt (a string only)
  * @returns {string} The encrypted data object (containing tag, salt, iv) as a string
@@ -46,6 +48,7 @@ function encryptWithPassword(password, data) {
 }
 
 /**
+ * @function
  * @description Decrypts a data object using a password
  * @param {string} password The password from the user to decrypt with
  * @param {string} input The encrypted data object (containing tag, salt, iv) as a string

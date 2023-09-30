@@ -1,9 +1,9 @@
 /**
- * @description The Request class and the RequestTypes enum.
+ * @fileoverview The Request class and the RequestTypes enum.
  */
 
 /**
- * @description: Represents the type of a request
+ * @description Represents the type of a request
  * @enum {string}
  */
 const RequestTypes = {
@@ -15,7 +15,7 @@ const RequestTypes = {
 };
 
 /**
- * @description: Represents a request object
+ * @description Represents a request object
  * @class Request
  * @param {string} requestType - Type of request
  * @param {object} requestData - Request data

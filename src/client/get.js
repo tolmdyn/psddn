@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Functions for getting items from the local database, remote providers
+ * and DHT.
+ * @memberof client
+ */
+
 const debug = require('debug')('client');
 
 const { isValidKeyFormat } = require('../utils/utils');
@@ -15,6 +21,7 @@ function setDb(dbInstance) {
 }
 
 /**
+ * @function validateGetParameters
  * @description Validates the parameters for a get request.
  * @param {string} key The key of the item to get.
  * @param {string} type The type of the item to get.

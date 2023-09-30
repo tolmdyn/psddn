@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Creates a new document and publishes it to the network.
+ * @memberof client
+ */
+
 const debug = require('debug')('client');
 
 const {

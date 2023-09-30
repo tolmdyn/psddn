@@ -1,11 +1,12 @@
 /**
- * @description User Interface entry point, injects the required interface module
+ * @fileoverview User Interface entry point, injects the required interface module
  * and starts it.
  *
  * Current options are:
- * - none: headless mode, no UI
- * - web: web UI (not yet implemented)
- * - term: interactive terminal UI
+ * * none: headless mode, no UI
+ * * web: web UI (not yet implemented)
+ * * term: interactive terminal UI
+ * @module ui
  */
 
 // const webUI = require('./web/index'); // not yet implemented

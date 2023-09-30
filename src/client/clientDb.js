@@ -10,6 +10,11 @@ const putPub = require('./putPub');
 
 let db = null;
 
+/**
+ * @function initDb
+ * @description Initialise the database instance for the client module
+ * @param {*} dbInstance The database instance to use
+ */
 function initDb(dbInstance) {
   db = dbInstance;
   feed.setDb(db);

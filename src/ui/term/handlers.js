@@ -1,6 +1,8 @@
 /**
- * @description Command handlers for the terminal UI. New commands should be added here.
- * */
+ * @fileoverview Command handlers for the terminal UI. New commands should be added here.
+ * @memberof module:ui/term
+ */
+
 const chalk = require('chalk');
 
 const client = require('../../client');
@@ -8,6 +10,13 @@ const { askQuestion, parseItem } = require('./termUtils');
 const { ResponseTypes } = require('../../models/response');
 const { formatDocuments } = require('./termUtils');
 
+/**
+ * @description Formats a response object into a printable string.
+ * (strips out the response type on success)
+ * @param {*} response The response object to format
+ * @returns {string} The formatted string
+ * @memberof module:ui/term
+ */
 function formatResponse(response) {
   if (response.responseType === ResponseTypes.Success) {
     return response.responseData;
@@ -15,6 +24,7 @@ function formatResponse(response) {
   }
   return `${chalk.red('Error')}: ${response.responseData}`;
 }
+
 async function handleGet(args) {
   const [key, type] = args;
 

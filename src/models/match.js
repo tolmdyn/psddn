@@ -1,5 +1,5 @@
 /**
- * @description Regular expressions for key validation
+ * @fileoverview Regular expressions for key validation
  */
 
 const keyRegex = /^[A-Za-z0-9+/]{43,46}(={0,2})$/;

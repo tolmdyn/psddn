@@ -1,3 +1,10 @@
+/**
+ * @fileoverview This file is the entry point for the 'headless' UI. It allows the
+ * creation of a psddn instance without an interface, for example for testing.
+ * @module ui/headless
+ * @memberof ui
+ */
+
 const client = require('../../client');
 // const { shutdown } = require('../../utils/shutdown');
 

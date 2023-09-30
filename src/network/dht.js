@@ -1,5 +1,5 @@
 /**
- * @description Provide the DHT functions.
+ * @fileoverview Provide the DHT functions.
  *
  * Make use of a distributed hash table to distribute items across the network.
  *
