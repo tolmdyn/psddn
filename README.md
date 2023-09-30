@@ -9,6 +9,9 @@ Built in JavaScript using Node.js.
 - [Features](#features)
 - [Getting Started](#getting-started)
 - [Usage](#usage)
+- [Testing](#testing)
+- [CLI Options](#cli-options)
+- [TUI Commands](#tui-commands)
 - [License](#license)
 <!-- - [Project Structure](#project-structure)
 - [Contributing](#contributing) -->
@@ -36,9 +39,13 @@ Built in JavaScript using Node.js.
 
 Run the application: `npm start` or `./app/psddn.js --help`.  
 
-Run the tests: `npm test` or `npm run test:<name of module>`.
+## Testing
 
-Test report: `npm run test:report`. [Results](https://tolmdyn.github.io/psddn/mochawesome.html)
+Run the tests: `npm test` or `npm run test:<name of module>`.  
+
+Test report: `npm run test:report`.  
+
+[Test Results](https://tolmdyn.github.io/psddn/mochawesome.html) saved to `./mochawesome-report/mochawesome.html`.
 
 ### CLI options:
 ```
@@ -83,21 +90,6 @@ Debug commands:
 `hand` 
 `ping` 
 `help`  
-
-<!-- ## Project Structure
-
-- **bin**/: executable files
-    - **app.js**: main executable
-- **src**/: source files contained in subdirectories
-    - **server**/: server source files
-    - **client**/: client source files 
-    - **ui**/: user interface directories
-    - **database**/: database related source code
-    - **models**/: model/schema definitions and validation
-    - **network**/: network related source code
-    - **utils**/: shared utility / helper functions
-- **tests**/: testing code (mocha)
-    - **scripts**/: test scripts -->
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
