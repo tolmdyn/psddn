@@ -93,3 +93,24 @@ Debug commands:
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Screenshots
+
+Creating a new account and making a new post.  
+![Session1](./.github/screenshots/session1.png)  
+
+Logging in and following a user.  
+![Session2](./.github/screenshots/session2.png)  
+
+Get followed documents.  
+![Session3](./.github/screenshots/session3.png)  
+
+Cache dropout.  
+![Session4](./.github/screenshots/session4.png)
+
+Second post.
+![Session5](./.github/screenshots/session5.png)
+
+Dummy network within tmux session. (`./tests/scripts/tmux-network.sh`)
+![Tmux](./.github/screenshots/tmux-session2.png)
+![Tmux](./.github/screenshots/tmux-session3.png)
