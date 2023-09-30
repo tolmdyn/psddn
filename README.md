@@ -38,6 +38,8 @@ Run the application: `npm start` or `./app/psddn.js --help`.
 
 Run the tests: `npm test` or `npm run test:<name of module>`.
 
+Test report: `npm run test:report`. [Results](https://tolmdyn.github.io/psddn/mochawesome.html)
+
 ### CLI options:
 ```
 Usage: psddn [options]
