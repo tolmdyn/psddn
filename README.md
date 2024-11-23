@@ -4,17 +4,16 @@
 A decentralised peer-to-peer text document sharing application.
 Built in JavaScript using Node.js.
 
+Report paper / thesis providing full explanation of the project available [here](https://github.com/tolmdyn/psddn/blob/main/docs/PSDDN__A_Peer_to_Peer_Document_Distribution_Network.pdf).
+
 ## Table of Contents
 - [Overview](#overview)
 - [Features](#features)
-- [Getting Started](#getting-started)
 - [Usage](#usage)
 - [Testing](#testing)
 - [CLI Options](#cli-options)
 - [TUI Commands](#tui-commands)
 - [License](#license)
-<!-- - [Project Structure](#project-structure)
-- [Contributing](#contributing) -->
 
 ## Features
 - **Peer-to-Peer:** Peers can connect to each other and share items via a cache of peers and a global distributed hash table.
